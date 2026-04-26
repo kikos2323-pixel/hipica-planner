@@ -1,6 +1,15 @@
 const STORAGE_KEY = "fincaPlanner.v1";
 const THEME_KEY = "fincaPlanner.theme";
 const STANDARD_DAY_HOURS = 7;
+const WEEKLY_SCHEDULE = [
+  { day: 1, label: "Lunes", shifts: [{ start: "07:00", end: "13:30" }, { start: "19:00", end: "21:00" }] },
+  { day: 2, label: "Martes", shifts: [{ start: "08:00", end: "13:00" }] },
+  { day: 3, label: "Miercoles", shifts: [{ start: "08:00", end: "13:00" }, { start: "19:00", end: "21:00" }] },
+  { day: 4, label: "Jueves", shifts: [{ start: "08:00", end: "13:00" }] },
+  { day: 5, label: "Viernes", shifts: [{ start: "08:00", end: "13:00" }, { start: "19:00", end: "21:00" }] },
+  { day: 6, label: "Sabado", shifts: [{ start: "07:00", end: "13:30" }, { start: "19:00", end: "21:00" }] },
+  { day: 0, label: "Domingo", shifts: [] }
+];
 
 const state = {
   workEntries: [],
@@ -48,6 +57,33 @@ function minutesFromTime(time) {
   if (!time) return null;
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
+}
+
+function hoursBetween(startTime, endTime) {
+  const start = minutesFromTime(startTime);
+  const end = minutesFromTime(endTime);
+  if (start === null || end === null || end <= start) return 0;
+  return roundHours((end - start) / 60);
+}
+
+function getScheduleForDate(dateString) {
+  const date = new Date(`${dateString}T12:00:00`);
+  const day = date.getDay();
+  return WEEKLY_SCHEDULE.find((item) => item.day === day) || WEEKLY_SCHEDULE[0];
+}
+
+function scheduleExpectedHours(dateString) {
+  const schedule = getScheduleForDate(dateString);
+  return scheduleTotalHours(schedule);
+}
+
+function scheduleTotalHours(schedule) {
+  return roundHours(schedule.shifts.reduce((sum, shift) => sum + hoursBetween(shift.start, shift.end), 0));
+}
+
+function scheduleLabel(schedule) {
+  if (!schedule.shifts.length) return "Descanso";
+  return schedule.shifts.map((shift) => `${shift.start} - ${shift.end}`).join(" / ");
 }
 
 function calculateWorkHours(entry) {
@@ -149,6 +185,7 @@ function applyTheme() {
 
 function setDefaultDates() {
   $("#workDate").value = todayISO();
+  $("#expectedHours").value = scheduleExpectedHours(todayISO());
   $("#taskDate").value = todayISO();
 }
 
@@ -157,6 +194,7 @@ function render() {
   renderDashboard();
   renderWorkTable();
   renderTasks();
+  renderWeeklySchedule();
   renderCalendar();
   renderHistory();
   renderStats();
@@ -298,7 +336,7 @@ function syncClockToWorkEntry() {
       startTime: "",
       endTime: "",
       breakMinutes: 0,
-      expectedHours: STANDARD_DAY_HOURS,
+      expectedHours: scheduleExpectedHours(date) || STANDARD_DAY_HOURS,
       notes: "Registro creado con el fichaje automatico",
       generatedByClock: true,
       updatedAt: new Date().toISOString()
@@ -369,7 +407,9 @@ function renderDashboard() {
 
   const todayEntries = state.workEntries.filter((entry) => entry.date === todayISO());
   const todayTasks = state.tasks.filter((task) => task.date === todayISO());
+  const todaySchedule = getScheduleForDate(todayISO());
   $("#todaySummary").innerHTML = [
+    `<div class="summary-item"><strong>Horario previsto</strong><p>${scheduleLabel(todaySchedule)} - ${scheduleExpectedHours(todayISO())} h</p></div>`,
     ...todayEntries.map((entry) => `<div class="summary-item"><strong>${entry.dayType}</strong><p>${calculateWorkHours(entry)} h trabajadas - Extra ${calculateExtraHours(entry)} h</p></div>`),
     ...todayTasks.map((task) => `<div class="summary-item"><strong>${task.name}</strong><p>${task.time || "Sin hora"} - ${labelStatus(task.status)} - ${task.priority}</p></div>`)
   ].join("") || emptyState("Aun no hay registros para hoy.");
@@ -381,6 +421,24 @@ function renderDashboard() {
   $("#upcomingTasks").innerHTML = upcoming.map(taskCardHtml).join("") || emptyState("No hay tareas pendientes.");
 
   drawMonthChart();
+}
+
+function renderWeeklySchedule() {
+  const today = new Date().getDay();
+  $("#weeklySchedule").innerHTML = WEEKLY_SCHEDULE.map((schedule) => {
+    const isToday = schedule.day === today;
+    const isRest = !schedule.shifts.length;
+    const shifts = isRest
+      ? `<span class="schedule-shift">Descanso</span>`
+      : schedule.shifts.map((shift) => `<span class="schedule-shift">${shift.start} - ${shift.end}</span>`).join("");
+    return `
+      <article class="schedule-day ${isToday ? "today" : ""} ${isRest ? "rest" : ""}">
+        <strong>${schedule.label}</strong>
+        ${shifts}
+        <span class="schedule-total">${scheduleTotalHours(schedule)} h previstas</span>
+      </article>
+    `;
+  }).join("");
 }
 
 function renderWorkTable() {
@@ -472,8 +530,10 @@ function renderCalendar() {
     const iso = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const work = state.workEntries.filter((entry) => entry.date === iso);
     const tasks = state.tasks.filter((task) => task.date === iso);
+    const schedule = getScheduleForDate(iso);
     const isToday = iso === todayISO();
     const events = [
+      `<span class="calendar-event schedule">${scheduleLabel(schedule)}</span>`,
       ...work.map((entry) => `<span class="calendar-event">${entry.dayType}: ${calculateWorkHours(entry)} h</span>`),
       ...tasks.map((task) => `<span class="calendar-event task">${escapeHtml(task.name)}</span>`)
     ].join("");
@@ -664,8 +724,8 @@ function resetWorkForm() {
   $("#workForm").reset();
   $("#workId").value = "";
   $("#workBreaks").value = 0;
-  $("#expectedHours").value = STANDARD_DAY_HOURS;
   $("#workDate").value = todayISO();
+  $("#expectedHours").value = scheduleExpectedHours(todayISO()) || STANDARD_DAY_HOURS;
 }
 
 function resetTaskForm() {
@@ -746,6 +806,9 @@ function bindEvents() {
   $("#resetWorkBtn").addEventListener("click", resetWorkForm);
   $("#resetTaskBtn").addEventListener("click", resetTaskForm);
   $("#taskFilter").addEventListener("change", renderTasks);
+  $("#workDate").addEventListener("change", () => {
+    $("#expectedHours").value = scheduleExpectedHours($("#workDate").value) || STANDARD_DAY_HOURS;
+  });
   $("#clearDataBtn").addEventListener("click", clearData);
   $("#clockToggleBtn").addEventListener("click", toggleClock);
   $("#clockResetBtn").addEventListener("click", resetClock);
