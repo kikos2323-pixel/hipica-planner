@@ -33,7 +33,18 @@
             <p class="eyebrow" id="todayLabel"></p>
             <h1 id="viewTitle">Inicio</h1>
           </div>
-          <button class="ghost-button" id="seedDemoBtn" type="button">Cargar ejemplo</button>
+          <div class="topbar-actions" aria-label="Opciones de la aplicacion">
+            <label class="theme-picker">Interfaz
+              <select id="themeSelect">
+                <option value="finca">Finca</option>
+                <option value="pro">Profesional</option>
+                <option value="coral">Coral</option>
+                <option value="contrast">Alto contraste</option>
+              </select>
+            </label>
+            <button class="ghost-button" id="modeToggleBtn" type="button">Modo oscuro</button>
+            <button class="ghost-button" id="seedDemoBtn" type="button">Cargar ejemplo</button>
+          </div>
         </header>
 
         <section class="view active" id="dashboard">

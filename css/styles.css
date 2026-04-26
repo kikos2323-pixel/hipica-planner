@@ -1,6 +1,13 @@
-:root {
+html {
+  color-scheme: light;
+}
+
+:root,
+body[data-theme="finca"][data-mode="light"] {
   --bg: #f6f8f3;
+  --bg-pattern: radial-gradient(circle at top left, rgba(47, 125, 88, 0.14), transparent 32rem), linear-gradient(135deg, #f8faf5 0%, #eef5eb 100%);
   --surface: #ffffff;
+  --surface-raised: #ffffff;
   --surface-soft: #edf4ea;
   --text: #20302a;
   --muted: #66736d;
@@ -8,8 +15,164 @@
   --primary: #2f7d58;
   --primary-dark: #245f45;
   --accent: #d88736;
+  --chart-a: #2f7d58;
+  --chart-b: #d88736;
+  --chart-c: #4b7f9f;
+  --chart-d: #8d6a9f;
   --danger: #b84545;
   --shadow: 0 14px 34px rgba(38, 56, 48, 0.09);
+  --shadow-strong: 0 22px 48px rgba(38, 56, 48, 0.14);
+}
+
+body[data-theme="finca"][data-mode="dark"] {
+  color-scheme: dark;
+  --bg: #121a16;
+  --bg-pattern: radial-gradient(circle at top left, rgba(70, 150, 108, 0.2), transparent 28rem), linear-gradient(135deg, #111814 0%, #1d2b24 100%);
+  --surface: #1c2722;
+  --surface-raised: #23332b;
+  --surface-soft: #263d32;
+  --text: #edf6ef;
+  --muted: #a9b8ae;
+  --line: #33473d;
+  --primary: #6cc28e;
+  --primary-dark: #9be0b6;
+  --accent: #e5a252;
+  --chart-a: #6cc28e;
+  --chart-b: #e5a252;
+  --chart-c: #7fb8d5;
+  --chart-d: #c5a0df;
+  --danger: #ff8d8d;
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.24);
+  --shadow-strong: 0 26px 60px rgba(0, 0, 0, 0.34);
+}
+
+body[data-theme="pro"][data-mode="light"] {
+  --bg: #f4f7fb;
+  --bg-pattern: radial-gradient(circle at top right, rgba(41, 98, 255, 0.12), transparent 30rem), linear-gradient(135deg, #f8fbff 0%, #eef3f8 100%);
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-soft: #eaf1fb;
+  --text: #17202f;
+  --muted: #627086;
+  --line: #d8e0ec;
+  --primary: #2864d9;
+  --primary-dark: #1d4fad;
+  --accent: #10a37f;
+  --chart-a: #2864d9;
+  --chart-b: #10a37f;
+  --chart-c: #d88736;
+  --chart-d: #7c5cff;
+  --danger: #c23b54;
+  --shadow: 0 14px 34px rgba(28, 48, 78, 0.1);
+  --shadow-strong: 0 24px 56px rgba(28, 48, 78, 0.16);
+}
+
+body[data-theme="pro"][data-mode="dark"] {
+  color-scheme: dark;
+  --bg: #0e1117;
+  --bg-pattern: radial-gradient(circle at top right, rgba(76, 128, 255, 0.22), transparent 30rem), linear-gradient(135deg, #0d1117 0%, #171d28 100%);
+  --surface: #171d26;
+  --surface-raised: #1f2733;
+  --surface-soft: #232d3b;
+  --text: #edf2fa;
+  --muted: #a8b3c4;
+  --line: #303b4d;
+  --primary: #78a6ff;
+  --primary-dark: #a9c5ff;
+  --accent: #4fd1b0;
+  --chart-a: #78a6ff;
+  --chart-b: #4fd1b0;
+  --chart-c: #f0aa5f;
+  --chart-d: #b9a6ff;
+  --danger: #ff7d92;
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.26);
+  --shadow-strong: 0 28px 62px rgba(0, 0, 0, 0.38);
+}
+
+body[data-theme="coral"][data-mode="light"] {
+  --bg: #fff8f4;
+  --bg-pattern: radial-gradient(circle at top left, rgba(231, 96, 84, 0.14), transparent 28rem), linear-gradient(135deg, #fffaf7 0%, #f6f1ff 100%);
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-soft: #fff0ea;
+  --text: #302421;
+  --muted: #786a64;
+  --line: #eadbd5;
+  --primary: #df6154;
+  --primary-dark: #b94137;
+  --accent: #5c8f7b;
+  --chart-a: #df6154;
+  --chart-b: #5c8f7b;
+  --chart-c: #d39c32;
+  --chart-d: #8d6a9f;
+  --danger: #b84545;
+  --shadow: 0 14px 34px rgba(88, 54, 45, 0.1);
+  --shadow-strong: 0 24px 56px rgba(88, 54, 45, 0.16);
+}
+
+body[data-theme="coral"][data-mode="dark"] {
+  color-scheme: dark;
+  --bg: #1b1414;
+  --bg-pattern: radial-gradient(circle at top left, rgba(223, 97, 84, 0.18), transparent 30rem), linear-gradient(135deg, #1b1414 0%, #291c28 100%);
+  --surface: #261d1d;
+  --surface-raised: #302323;
+  --surface-soft: #3c2a27;
+  --text: #fff2ed;
+  --muted: #c8b1aa;
+  --line: #493631;
+  --primary: #ff8d80;
+  --primary-dark: #ffc1b9;
+  --accent: #8ad0b7;
+  --chart-a: #ff8d80;
+  --chart-b: #8ad0b7;
+  --chart-c: #e9b85b;
+  --chart-d: #c3a1df;
+  --danger: #ff9c9c;
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.24);
+  --shadow-strong: 0 28px 62px rgba(0, 0, 0, 0.36);
+}
+
+body[data-theme="contrast"][data-mode="light"] {
+  --bg: #f7f7f2;
+  --bg-pattern: linear-gradient(135deg, #ffffff 0%, #eceee7 100%);
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-soft: #e7efe8;
+  --text: #101410;
+  --muted: #4c554d;
+  --line: #c9d0c8;
+  --primary: #006c45;
+  --primary-dark: #004f33;
+  --accent: #b45f06;
+  --chart-a: #006c45;
+  --chart-b: #b45f06;
+  --chart-c: #005b96;
+  --chart-d: #6a329f;
+  --danger: #9c2020;
+  --shadow: 0 12px 28px rgba(12, 18, 14, 0.11);
+  --shadow-strong: 0 22px 48px rgba(12, 18, 14, 0.18);
+}
+
+body[data-theme="contrast"][data-mode="dark"] {
+  color-scheme: dark;
+  --bg: #070907;
+  --bg-pattern: linear-gradient(135deg, #070907 0%, #111811 100%);
+  --surface: #111611;
+  --surface-raised: #182018;
+  --surface-soft: #203020;
+  --text: #f7fff7;
+  --muted: #c7d4c7;
+  --line: #3a4b3a;
+  --primary: #72f0a3;
+  --primary-dark: #b6ffd0;
+  --accent: #ffc46b;
+  --chart-a: #72f0a3;
+  --chart-b: #ffc46b;
+  --chart-c: #7acfff;
+  --chart-d: #d2a6ff;
+  --danger: #ff8b8b;
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.3);
+  --shadow-strong: 0 30px 68px rgba(0, 0, 0, 0.42);
 }
 
 * {
@@ -19,7 +182,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background: var(--bg-pattern);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -46,8 +209,9 @@ button {
   top: 0;
   height: 100vh;
   padding: 22px;
-  background: #ffffff;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   border-right: 1px solid var(--line);
+  backdrop-filter: blur(16px);
 }
 
 .brand {
@@ -116,6 +280,22 @@ label,
   margin-bottom: 22px;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.theme-picker {
+  min-width: 158px;
+}
+
+.theme-picker select {
+  min-height: 44px;
+}
+
 h1,
 h2,
 p {
@@ -167,10 +347,11 @@ h2 {
 
 .panel,
 .metric {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   border: 1px solid var(--line);
   border-radius: 8px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
 }
 
 .panel {
@@ -180,9 +361,23 @@ h2 {
 
 .metric {
   padding: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: -36px;
+  width: 92px;
+  height: 92px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
 }
 
 .metric strong {
+  position: relative;
   display: block;
   margin-top: 8px;
   font-size: 1.85rem;
@@ -225,7 +420,7 @@ textarea {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: white;
+  background: var(--surface-raised);
   color: var(--text);
 }
 
@@ -267,14 +462,14 @@ textarea {
 .ghost-button,
 .small-button,
 .icon-button {
-  background: white;
+  background: var(--surface-raised);
   border-color: var(--line);
   color: var(--text);
 }
 
 .danger-button {
-  background: #fff1f1;
-  border-color: #f1cccc;
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--danger) 28%, var(--line));
   color: var(--danger);
 }
 
@@ -327,7 +522,7 @@ th {
   padding: 13px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fbfcfa;
+  background: var(--surface-raised);
 }
 
 .task-card {
@@ -362,17 +557,17 @@ th {
 }
 
 .badge.high {
-  background: #fff1d9;
-  color: #8a520e;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  color: var(--accent);
 }
 
 .badge.done {
-  background: #e7f7eb;
-  color: #246c3e;
+  background: color-mix(in srgb, var(--primary) 18%, var(--surface));
+  color: var(--primary-dark);
 }
 
 .badge.late {
-  background: #fff1f1;
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface));
   color: var(--danger);
 }
 
@@ -402,7 +597,7 @@ th {
   padding: 9px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: white;
+  background: var(--surface-raised);
 }
 
 .calendar-day.empty {
@@ -433,7 +628,7 @@ th {
 }
 
 .calendar-event.task {
-  background: #fff4e8;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
 }
 
 .empty-state {
@@ -494,6 +689,10 @@ th {
 
   .topbar {
     align-items: flex-start;
+  }
+
+  .topbar-actions {
+    justify-content: flex-start;
   }
 
   .calendar-grid,

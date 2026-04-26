@@ -1,11 +1,16 @@
 const STORAGE_KEY = "fincaPlanner.v1";
+const THEME_KEY = "fincaPlanner.theme";
 const STANDARD_DAY_HOURS = 8;
 
 const state = {
   workEntries: [],
   tasks: [],
   currentView: "dashboard",
-  calendarDate: new Date()
+  calendarDate: new Date(),
+  theme: {
+    name: "finca",
+    mode: "light"
+  }
 };
 
 let charts = {};
@@ -95,6 +100,32 @@ function loadData() {
   }
 }
 
+function loadTheme() {
+  const raw = localStorage.getItem(THEME_KEY);
+  if (!raw) return;
+  try {
+    const theme = JSON.parse(raw);
+    state.theme.name = theme.name || "finca";
+    state.theme.mode = theme.mode || "light";
+  } catch {
+    state.theme.name = "finca";
+    state.theme.mode = "light";
+  }
+}
+
+function saveTheme() {
+  localStorage.setItem(THEME_KEY, JSON.stringify(state.theme));
+}
+
+function applyTheme() {
+  document.body.dataset.theme = state.theme.name;
+  document.body.dataset.mode = state.theme.mode;
+  $("#themeSelect").value = state.theme.name;
+  $("#modeToggleBtn").textContent = state.theme.mode === "dark" ? "Modo claro" : "Modo oscuro";
+  saveTheme();
+  renderStats();
+}
+
 function setDefaultDates() {
   $("#workDate").value = todayISO();
   $("#taskDate").value = todayISO();
@@ -108,6 +139,10 @@ function render() {
   renderHistory();
   renderStats();
   saveData();
+}
+
+function cssVar(name) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
 }
 
 function switchView(view) {
@@ -290,7 +325,7 @@ function drawMonthChart() {
 
   drawChart("monthChart", {
     type: "bar",
-    data: { labels, datasets: [{ label: "Horas", data, backgroundColor: "#2f7d58" }] },
+    data: { labels, datasets: [{ label: "Horas", data, backgroundColor: cssVar("--chart-a") }] },
     options: chartOptions()
   });
 }
@@ -301,7 +336,7 @@ function drawDailyChart() {
     type: "line",
     data: {
       labels: entries.map((entry) => formatDate(entry.date)),
-      datasets: [{ label: "Horas", data: entries.map(calculateWorkHours), borderColor: "#2f7d58", backgroundColor: "rgba(47, 125, 88, 0.14)", tension: 0.25, fill: true }]
+      datasets: [{ label: "Horas", data: entries.map(calculateWorkHours), borderColor: cssVar("--chart-a"), backgroundColor: colorWithAlpha("--chart-a", 0.16), tension: 0.25, fill: true }]
     },
     options: chartOptions()
   });
@@ -313,7 +348,7 @@ function drawTaskHoursChart() {
     type: "doughnut",
     data: {
       labels: Object.keys(grouped),
-      datasets: [{ data: Object.values(grouped), backgroundColor: ["#2f7d58", "#d88736", "#4b7f9f", "#8d6a9f", "#9a7a3c", "#5e8d72"] }]
+      datasets: [{ data: Object.values(grouped), backgroundColor: chartPalette() }]
     },
     options: chartOptions(false)
   });
@@ -325,7 +360,7 @@ function drawDayTypeChart() {
     type: "pie",
     data: {
       labels: Object.keys(grouped),
-      datasets: [{ data: Object.values(grouped), backgroundColor: ["#2f7d58", "#d88736", "#4b7f9f", "#b84545", "#8d6a9f"] }]
+      datasets: [{ data: Object.values(grouped), backgroundColor: chartPalette() }]
     },
     options: chartOptions(false)
   });
@@ -351,9 +386,32 @@ function groupBy(items, key, valueGetter) {
 function chartOptions(showLegend = true) {
   return {
     responsive: true,
-    plugins: { legend: { display: showLegend } },
-    scales: showLegend ? { y: { beginAtZero: true } } : undefined
+    plugins: {
+      legend: {
+        display: showLegend,
+        labels: { color: cssVar("--muted") }
+      }
+    },
+    scales: showLegend ? {
+      x: { ticks: { color: cssVar("--muted") }, grid: { color: colorWithAlpha("--line", 0.7) } },
+      y: { beginAtZero: true, ticks: { color: cssVar("--muted") }, grid: { color: colorWithAlpha("--line", 0.7) } }
+    } : undefined
   };
+}
+
+function chartPalette() {
+  return ["--chart-a", "--chart-b", "--chart-c", "--chart-d", "--primary", "--accent"].map(cssVar);
+}
+
+function colorWithAlpha(variableName, alpha) {
+  const color = cssVar(variableName);
+  if (color.startsWith("#") && color.length === 7) {
+    const red = parseInt(color.slice(1, 3), 16);
+    const green = parseInt(color.slice(3, 5), 16);
+    const blue = parseInt(color.slice(5, 7), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  }
+  return color;
 }
 
 function saveWork(event) {
@@ -512,6 +570,14 @@ function bindEvents() {
   $("#taskFilter").addEventListener("change", renderTasks);
   $("#seedDemoBtn").addEventListener("click", seedDemoData);
   $("#clearDataBtn").addEventListener("click", clearData);
+  $("#themeSelect").addEventListener("change", (event) => {
+    state.theme.name = event.target.value;
+    applyTheme();
+  });
+  $("#modeToggleBtn").addEventListener("click", () => {
+    state.theme.mode = state.theme.mode === "dark" ? "light" : "dark";
+    applyTheme();
+  });
 
   $("#prevMonthBtn").addEventListener("click", () => {
     state.calendarDate.setMonth(state.calendarDate.getMonth() - 1);
@@ -538,9 +604,11 @@ function bindEvents() {
 
 function init() {
   $("#todayLabel").textContent = new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
+  loadTheme();
   loadData();
   setDefaultDates();
   bindEvents();
+  applyTheme();
   render();
 }
 
