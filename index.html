@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Finca Planner</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">FP</span>
+          <div>
+            <strong>Finca Planner</strong>
+            <small>Jornada y tareas</small>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Navegacion principal">
+          <button class="nav-link active" data-view="dashboard">Inicio</button>
+          <button class="nav-link" data-view="jornada">Jornada</button>
+          <button class="nav-link" data-view="tareas">Tareas</button>
+          <button class="nav-link" data-view="calendario">Calendario</button>
+          <button class="nav-link" data-view="estadisticas">Graficos</button>
+          <button class="nav-link" data-view="historial">Historial</button>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="todayLabel"></p>
+            <h1 id="viewTitle">Inicio</h1>
+          </div>
+          <button class="ghost-button" id="seedDemoBtn" type="button">Cargar ejemplo</button>
+        </header>
+
+        <section class="view active" id="dashboard">
+          <div class="stats-grid">
+            <article class="metric">
+              <span>Este mes</span>
+              <strong id="monthHours">0 h</strong>
+            </article>
+            <article class="metric">
+              <span>Esta semana</span>
+              <strong id="weekHours">0 h</strong>
+            </article>
+            <article class="metric">
+              <span>Pendientes</span>
+              <strong id="pendingTasks">0</strong>
+            </article>
+            <article class="metric">
+              <span>Promedio diario</span>
+              <strong id="averageHours">0 h</strong>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Resumen del dia</h2>
+              </div>
+              <div id="todaySummary" class="summary-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Proximas tareas</h2>
+              </div>
+              <div id="upcomingTasks" class="task-list compact"></div>
+            </section>
+
+            <section class="panel wide">
+              <div class="panel-heading">
+                <h2>Horas del mes</h2>
+              </div>
+              <canvas id="monthChart" height="130"></canvas>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="jornada">
+          <form class="form-grid panel" id="workForm">
+            <input type="hidden" id="workId">
+            <label>Fecha
+              <input id="workDate" type="date" required>
+            </label>
+            <label>Tipo de dia
+              <select id="workDayType">
+                <option value="trabajado">Trabajado</option>
+                <option value="libre">Libre</option>
+                <option value="vacaciones">Vacaciones</option>
+                <option value="baja">Baja</option>
+                <option value="festivo">Festivo</option>
+              </select>
+            </label>
+            <label>Hora de entrada
+              <input id="workStart" type="time">
+            </label>
+            <label>Hora de salida
+              <input id="workEnd" type="time">
+            </label>
+            <label>Pausas en minutos
+              <input id="workBreaks" type="number" min="0" step="5" value="0">
+            </label>
+            <label>Horas previstas
+              <input id="expectedHours" type="number" min="0" step="0.25" value="8">
+            </label>
+            <label class="full">Observaciones
+              <textarea id="workNotes" rows="3" placeholder="Ej. revision veterinaria, lluvia, trabajo extra..."></textarea>
+            </label>
+            <div class="form-actions full">
+              <button class="primary-button" type="submit">Guardar jornada</button>
+              <button class="ghost-button" id="resetWorkBtn" type="button">Limpiar</button>
+            </div>
+          </form>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Jornadas registradas</h2>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Horario</th>
+                    <th>Total</th>
+                    <th>Extra</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="workTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="tareas">
+          <form class="form-grid panel" id="taskForm">
+            <input type="hidden" id="taskId">
+            <label>Nombre
+              <input id="taskName" list="taskSuggestions" placeholder="Limpiar cuadras" required>
+              <datalist id="taskSuggestions">
+                <option value="Limpiar cuadras"></option>
+                <option value="Poda"></option>
+                <option value="Dar de comer a los caballos"></option>
+                <option value="Revisar bebederos"></option>
+                <option value="Preparar alimento"></option>
+                <option value="Reparaciones"></option>
+                <option value="Mantenimiento de herramientas"></option>
+                <option value="Limpieza general"></option>
+              </datalist>
+            </label>
+            <label>Fecha
+              <input id="taskDate" type="date" required>
+            </label>
+            <label>Hora prevista
+              <input id="taskTime" type="time">
+            </label>
+            <label>Duracion aprox. (h)
+              <input id="taskDuration" type="number" min="0" step="0.25" value="1">
+            </label>
+            <label>Estado
+              <select id="taskStatus">
+                <option value="pendiente">Pendiente</option>
+                <option value="en-proceso">En proceso</option>
+                <option value="terminada">Terminada</option>
+              </select>
+            </label>
+            <label>Prioridad
+              <select id="taskPriority">
+                <option value="media">Media</option>
+                <option value="alta">Alta</option>
+                <option value="baja">Baja</option>
+              </select>
+            </label>
+            <label class="full">Observaciones
+              <textarea id="taskNotes" rows="3" placeholder="Materiales, zona, detalles importantes..."></textarea>
+            </label>
+            <div class="form-actions full">
+              <button class="primary-button" type="submit">Guardar tarea</button>
+              <button class="ghost-button" id="resetTaskBtn" type="button">Limpiar</button>
+            </div>
+          </form>
+
+          <section class="panel">
+            <div class="panel-heading split">
+              <h2>Tareas</h2>
+              <select id="taskFilter">
+                <option value="todas">Todas</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="en-proceso">En proceso</option>
+                <option value="terminada">Terminadas</option>
+              </select>
+            </div>
+            <div id="taskList" class="task-list"></div>
+          </section>
+        </section>
+
+        <section class="view" id="calendario">
+          <section class="panel">
+            <div class="panel-heading split">
+              <button class="icon-button" id="prevMonthBtn" type="button" aria-label="Mes anterior">‹</button>
+              <h2 id="calendarTitle"></h2>
+              <button class="icon-button" id="nextMonthBtn" type="button" aria-label="Mes siguiente">›</button>
+            </div>
+            <div class="calendar-weekdays">
+              <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </section>
+        </section>
+
+        <section class="view" id="estadisticas">
+          <div class="chart-grid">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Horas por dia</h2>
+              </div>
+              <canvas id="dailyChart" height="170"></canvas>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Horas por tipo de tarea</h2>
+              </div>
+              <canvas id="taskHoursChart" height="170"></canvas>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Tipos de dia</h2>
+              </div>
+              <canvas id="dayTypeChart" height="170"></canvas>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Tareas mas realizadas</h2>
+              </div>
+              <div id="topTasks" class="rank-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="historial">
+          <section class="panel">
+            <div class="panel-heading split">
+              <h2>Historial completo</h2>
+              <button class="danger-button" id="clearDataBtn" type="button">Borrar datos</button>
+            </div>
+            <div id="historyList" class="history-list"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="js/app.js"></script>
+  </body>
+</html>
