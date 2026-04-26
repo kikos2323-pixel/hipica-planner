@@ -11,19 +11,19 @@
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand">
-          <span class="brand-mark">FP</span>
+          <span class="brand-mark icon-slot" data-icon="brand">FP</span>
           <div>
             <strong>Finca Planner</strong>
             <small>Jornada y tareas</small>
           </div>
         </div>
         <nav class="nav" aria-label="Navegacion principal">
-          <button class="nav-link active" data-view="dashboard">Inicio</button>
-          <button class="nav-link" data-view="jornada">Jornada</button>
-          <button class="nav-link" data-view="tareas">Tareas</button>
-          <button class="nav-link" data-view="calendario">Calendario</button>
-          <button class="nav-link" data-view="estadisticas">Graficos</button>
-          <button class="nav-link" data-view="historial">Historial</button>
+          <button class="nav-link active" data-view="dashboard"><span class="icon-slot" data-icon="home"></span>Inicio</button>
+          <button class="nav-link" data-view="jornada"><span class="icon-slot" data-icon="clock"></span>Jornada</button>
+          <button class="nav-link" data-view="tareas"><span class="icon-slot" data-icon="tasks"></span>Tareas</button>
+          <button class="nav-link" data-view="calendario"><span class="icon-slot" data-icon="calendar"></span>Calendario</button>
+          <button class="nav-link" data-view="estadisticas"><span class="icon-slot" data-icon="chart"></span>Graficos</button>
+          <button class="nav-link" data-view="historial"><span class="icon-slot" data-icon="history"></span>Historial</button>
         </nav>
       </aside>
 
@@ -34,34 +34,44 @@
             <h1 id="viewTitle">Inicio</h1>
           </div>
           <div class="topbar-actions" aria-label="Opciones de la aplicacion">
-            <label class="theme-picker">Interfaz
-              <select id="themeSelect">
-                <option value="finca">Finca</option>
-                <option value="pro">Profesional</option>
-                <option value="coral">Coral</option>
-                <option value="contrast">Alto contraste</option>
-              </select>
-            </label>
             <button class="ghost-button" id="modeToggleBtn" type="button">Modo oscuro</button>
-            <button class="ghost-button" id="seedDemoBtn" type="button">Cargar ejemplo</button>
           </div>
         </header>
 
         <section class="view active" id="dashboard">
+          <section class="panel clock-panel">
+            <div class="clock-info">
+              <span class="clock-icon icon-slot" data-icon="timer"></span>
+              <div>
+                <p class="eyebrow" id="clockStatus">Jornada sin iniciar</p>
+                <strong id="clockElapsed">00:00:00</strong>
+                <div id="clockSegments" class="clock-segments"></div>
+              </div>
+            </div>
+            <div class="clock-actions">
+              <button class="primary-button clock-main-button" id="clockToggleBtn" type="button">Iniciar jornada</button>
+              <button class="ghost-button" id="clockResetBtn" type="button">Reiniciar hoy</button>
+            </div>
+          </section>
+
           <div class="stats-grid">
             <article class="metric">
+              <span class="metric-icon icon-slot" data-icon="month"></span>
               <span>Este mes</span>
               <strong id="monthHours">0 h</strong>
             </article>
             <article class="metric">
+              <span class="metric-icon icon-slot" data-icon="week"></span>
               <span>Esta semana</span>
               <strong id="weekHours">0 h</strong>
             </article>
             <article class="metric">
+              <span class="metric-icon icon-slot" data-icon="pending"></span>
               <span>Pendientes</span>
               <strong id="pendingTasks">0</strong>
             </article>
             <article class="metric">
+              <span class="metric-icon icon-slot" data-icon="average"></span>
               <span>Promedio diario</span>
               <strong id="averageHours">0 h</strong>
             </article>
@@ -70,21 +80,21 @@
           <div class="dashboard-grid">
             <section class="panel">
               <div class="panel-heading">
-                <h2>Resumen del dia</h2>
+                <h2><span class="icon-slot" data-icon="today"></span>Resumen del dia</h2>
               </div>
               <div id="todaySummary" class="summary-list"></div>
             </section>
 
             <section class="panel">
               <div class="panel-heading">
-                <h2>Proximas tareas</h2>
+                <h2><span class="icon-slot" data-icon="next"></span>Proximas tareas</h2>
               </div>
               <div id="upcomingTasks" class="task-list compact"></div>
             </section>
 
             <section class="panel wide">
               <div class="panel-heading">
-                <h2>Horas del mes</h2>
+                <h2><span class="icon-slot" data-icon="bars"></span>Horas del mes</h2>
               </div>
               <canvas id="monthChart" height="130"></canvas>
             </section>
@@ -92,6 +102,17 @@
         </section>
 
         <section class="view" id="jornada">
+          <section class="panel clock-panel compact-clock">
+            <div class="clock-info">
+              <span class="clock-icon icon-slot" data-icon="timer"></span>
+              <div>
+                <p class="eyebrow" id="workClockStatus">Fichaje de hoy</p>
+                <strong id="workClockElapsed">00:00:00</strong>
+                <div id="workClockSegments" class="clock-segments"></div>
+              </div>
+            </div>
+          </section>
+
           <form class="form-grid panel" id="workForm">
             <input type="hidden" id="workId">
             <label>Fecha
@@ -129,7 +150,7 @@
 
           <section class="panel">
             <div class="panel-heading">
-              <h2>Jornadas registradas</h2>
+              <h2><span class="icon-slot" data-icon="log"></span>Jornadas registradas</h2>
             </div>
             <div class="table-wrap">
               <table>
@@ -199,7 +220,7 @@
 
           <section class="panel">
             <div class="panel-heading split">
-              <h2>Tareas</h2>
+              <h2><span class="icon-slot" data-icon="tasks"></span>Tareas</h2>
               <select id="taskFilter">
                 <option value="todas">Todas</option>
                 <option value="pendiente">Pendientes</option>
@@ -214,9 +235,9 @@
         <section class="view" id="calendario">
           <section class="panel">
             <div class="panel-heading split">
-              <button class="icon-button" id="prevMonthBtn" type="button" aria-label="Mes anterior">‹</button>
+              <button class="icon-button" id="prevMonthBtn" type="button" aria-label="Mes anterior">&lsaquo;</button>
               <h2 id="calendarTitle"></h2>
-              <button class="icon-button" id="nextMonthBtn" type="button" aria-label="Mes siguiente">›</button>
+              <button class="icon-button" id="nextMonthBtn" type="button" aria-label="Mes siguiente">&rsaquo;</button>
             </div>
             <div class="calendar-weekdays">
               <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
@@ -229,25 +250,25 @@
           <div class="chart-grid">
             <section class="panel">
               <div class="panel-heading">
-                <h2>Horas por dia</h2>
+                <h2><span class="icon-slot" data-icon="line"></span>Horas por dia</h2>
               </div>
               <canvas id="dailyChart" height="170"></canvas>
             </section>
             <section class="panel">
               <div class="panel-heading">
-                <h2>Horas por tipo de tarea</h2>
+                <h2><span class="icon-slot" data-icon="donut"></span>Horas por tipo de tarea</h2>
               </div>
               <canvas id="taskHoursChart" height="170"></canvas>
             </section>
             <section class="panel">
               <div class="panel-heading">
-                <h2>Tipos de dia</h2>
+                <h2><span class="icon-slot" data-icon="days"></span>Tipos de dia</h2>
               </div>
               <canvas id="dayTypeChart" height="170"></canvas>
             </section>
             <section class="panel">
               <div class="panel-heading">
-                <h2>Tareas mas realizadas</h2>
+                <h2><span class="icon-slot" data-icon="top"></span>Tareas mas realizadas</h2>
               </div>
               <div id="topTasks" class="rank-list"></div>
             </section>
@@ -257,7 +278,7 @@
         <section class="view" id="historial">
           <section class="panel">
             <div class="panel-heading split">
-              <h2>Historial completo</h2>
+              <h2><span class="icon-slot" data-icon="history"></span>Historial completo</h2>
               <button class="danger-button" id="clearDataBtn" type="button">Borrar datos</button>
             </div>
             <div id="historyList" class="history-list"></div>

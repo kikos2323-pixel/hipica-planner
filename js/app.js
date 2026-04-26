@@ -1,19 +1,24 @@
 const STORAGE_KEY = "fincaPlanner.v1";
 const THEME_KEY = "fincaPlanner.theme";
-const STANDARD_DAY_HOURS = 8;
+const STANDARD_DAY_HOURS = 7;
 
 const state = {
   workEntries: [],
   tasks: [],
   currentView: "dashboard",
   calendarDate: new Date(),
+  clock: {
+    date: todayISO(),
+    isRunning: false,
+    segments: []
+  },
   theme: {
-    name: "finca",
     mode: "light"
   }
 };
 
 let charts = {};
+let clockInterval = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -47,6 +52,9 @@ function minutesFromTime(time) {
 
 function calculateWorkHours(entry) {
   if (entry.dayType !== "trabajado") return 0;
+  if (Array.isArray(entry.segments) && entry.segments.length) {
+    return roundHours(entry.segments.reduce((sum, segment) => sum + segmentMinutes(segment), 0) / 60);
+  }
   const start = minutesFromTime(entry.startTime);
   const end = minutesFromTime(entry.endTime);
   if (start === null || end === null || end <= start) return 0;
@@ -83,7 +91,8 @@ function isSameMonth(dateString, date = new Date()) {
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     workEntries: state.workEntries,
-    tasks: state.tasks
+    tasks: state.tasks,
+    clock: state.clock
   }));
 }
 
@@ -94,6 +103,22 @@ function loadData() {
     const data = JSON.parse(raw);
     state.workEntries = Array.isArray(data.workEntries) ? data.workEntries : [];
     state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
+    if (data.clock && Array.isArray(data.clock.segments)) {
+      state.clock = {
+        date: data.clock.date || todayISO(),
+        isRunning: Boolean(data.clock.isRunning),
+        segments: data.clock.segments
+      };
+    } else {
+      const todayEntry = state.workEntries.find((entry) => entry.date === todayISO() && Array.isArray(entry.segments));
+      if (todayEntry) {
+        state.clock = {
+          date: todayISO(),
+          isRunning: todayEntry.segments.some((segment) => !segment.end),
+          segments: todayEntry.segments
+        };
+      }
+    }
   } catch {
     state.workEntries = [];
     state.tasks = [];
@@ -105,10 +130,8 @@ function loadTheme() {
   if (!raw) return;
   try {
     const theme = JSON.parse(raw);
-    state.theme.name = theme.name || "finca";
     state.theme.mode = theme.mode || "light";
   } catch {
-    state.theme.name = "finca";
     state.theme.mode = "light";
   }
 }
@@ -118,9 +141,7 @@ function saveTheme() {
 }
 
 function applyTheme() {
-  document.body.dataset.theme = state.theme.name;
   document.body.dataset.mode = state.theme.mode;
-  $("#themeSelect").value = state.theme.name;
   $("#modeToggleBtn").textContent = state.theme.mode === "dark" ? "Modo claro" : "Modo oscuro";
   saveTheme();
   renderStats();
@@ -132,6 +153,7 @@ function setDefaultDates() {
 }
 
 function render() {
+  renderClock();
   renderDashboard();
   renderWorkTable();
   renderTasks();
@@ -139,6 +161,176 @@ function render() {
   renderHistory();
   renderStats();
   saveData();
+}
+
+function normalizeClockDate() {
+  if (state.clock.date === todayISO()) return;
+  state.clock = {
+    date: todayISO(),
+    isRunning: false,
+    segments: []
+  };
+}
+
+function timeLabelFromIso(isoValue) {
+  if (!isoValue) return "";
+  return new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit" }).format(new Date(isoValue));
+}
+
+function timeInputFromIso(isoValue) {
+  if (!isoValue) return "";
+  const date = new Date(isoValue);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function formatDuration(totalSeconds) {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const rest = seconds % 60;
+  return [hours, minutes, rest].map((value) => String(value).padStart(2, "0")).join(":");
+}
+
+function segmentMinutes(segment, includeRunning = true) {
+  return Math.round(segmentSeconds(segment, includeRunning) / 60);
+}
+
+function segmentSeconds(segment, includeRunning = true) {
+  if (!segment.start) return 0;
+  const start = new Date(segment.start);
+  const end = segment.end ? new Date(segment.end) : includeRunning ? new Date() : start;
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return 0;
+  return Math.floor((end - start) / 1000);
+}
+
+function clockElapsedSeconds() {
+  return state.clock.segments.reduce((sum, segment) => sum + segmentSeconds(segment), 0);
+}
+
+function segmentListHtml(segments) {
+  if (!segments.length) return `<span class="muted">Sin tramos registrados hoy</span>`;
+  return segments.map((segment) => {
+    const isRunning = !segment.end;
+    const endLabel = isRunning ? "en curso" : timeLabelFromIso(segment.end);
+    return `<span class="clock-segment ${isRunning ? "running" : ""}">${timeLabelFromIso(segment.start)} - ${endLabel}</span>`;
+  }).join("");
+}
+
+function renderClock() {
+  normalizeClockDate();
+  const elapsed = formatDuration(clockElapsedSeconds());
+  const status = state.clock.isRunning ? "Jornada en marcha" : state.clock.segments.length ? "Jornada pausada" : "Jornada sin iniciar";
+  const segmentsHtml = segmentListHtml(state.clock.segments);
+
+  $("#clockStatus").textContent = status;
+  $("#clockElapsed").textContent = elapsed;
+  $("#clockSegments").innerHTML = segmentsHtml;
+  $("#clockToggleBtn").textContent = state.clock.isRunning ? "Pausar jornada" : state.clock.segments.length ? "Reanudar jornada" : "Iniciar jornada";
+
+  $("#workClockStatus").textContent = status;
+  $("#workClockElapsed").textContent = elapsed;
+  $("#workClockSegments").innerHTML = segmentsHtml;
+}
+
+function startClock() {
+  normalizeClockDate();
+  if (state.clock.isRunning) return;
+  state.clock.isRunning = true;
+  state.clock.segments.push({ start: new Date().toISOString(), end: null });
+  syncClockToWorkEntry();
+  render();
+}
+
+function pauseClock() {
+  normalizeClockDate();
+  const activeSegment = state.clock.segments.find((segment) => !segment.end);
+  if (!activeSegment) {
+    state.clock.isRunning = false;
+    render();
+    return;
+  }
+  activeSegment.end = new Date().toISOString();
+  state.clock.isRunning = false;
+  syncClockToWorkEntry();
+  render();
+}
+
+function toggleClock() {
+  if (state.clock.isRunning) {
+    pauseClock();
+  } else {
+    startClock();
+  }
+}
+
+function resetClock() {
+  if (!confirm("Quieres reiniciar el fichaje de hoy? Se borraran los tramos registrados hoy en este navegador.")) return;
+  const date = todayISO();
+  state.clock = { date, isRunning: false, segments: [] };
+  const entry = state.workEntries.find((item) => item.date === date && item.generatedByClock);
+  if (entry) {
+    state.workEntries = state.workEntries.filter((item) => item.id !== entry.id);
+  } else {
+    const todayEntry = state.workEntries.find((item) => item.date === date);
+    if (todayEntry) {
+      todayEntry.segments = [];
+      todayEntry.startTime = "";
+      todayEntry.endTime = "";
+      todayEntry.breakMinutes = 0;
+      todayEntry.updatedAt = new Date().toISOString();
+    }
+  }
+  render();
+}
+
+function syncClockToWorkEntry() {
+  const date = state.clock.date;
+  const segments = state.clock.segments;
+  if (!segments.length) return;
+
+  let entry = state.workEntries.find((item) => item.date === date && item.dayType === "trabajado");
+  if (!entry) {
+    entry = {
+      id: uid(),
+      date,
+      dayType: "trabajado",
+      startTime: "",
+      endTime: "",
+      breakMinutes: 0,
+      expectedHours: STANDARD_DAY_HOURS,
+      notes: "Registro creado con el fichaje automatico",
+      generatedByClock: true,
+      updatedAt: new Date().toISOString()
+    };
+    state.workEntries.push(entry);
+  }
+
+  entry.dayType = "trabajado";
+  entry.segments = segments.map((segment) => ({ ...segment }));
+  entry.startTime = timeInputFromIso(segments[0].start);
+  const lastFinished = [...segments].reverse().find((segment) => segment.end);
+  entry.endTime = lastFinished ? timeInputFromIso(lastFinished.end) : "";
+  entry.breakMinutes = calculateBreakMinutesFromSegments(segments);
+  entry.updatedAt = new Date().toISOString();
+}
+
+function calculateBreakMinutesFromSegments(segments) {
+  const finished = segments.filter((segment) => segment.start && segment.end);
+  return finished.reduce((sum, segment, index) => {
+    const next = finished[index + 1];
+    if (!next) return sum;
+    const end = new Date(segment.end);
+    const nextStart = new Date(next.start);
+    return sum + Math.max(0, Math.round((nextStart - end) / 60000));
+  }, 0);
+}
+
+function workScheduleLabel(entry) {
+  if (Array.isArray(entry.segments) && entry.segments.length) {
+    return entry.segments.map((segment) => `${timeLabelFromIso(segment.start)} - ${segment.end ? timeLabelFromIso(segment.end) : "en curso"}`).join("<br>");
+  }
+  return `${entry.startTime || "-"} - ${entry.endTime || "-"}`;
 }
 
 function cssVar(name) {
@@ -178,8 +370,8 @@ function renderDashboard() {
   const todayEntries = state.workEntries.filter((entry) => entry.date === todayISO());
   const todayTasks = state.tasks.filter((task) => task.date === todayISO());
   $("#todaySummary").innerHTML = [
-    ...todayEntries.map((entry) => `<div class="summary-item"><strong>${entry.dayType}</strong><p>${calculateWorkHours(entry)} h trabajadas · Extra ${calculateExtraHours(entry)} h</p></div>`),
-    ...todayTasks.map((task) => `<div class="summary-item"><strong>${task.name}</strong><p>${task.time || "Sin hora"} · ${labelStatus(task.status)} · ${task.priority}</p></div>`)
+    ...todayEntries.map((entry) => `<div class="summary-item"><strong>${entry.dayType}</strong><p>${calculateWorkHours(entry)} h trabajadas - Extra ${calculateExtraHours(entry)} h</p></div>`),
+    ...todayTasks.map((task) => `<div class="summary-item"><strong>${task.name}</strong><p>${task.time || "Sin hora"} - ${labelStatus(task.status)} - ${task.priority}</p></div>`)
   ].join("") || emptyState("Aun no hay registros para hoy.");
 
   const upcoming = state.tasks
@@ -198,7 +390,7 @@ function renderWorkTable() {
       <tr>
         <td>${formatDate(entry.date)}</td>
         <td><span class="badge">${entry.dayType}</span></td>
-        <td>${entry.startTime || "-"} - ${entry.endTime || "-"}</td>
+        <td>${workScheduleLabel(entry)}</td>
         <td>${calculateWorkHours(entry)} h</td>
         <td>${calculateExtraHours(entry)} h</td>
         <td>
@@ -223,7 +415,8 @@ function taskCardHtml(task) {
   const doneClass = task.status === "terminada" ? "done" : "";
   return `
     <article class="task-card">
-      <div>
+      <span class="icon-slot task-icon" data-icon="${taskIconKey(task.name)}"></span>
+      <div class="task-main">
         <h3>${escapeHtml(task.name)}</h3>
         <div class="meta">
           <span>${formatDate(task.date)}</span>
@@ -240,6 +433,17 @@ function taskCardHtml(task) {
       </div>
     </article>
   `;
+}
+
+function taskIconKey(taskName) {
+  const name = taskName.toLowerCase();
+  if (name.includes("cuadra") || name.includes("limpieza")) return "stable";
+  if (name.includes("caballo") || name.includes("comer")) return "horse";
+  if (name.includes("bebedero") || name.includes("agua")) return "water";
+  if (name.includes("alimento") || name.includes("comida")) return "feed";
+  if (name.includes("repar") || name.includes("herramient")) return "tools";
+  if (name.includes("poda")) return "prune";
+  return "custom-task";
 }
 
 function labelStatus(status) {
@@ -288,11 +492,11 @@ function renderHistory() {
   const items = [
     ...state.workEntries.map((entry) => ({
       date: entry.date,
-      html: `<div class="history-item"><strong>Jornada · ${formatDate(entry.date)}</strong><p>${entry.dayType} · ${calculateWorkHours(entry)} h · ${escapeHtml(entry.notes || "Sin observaciones")}</p></div>`
+      html: `<div class="history-item"><strong>Jornada - ${formatDate(entry.date)}</strong><p>${entry.dayType} - ${calculateWorkHours(entry)} h - ${escapeHtml(entry.notes || "Sin observaciones")}</p></div>`
     })),
     ...state.tasks.map((task) => ({
       date: task.date,
-      html: `<div class="history-item"><strong>Tarea · ${escapeHtml(task.name)}</strong><p>${formatDate(task.date)} · ${labelStatus(task.status)} · ${escapeHtml(task.notes || "Sin observaciones")}</p></div>`
+      html: `<div class="history-item"><strong>Tarea - ${escapeHtml(task.name)}</strong><p>${formatDate(task.date)} - ${labelStatus(task.status)} - ${escapeHtml(task.notes || "Sin observaciones")}</p></div>`
     }))
   ].sort((a, b) => b.date.localeCompare(a.date));
 
@@ -511,37 +715,11 @@ function deleteTask(id) {
   render();
 }
 
-function seedDemoData() {
-  const today = new Date();
-  const isoForOffset = (offset) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + offset);
-    return date.toISOString().slice(0, 10);
-  };
-
-  state.workEntries = [
-    { id: uid(), date: isoForOffset(-4), dayType: "trabajado", startTime: "08:00", endTime: "16:30", breakMinutes: 30, expectedHours: 8, notes: "Limpieza y alimentacion" },
-    { id: uid(), date: isoForOffset(-3), dayType: "trabajado", startTime: "08:15", endTime: "17:00", breakMinutes: 45, expectedHours: 8, notes: "Poda y mantenimiento" },
-    { id: uid(), date: isoForOffset(-2), dayType: "libre", startTime: "", endTime: "", breakMinutes: 0, expectedHours: 8, notes: "Descanso" },
-    { id: uid(), date: isoForOffset(-1), dayType: "trabajado", startTime: "07:45", endTime: "16:15", breakMinutes: 30, expectedHours: 8, notes: "Revision bebederos" },
-    { id: uid(), date: isoForOffset(0), dayType: "trabajado", startTime: "08:00", endTime: "15:30", breakMinutes: 30, expectedHours: 8, notes: "Turno de manana" }
-  ];
-
-  state.tasks = [
-    { id: uid(), name: "Limpiar cuadras", date: isoForOffset(0), time: "09:00", duration: 2, status: "en-proceso", priority: "alta", notes: "Empezar por la zona norte" },
-    { id: uid(), name: "Dar de comer a los caballos", date: isoForOffset(0), time: "12:00", duration: 1, status: "pendiente", priority: "alta", notes: "" },
-    { id: uid(), name: "Revisar bebederos", date: isoForOffset(1), time: "10:30", duration: 1.5, status: "pendiente", priority: "media", notes: "Comprobar presion" },
-    { id: uid(), name: "Mantenimiento de herramientas", date: isoForOffset(2), time: "15:00", duration: 2, status: "pendiente", priority: "baja", notes: "" },
-    { id: uid(), name: "Poda", date: isoForOffset(3), time: "08:30", duration: 3, status: "pendiente", priority: "media", notes: "Llevar tijeras grandes" }
-  ];
-
-  render();
-}
-
 function clearData() {
   if (!confirm("Esto borrara todas las jornadas y tareas guardadas en este navegador. Continuar?")) return;
   state.workEntries = [];
   state.tasks = [];
+  state.clock = { date: todayISO(), isRunning: false, segments: [] };
   render();
 }
 
@@ -568,12 +746,9 @@ function bindEvents() {
   $("#resetWorkBtn").addEventListener("click", resetWorkForm);
   $("#resetTaskBtn").addEventListener("click", resetTaskForm);
   $("#taskFilter").addEventListener("change", renderTasks);
-  $("#seedDemoBtn").addEventListener("click", seedDemoData);
   $("#clearDataBtn").addEventListener("click", clearData);
-  $("#themeSelect").addEventListener("change", (event) => {
-    state.theme.name = event.target.value;
-    applyTheme();
-  });
+  $("#clockToggleBtn").addEventListener("click", toggleClock);
+  $("#clockResetBtn").addEventListener("click", resetClock);
   $("#modeToggleBtn").addEventListener("click", () => {
     state.theme.mode = state.theme.mode === "dark" ? "light" : "dark";
     applyTheme();
@@ -610,6 +785,7 @@ function init() {
   bindEvents();
   applyTheme();
   render();
+  clockInterval = setInterval(renderClock, 1000);
 }
 
 init();
