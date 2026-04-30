@@ -16,6 +16,7 @@ const state = {
   tasks: [],
   currentView: "dashboard",
   calendarDate: new Date(),
+  manualSegments: [],
   clock: {
     date: todayISO(),
     isRunning: false,
@@ -84,6 +85,13 @@ function scheduleTotalHours(schedule) {
 function scheduleLabel(schedule) {
   if (!schedule.shifts.length) return "Descanso";
   return schedule.shifts.map((shift) => `${shift.start} - ${shift.end}`).join(" / ");
+}
+
+function isoFromDateAndTime(dateString, timeString) {
+  if (!dateString || !timeString) return null;
+  const date = new Date(`${dateString}T${timeString}:00`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
 }
 
 function calculateWorkHours(entry) {
@@ -186,11 +194,13 @@ function applyTheme() {
 function setDefaultDates() {
   $("#workDate").value = todayISO();
   $("#expectedHours").value = scheduleExpectedHours(todayISO());
+  $("#manualDate").value = todayISO();
   $("#taskDate").value = todayISO();
 }
 
 function render() {
   renderClock();
+  renderManualSegments();
   renderDashboard();
   renderWorkTable();
   renderTasks();
@@ -369,6 +379,130 @@ function workScheduleLabel(entry) {
     return entry.segments.map((segment) => `${timeLabelFromIso(segment.start)} - ${segment.end ? timeLabelFromIso(segment.end) : "en curso"}`).join("<br>");
   }
   return `${entry.startTime || "-"} - ${entry.endTime || "-"}`;
+}
+
+function loadManualSegmentsForDate(dateString = $("#manualDate").value || todayISO()) {
+  const entry = state.workEntries.find((item) => item.date === dateString);
+  if (entry && Array.isArray(entry.segments) && entry.segments.length) {
+    state.manualSegments = entry.segments.map((segment) => ({
+      start: timeInputFromIso(segment.start),
+      end: segment.end ? timeInputFromIso(segment.end) : ""
+    }));
+  } else if (entry && entry.startTime && entry.endTime) {
+    state.manualSegments = [{ start: entry.startTime, end: entry.endTime }];
+  } else {
+    state.manualSegments = [{ start: "", end: "" }];
+  }
+  renderManualSegments();
+}
+
+function renderManualSegments() {
+  const container = $("#manualSegments");
+  if (!container) return;
+  if (!state.manualSegments.length) {
+    state.manualSegments = [{ start: "", end: "" }];
+  }
+  container.innerHTML = state.manualSegments.map((segment, index) => `
+    <div class="manual-segment-row">
+      <label>Inicio tramo ${index + 1}
+        <input type="time" value="${escapeHtml(segment.start || "")}" data-manual-start="${index}">
+      </label>
+      <label>Fin tramo ${index + 1}
+        <input type="time" value="${escapeHtml(segment.end || "")}" data-manual-end="${index}">
+      </label>
+      <button class="small-button" type="button" data-remove-segment="${index}">Quitar</button>
+    </div>
+  `).join("");
+  $("#manualTotal").textContent = `${manualSegmentsHours()} h`;
+}
+
+function manualSegmentsHours() {
+  return roundHours(state.manualSegments.reduce((sum, segment) => sum + hoursBetween(segment.start, segment.end), 0));
+}
+
+function addManualSegment() {
+  state.manualSegments.push({ start: "", end: "" });
+  renderManualSegments();
+}
+
+function removeManualSegment(index) {
+  state.manualSegments.splice(index, 1);
+  if (!state.manualSegments.length) state.manualSegments.push({ start: "", end: "" });
+  renderManualSegments();
+}
+
+function updateManualSegment(index, field, value) {
+  if (!state.manualSegments[index]) return;
+  state.manualSegments[index][field] = value;
+  $("#manualTotal").textContent = `${manualSegmentsHours()} h`;
+}
+
+function loadScheduleIntoManualEditor() {
+  const date = $("#manualDate").value || todayISO();
+  const schedule = getScheduleForDate(date);
+  state.manualSegments = schedule.shifts.length
+    ? schedule.shifts.map((shift) => ({ start: shift.start, end: shift.end }))
+    : [{ start: "", end: "" }];
+  renderManualSegments();
+}
+
+function saveManualSegments() {
+  const date = $("#manualDate").value || todayISO();
+  const validSegments = state.manualSegments
+    .filter((segment) => segment.start && segment.end && hoursBetween(segment.start, segment.end) > 0)
+    .map((segment) => ({
+      start: isoFromDateAndTime(date, segment.start),
+      end: isoFromDateAndTime(date, segment.end)
+    }))
+    .filter((segment) => segment.start && segment.end);
+
+  if (!validSegments.length) {
+    alert("Añade al menos un tramo completo con hora de inicio y hora de fin.");
+    return;
+  }
+
+  let entry = state.workEntries.find((item) => item.date === date && item.dayType === "trabajado");
+  if (!entry) {
+    entry = {
+      id: uid(),
+      date,
+      dayType: "trabajado",
+      startTime: "",
+      endTime: "",
+      breakMinutes: 0,
+      expectedHours: scheduleExpectedHours(date) || STANDARD_DAY_HOURS,
+      notes: "Jornada corregida manualmente",
+      updatedAt: new Date().toISOString()
+    };
+    state.workEntries.push(entry);
+  }
+
+  entry.dayType = "trabajado";
+  entry.segments = validSegments;
+  entry.startTime = timeInputFromIso(validSegments[0].start);
+  entry.endTime = timeInputFromIso(validSegments[validSegments.length - 1].end);
+  entry.breakMinutes = calculateBreakMinutesFromSegments(validSegments);
+  entry.expectedHours = Number(entry.expectedHours) || scheduleExpectedHours(date) || STANDARD_DAY_HOURS;
+  entry.notes = entry.notes || "Jornada corregida manualmente";
+  entry.updatedAt = new Date().toISOString();
+
+  if (date === todayISO()) {
+    state.clock = {
+      date,
+      isRunning: validSegments.some((segment) => !segment.end),
+      segments: validSegments.map((segment) => ({ ...segment }))
+    };
+  }
+
+  render();
+  alert("Fichaje corregido y guardado.");
+}
+
+function openTodayCorrection() {
+  switchView("jornada");
+  $("#manualDate").value = todayISO();
+  loadManualSegmentsForDate(todayISO());
+  document.querySelector(".manual-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function cssVar(name) {
@@ -747,6 +881,8 @@ function editWork(id) {
   $("#workBreaks").value = entry.breakMinutes;
   $("#expectedHours").value = entry.expectedHours;
   $("#workNotes").value = entry.notes;
+  $("#manualDate").value = entry.date;
+  loadManualSegmentsForDate(entry.date);
 }
 
 function editTask(id) {
@@ -783,6 +919,147 @@ function clearData() {
   render();
 }
 
+function createBackup() {
+  return {
+    app: "Finca Planner",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    data: {
+      workEntries: state.workEntries.map(normalizeWorkEntry),
+      tasks: state.tasks.map(normalizeTask),
+      clock: normalizeClock(state.clock),
+      theme: normalizeTheme(state.theme)
+    }
+  };
+}
+
+function exportData() {
+  const backup = createBackup();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `finca-planner-copia-${todayISO()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function readBackupData(parsed) {
+  if (!parsed || typeof parsed !== "object") return null;
+  if (parsed.app === "Finca Planner" && parsed.version === 1 && parsed.data) return parsed.data;
+  if (Array.isArray(parsed.workEntries) && Array.isArray(parsed.tasks)) return parsed;
+  return null;
+}
+
+function normalizeImportedData(data) {
+  if (!data || !Array.isArray(data.workEntries) || !Array.isArray(data.tasks)) return null;
+  return {
+    workEntries: data.workEntries.map(normalizeWorkEntry).filter((entry) => entry.id && entry.date),
+    tasks: data.tasks.map(normalizeTask).filter((task) => task.id && task.name && task.date),
+    clock: normalizeClock(data.clock),
+    theme: normalizeTheme(data.theme)
+  };
+}
+
+function normalizeWorkEntry(entry) {
+  const source = entry && typeof entry === "object" ? entry : {};
+  return {
+    id: String(source.id || uid()),
+    date: String(source.date || todayISO()),
+    dayType: String(source.dayType || "trabajado"),
+    startTime: String(source.startTime || ""),
+    endTime: String(source.endTime || ""),
+    breakMinutes: Number(source.breakMinutes) || 0,
+    expectedHours: Number(source.expectedHours) || scheduleExpectedHours(source.date || todayISO()) || STANDARD_DAY_HOURS,
+    notes: String(source.notes || ""),
+    generatedByClock: Boolean(source.generatedByClock),
+    segments: Array.isArray(source.segments) ? source.segments.map(normalizeSegment).filter(Boolean) : [],
+    updatedAt: String(source.updatedAt || new Date().toISOString())
+  };
+}
+
+function normalizeTask(task) {
+  const source = task && typeof task === "object" ? task : {};
+  return {
+    id: String(source.id || uid()),
+    name: String(source.name || ""),
+    date: String(source.date || todayISO()),
+    time: String(source.time || ""),
+    duration: Number(source.duration) || 0,
+    status: String(source.status || "pendiente"),
+    priority: String(source.priority || "media"),
+    notes: String(source.notes || ""),
+    updatedAt: String(source.updatedAt || new Date().toISOString())
+  };
+}
+
+function normalizeSegment(segment) {
+  if (!segment || typeof segment !== "object" || !segment.start) return null;
+  const start = new Date(segment.start);
+  const end = segment.end ? new Date(segment.end) : null;
+  if (Number.isNaN(start.getTime())) return null;
+  if (end && Number.isNaN(end.getTime())) return null;
+  return {
+    start: start.toISOString(),
+    end: end ? end.toISOString() : null
+  };
+}
+
+function normalizeClock(clock) {
+  const source = clock && typeof clock === "object" ? clock : {};
+  const segments = Array.isArray(source.segments) ? source.segments.map(normalizeSegment).filter(Boolean) : [];
+  return {
+    date: String(source.date || todayISO()),
+    isRunning: Boolean(source.isRunning && segments.some((segment) => !segment.end)),
+    segments
+  };
+}
+
+function normalizeTheme(theme) {
+  const source = theme && typeof theme === "object" ? theme : {};
+  return {
+    mode: source.mode === "dark" ? "dark" : "light"
+  };
+}
+
+function importData(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || "{}"));
+      const data = normalizeImportedData(readBackupData(parsed));
+
+      if (!data) {
+        alert("El archivo no parece una copia valida de Finca Planner.");
+        return;
+      }
+
+      if (!confirm("Importar esta copia sustituira los datos actuales guardados en este navegador. Continuar?")) return;
+
+      state.workEntries = data.workEntries;
+      state.tasks = data.tasks;
+      state.clock = data.clock;
+      state.theme = data.theme;
+
+      saveTheme();
+      applyTheme();
+      loadManualSegmentsForDate($("#manualDate").value || todayISO());
+      render();
+      alert("Copia importada correctamente.");
+    } catch {
+      alert("No se ha podido leer el archivo. Comprueba que sea una copia JSON valida.");
+    } finally {
+      event.target.value = "";
+    }
+  });
+  reader.readAsText(file);
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -806,11 +1083,18 @@ function bindEvents() {
   $("#resetWorkBtn").addEventListener("click", resetWorkForm);
   $("#resetTaskBtn").addEventListener("click", resetTaskForm);
   $("#taskFilter").addEventListener("change", renderTasks);
+  $("#manualDate").addEventListener("change", () => loadManualSegmentsForDate($("#manualDate").value));
+  $("#addSegmentBtn").addEventListener("click", addManualSegment);
+  $("#loadScheduleBtn").addEventListener("click", loadScheduleIntoManualEditor);
+  $("#saveManualSegmentsBtn").addEventListener("click", saveManualSegments);
+  $("#exportDataBtn").addEventListener("click", exportData);
+  $("#importDataInput").addEventListener("change", importData);
   $("#workDate").addEventListener("change", () => {
     $("#expectedHours").value = scheduleExpectedHours($("#workDate").value) || STANDARD_DAY_HOURS;
   });
   $("#clearDataBtn").addEventListener("click", clearData);
   $("#clockToggleBtn").addEventListener("click", toggleClock);
+  $("#clockEditBtn").addEventListener("click", openTodayCorrection);
   $("#clockResetBtn").addEventListener("click", resetClock);
   $("#modeToggleBtn").addEventListener("click", () => {
     state.theme.mode = state.theme.mode === "dark" ? "light" : "dark";
@@ -832,11 +1116,20 @@ function bindEvents() {
     const deleteWorkButton = event.target.closest("[data-delete-work]");
     const editTaskButton = event.target.closest("[data-edit-task]");
     const deleteTaskButton = event.target.closest("[data-delete-task]");
+    const removeSegmentButton = event.target.closest("[data-remove-segment]");
 
     if (editWorkButton) editWork(editWorkButton.dataset.editWork);
     if (deleteWorkButton) deleteWork(deleteWorkButton.dataset.deleteWork);
     if (editTaskButton) editTask(editTaskButton.dataset.editTask);
     if (deleteTaskButton) deleteTask(deleteTaskButton.dataset.deleteTask);
+    if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
+  });
+
+  document.body.addEventListener("input", (event) => {
+    const startInput = event.target.closest("[data-manual-start]");
+    const endInput = event.target.closest("[data-manual-end]");
+    if (startInput) updateManualSegment(Number(startInput.dataset.manualStart), "start", startInput.value);
+    if (endInput) updateManualSegment(Number(endInput.dataset.manualEnd), "end", endInput.value);
   });
 }
 
@@ -846,6 +1139,7 @@ function init() {
   loadData();
   setDefaultDates();
   bindEvents();
+  loadManualSegmentsForDate(todayISO());
   applyTheme();
   render();
   clockInterval = setInterval(renderClock, 1000);

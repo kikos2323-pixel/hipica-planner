@@ -50,6 +50,7 @@
             </div>
             <div class="clock-actions">
               <button class="primary-button clock-main-button" id="clockToggleBtn" type="button">Iniciar jornada</button>
+              <button class="ghost-button" id="clockEditBtn" type="button">Corregir hoy</button>
               <button class="ghost-button" id="clockResetBtn" type="button">Reiniciar hoy</button>
             </div>
           </section>
@@ -110,6 +111,27 @@
                 <strong id="workClockElapsed">00:00:00</strong>
                 <div id="workClockSegments" class="clock-segments"></div>
               </div>
+            </div>
+          </section>
+
+          <section class="panel manual-editor">
+            <div class="panel-heading split">
+              <h2><span class="icon-slot" data-icon="edit"></span>Corregir fichaje</h2>
+              <button class="ghost-button" id="loadScheduleBtn" type="button">Usar horario previsto</button>
+            </div>
+            <div class="manual-editor-top">
+              <label>Fecha a corregir
+                <input id="manualDate" type="date">
+              </label>
+              <div class="manual-total">
+                <span>Total corregido</span>
+                <strong id="manualTotal">0 h</strong>
+              </div>
+            </div>
+            <div id="manualSegments" class="manual-segments"></div>
+            <div class="form-actions">
+              <button class="ghost-button" id="addSegmentBtn" type="button">Añadir tramo</button>
+              <button class="primary-button" id="saveManualSegmentsBtn" type="button">Guardar correccion</button>
             </div>
           </section>
 
@@ -286,7 +308,13 @@
           <section class="panel">
             <div class="panel-heading split">
               <h2><span class="icon-slot" data-icon="history"></span>Historial completo</h2>
-              <button class="danger-button" id="clearDataBtn" type="button">Borrar datos</button>
+              <div class="backup-actions">
+                <button class="ghost-button" id="exportDataBtn" type="button">Exportar copia</button>
+                <label class="ghost-button import-button">Importar copia
+                  <input id="importDataInput" type="file" accept="application/json,.json">
+                </label>
+                <button class="danger-button" id="clearDataBtn" type="button">Borrar datos</button>
+              </div>
             </div>
             <div id="historyList" class="history-list"></div>
           </section>
