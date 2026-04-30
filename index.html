@@ -22,6 +22,7 @@
           <button class="nav-link" data-view="jornada"><span class="icon-slot" data-icon="clock"></span>Jornada</button>
           <button class="nav-link" data-view="tareas"><span class="icon-slot" data-icon="tasks"></span>Tareas</button>
           <button class="nav-link" data-view="calendario"><span class="icon-slot" data-icon="calendar"></span>Calendario</button>
+          <button class="nav-link" data-view="cuadras"><span class="icon-slot" data-icon="horse"></span>Caballos</button>
           <button class="nav-link" data-view="estadisticas"><span class="icon-slot" data-icon="chart"></span>Graficos</button>
           <button class="nav-link" data-view="historial"><span class="icon-slot" data-icon="history"></span>Historial</button>
         </nav>
@@ -295,6 +296,68 @@
               <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
             </div>
             <div id="calendarGrid" class="calendar-grid"></div>
+          </section>
+        </section>
+
+        <section class="view" id="cuadras">
+          <section class="panel">
+            <div class="panel-heading split">
+              <h2><span class="icon-slot" data-icon="map"></span>Localizar cuadra</h2>
+            </div>
+            <div class="stable-search">
+              <label>Buscar caballo
+                <input id="horseSearch" type="text" placeholder="Ej. caballo 8, Luna, cuadra norte">
+              </label>
+              <button class="primary-button" id="findHorseBtn" type="button">Buscar</button>
+              <button class="ghost-button voice-command-button" id="voiceHorseBtn" type="button">MIC</button>
+            </div>
+            <div id="horseResult" class="horse-result"></div>
+          </section>
+
+          <form class="form-grid panel" id="horseForm">
+            <input type="hidden" id="horseId">
+            <input type="hidden" id="horsePhotoData">
+            <div class="horse-photo-editor full">
+              <div class="horse-photo-preview" id="horsePhotoPreview">
+                <span>Foto</span>
+              </div>
+              <label class="ghost-button photo-button">Añadir foto
+                <input id="horsePhotoInput" type="file" accept="image/*" capture="environment">
+              </label>
+            </div>
+            <label>Numero o codigo
+              <input id="horseNumber" type="text" placeholder="8" required>
+            </label>
+            <label>Nombre del caballo
+              <input id="horseName" type="text" placeholder="Nombre del caballo">
+            </label>
+            <label>Cuadra / zona
+              <input id="stableName" type="text" placeholder="Cuadra norte, box 12..." required>
+            </label>
+            <label>Latitud
+              <input id="stableLat" type="number" step="0.000001" placeholder="40.123456" required>
+            </label>
+            <label>Longitud
+              <input id="stableLng" type="number" step="0.000001" placeholder="-3.123456" required>
+            </label>
+            <div class="form-actions full">
+              <button class="ghost-button" id="useLocationBtn" type="button">Guardar coordenadas actuales</button>
+              <span class="muted location-help" id="locationHelp">Pulsa estando junto a la cuadra del caballo.</span>
+            </div>
+            <label class="full">Observaciones
+              <textarea id="horseNotes" rows="3" placeholder="Detalles para encontrar la cuadra, referencias, acceso..."></textarea>
+            </label>
+            <div class="form-actions full">
+              <button class="primary-button" type="submit">Guardar caballo</button>
+              <button class="ghost-button" id="resetHorseBtn" type="button">Limpiar</button>
+            </div>
+          </form>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2><span class="icon-slot" data-icon="stable"></span>Caballos registrados</h2>
+            </div>
+            <div id="horseList" class="horse-list"></div>
           </section>
         </section>
 

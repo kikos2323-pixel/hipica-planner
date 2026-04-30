@@ -758,7 +758,8 @@ th {
 .task-list,
 .summary-list,
 .history-list,
-.rank-list {
+.rank-list,
+.horse-list {
   display: grid;
   gap: 10px;
 }
@@ -766,11 +767,111 @@ th {
 .task-card,
 .summary-item,
 .history-item,
-.rank-item {
+.rank-item,
+.horse-card,
+.horse-result-card {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--glass-strong);
+}
+
+.stable-search {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.voice-command-button {
+  min-width: 62px;
+}
+
+.horse-result {
+  margin-top: 14px;
+}
+
+.horse-result-card {
+  display: grid;
+  gap: 10px;
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--line));
+  box-shadow: var(--shadow);
+}
+
+.horse-card {
+  display: grid;
+  grid-template-columns: 86px 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.horse-card h3,
+.horse-result-card h3 {
+  margin: 0 0 6px;
+}
+
+.map-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  width: fit-content;
+  padding: 9px 13px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 70%, var(--accent)));
+  color: white;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.horse-photo-editor {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.horse-photo-preview,
+.horse-photo-thumb {
+  display: grid;
+  width: 86px;
+  height: 86px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--glass-soft);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.horse-photo-preview img,
+.horse-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.photo-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.location-help {
+  align-self: center;
+  font-size: 0.86rem;
 }
 
 .task-card {
@@ -993,7 +1094,7 @@ th {
   }
 
   .nav {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 5px;
   }
 
@@ -1002,7 +1103,7 @@ th {
     justify-content: center;
     padding: 7px 4px;
     text-align: center;
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     flex-direction: column;
     gap: 4px;
   }
@@ -1055,7 +1156,8 @@ th {
   }
 
   .manual-editor-top,
-  .manual-segment-row {
+  .manual-segment-row,
+  .stable-search {
     grid-template-columns: 1fr;
   }
 
@@ -1104,6 +1206,16 @@ th {
 
   .task-card {
     grid-template-columns: auto 1fr;
+  }
+
+  .horse-card {
+    grid-template-columns: 72px 1fr;
+  }
+
+  .horse-photo-thumb {
+    width: 72px;
+    height: 72px;
+    border-radius: 15px;
   }
 
   .schedule-grid {

@@ -14,6 +14,7 @@ const WEEKLY_SCHEDULE = [
 const state = {
   workEntries: [],
   tasks: [],
+  horses: [],
   currentView: "dashboard",
   currentWorkSection: "fichaje",
   calendarDate: new Date(),
@@ -141,6 +142,7 @@ function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     workEntries: state.workEntries,
     tasks: state.tasks,
+    horses: state.horses,
     clock: state.clock
   }));
 }
@@ -152,6 +154,7 @@ function loadData() {
     const data = JSON.parse(raw);
     state.workEntries = Array.isArray(data.workEntries) ? data.workEntries : [];
     state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
+    state.horses = Array.isArray(data.horses) ? data.horses : [];
     if (data.clock && Array.isArray(data.clock.segments)) {
       state.clock = {
         date: data.clock.date || todayISO(),
@@ -209,6 +212,7 @@ function render() {
   renderDashboard();
   renderWorkTable();
   renderTasks();
+  renderHorses();
   renderWeeklySchedule();
   renderCalendar();
   renderHistory();
@@ -610,6 +614,7 @@ function switchView(view, track = true) {
     jornada: "Registro de jornada",
     tareas: "Gestion de tareas",
     calendario: "Calendario",
+    cuadras: "Cuadras y mapa",
     estadisticas: "Graficos",
     historial: "Historial"
   }[view];
@@ -768,6 +773,227 @@ function taskIconKey(taskName) {
   if (name.includes("repar") || name.includes("herramient")) return "tools";
   if (name.includes("poda")) return "prune";
   return "custom-task";
+}
+
+function renderHorses() {
+  const list = $("#horseList");
+  if (!list) return;
+  const horses = [...state.horses].sort((a, b) => naturalHorseSort(a, b));
+  list.innerHTML = horses.map(horseCardHtml).join("") || emptyState("Todavia no hay caballos registrados.");
+}
+
+function naturalHorseSort(a, b) {
+  const aNum = Number(a.number);
+  const bNum = Number(b.number);
+  if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
+  return String(a.number || a.name).localeCompare(String(b.number || b.name), "es", { numeric: true });
+}
+
+function horseCardHtml(horse) {
+  return `
+    <article class="horse-card">
+      <div class="horse-photo-thumb">${horse.photo ? `<img src="${horse.photo}" alt="">` : `<span>${escapeHtml(horse.number || "?")}</span>`}</div>
+      <div>
+        <h3>${escapeHtml(horseLabel(horse))}</h3>
+        <div class="meta">
+          <span>${escapeHtml(horse.stable || "Sin cuadra")}</span>
+          <span>${Number(horse.lat).toFixed(6)}, ${Number(horse.lng).toFixed(6)}</span>
+        </div>
+        ${horse.notes ? `<p class="muted">${escapeHtml(horse.notes)}</p>` : ""}
+      </div>
+      <div class="card-actions">
+        <button class="small-button" data-find-horse="${horse.id}" type="button">Ver</button>
+        <button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
+        <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>
+      </div>
+    </article>
+  `;
+}
+
+function horseLabel(horse) {
+  const number = horse.number ? `Caballo ${horse.number}` : "Caballo";
+  return horse.name ? `${number} - ${horse.name}` : number;
+}
+
+function googleMapsUrl(horse) {
+  const query = encodeURIComponent(`${horse.lat},${horse.lng}`);
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
+function saveHorse(event) {
+  event.preventDefault();
+  const id = $("#horseId").value || uid();
+  const horse = {
+    id,
+    number: $("#horseNumber").value.trim(),
+    name: $("#horseName").value.trim(),
+    stable: $("#stableName").value.trim(),
+    lat: Number($("#stableLat").value),
+    lng: Number($("#stableLng").value),
+    photo: $("#horsePhotoData").value,
+    notes: $("#horseNotes").value.trim(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (!Number.isFinite(horse.lat) || !Number.isFinite(horse.lng)) {
+    alert("Introduce latitud y longitud validas.");
+    return;
+  }
+
+  state.horses = state.horses.filter((item) => item.id !== id);
+  state.horses.push(horse);
+  resetHorseForm();
+  render();
+}
+
+function resetHorseForm() {
+  $("#horseForm").reset();
+  $("#horseId").value = "";
+  $("#horsePhotoData").value = "";
+  renderHorsePhotoPreview("");
+}
+
+function editHorse(id) {
+  const horse = state.horses.find((item) => item.id === id);
+  if (!horse) return;
+  switchView("cuadras");
+  $("#horseId").value = horse.id;
+  $("#horseNumber").value = horse.number;
+  $("#horseName").value = horse.name;
+  $("#stableName").value = horse.stable;
+  $("#stableLat").value = horse.lat;
+  $("#stableLng").value = horse.lng;
+  $("#horsePhotoData").value = horse.photo || "";
+  renderHorsePhotoPreview(horse.photo || "");
+  $("#horseNotes").value = horse.notes;
+}
+
+function deleteHorse(id) {
+  if (!confirm("Quieres borrar este caballo del registro?")) return;
+  state.horses = state.horses.filter((item) => item.id !== id);
+  render();
+}
+
+function findHorseByQuery(query) {
+  const clean = normalizeSearch(query);
+  if (!clean) return null;
+  const numberMatch = clean.match(/\b(\d+)\b/);
+  return state.horses.find((horse) => {
+    const haystack = normalizeSearch(`${horse.number} ${horse.name} ${horse.stable} caballo ${horse.number}`);
+    if (numberMatch && String(horse.number) === numberMatch[1]) return true;
+    return haystack.includes(clean);
+  }) || null;
+}
+
+function normalizeSearch(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function showHorseResult(horse) {
+  const result = $("#horseResult");
+  if (!horse) {
+    result.innerHTML = emptyState("No he encontrado ese caballo. Revisa el numero, nombre o cuadra.");
+    return;
+  }
+  result.innerHTML = `
+    <article class="horse-result-card">
+      <h3>${escapeHtml(horseLabel(horse))}</h3>
+      ${horse.photo ? `<div class="horse-photo-preview"><img src="${horse.photo}" alt=""></div>` : ""}
+      <div class="meta">
+        <span>${escapeHtml(horse.stable)}</span>
+        <span>${Number(horse.lat).toFixed(6)}, ${Number(horse.lng).toFixed(6)}</span>
+      </div>
+      ${horse.notes ? `<p class="muted">${escapeHtml(horse.notes)}</p>` : ""}
+      <a class="map-link" href="${googleMapsUrl(horse)}" target="_blank" rel="noopener">Abrir en Google Maps</a>
+    </article>
+  `;
+}
+
+function renderHorsePhotoPreview(photoData) {
+  const preview = $("#horsePhotoPreview");
+  if (!preview) return;
+  preview.innerHTML = photoData ? `<img src="${photoData}" alt="">` : `<span>Foto</span>`;
+}
+
+function handleHorsePhoto(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.addEventListener("load", () => compressImage(String(reader.result || ""), 900, 0.78)
+    .then((dataUrl) => {
+      $("#horsePhotoData").value = dataUrl;
+      renderHorsePhotoPreview(dataUrl);
+    })
+    .catch(() => alert("No se ha podido preparar la foto.")));
+  reader.readAsDataURL(file);
+}
+
+function compressImage(dataUrl, maxSize, quality) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    image.onerror = reject;
+    image.src = dataUrl;
+  });
+}
+
+function useCurrentLocationForStable() {
+  if (!navigator.geolocation) {
+    alert("Tu navegador no permite obtener ubicacion.");
+    return;
+  }
+  $("#locationHelp").textContent = "Obteniendo coordenadas...";
+  navigator.geolocation.getCurrentPosition((position) => {
+    $("#stableLat").value = position.coords.latitude.toFixed(6);
+    $("#stableLng").value = position.coords.longitude.toFixed(6);
+    $("#locationHelp").textContent = `Coordenadas guardadas con precision aprox. ${Math.round(position.coords.accuracy)} m.`;
+  }, () => {
+    $("#locationHelp").textContent = "No se pudo obtener la ubicacion.";
+    alert("No se pudo obtener la ubicacion. Revisa permisos de ubicacion del navegador.");
+  }, {
+    enableHighAccuracy: true,
+    timeout: 12000,
+    maximumAge: 0
+  });
+}
+
+function findHorseFromInput() {
+  showHorseResult(findHorseByQuery($("#horseSearch").value));
+}
+
+function startHorseVoiceSearch() {
+  const Recognition = speechRecognitionConstructor();
+  if (!Recognition) {
+    alert("Tu navegador no permite busqueda por voz aqui. Prueba con Chrome o Edge.");
+    return;
+  }
+  if (activeRecognition) activeRecognition.stop();
+  const recognition = new Recognition();
+  activeRecognition = recognition;
+  recognition.lang = "es-ES";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  recognition.addEventListener("result", (event) => {
+    const text = Array.from(event.results).map((result) => result[0]?.transcript || "").join(" ").trim();
+    $("#horseSearch").value = text;
+    showHorseResult(findHorseByQuery(text));
+  });
+  recognition.addEventListener("end", () => {
+    if (activeRecognition === recognition) activeRecognition = null;
+  });
+  recognition.start();
 }
 
 function labelStatus(status) {
@@ -1049,6 +1275,7 @@ function clearData() {
   if (!confirm("Esto borrara todas las jornadas y tareas guardadas en este navegador. Continuar?")) return;
   state.workEntries = [];
   state.tasks = [];
+  state.horses = [];
   state.clock = { date: todayISO(), isRunning: false, segments: [] };
   render();
 }
@@ -1061,6 +1288,7 @@ function createBackup() {
     data: {
       workEntries: state.workEntries.map(normalizeWorkEntry),
       tasks: state.tasks.map(normalizeTask),
+      horses: state.horses.map(normalizeHorse),
       clock: normalizeClock(state.clock),
       theme: normalizeTheme(state.theme)
     }
@@ -1092,6 +1320,7 @@ function normalizeImportedData(data) {
   return {
     workEntries: data.workEntries.map(normalizeWorkEntry).filter((entry) => entry.id && entry.date),
     tasks: data.tasks.map(normalizeTask).filter((task) => task.id && task.name && task.date),
+    horses: Array.isArray(data.horses) ? data.horses.map(normalizeHorse).filter((horse) => horse.id && Number.isFinite(horse.lat) && Number.isFinite(horse.lng)) : [],
     clock: normalizeClock(data.clock),
     theme: normalizeTheme(data.theme)
   };
@@ -1124,6 +1353,21 @@ function normalizeTask(task) {
     duration: Number(source.duration) || 0,
     status: String(source.status || "pendiente"),
     priority: String(source.priority || "media"),
+    notes: String(source.notes || ""),
+    updatedAt: String(source.updatedAt || new Date().toISOString())
+  };
+}
+
+function normalizeHorse(horse) {
+  const source = horse && typeof horse === "object" ? horse : {};
+  return {
+    id: String(source.id || uid()),
+    number: String(source.number || ""),
+    name: String(source.name || ""),
+    stable: String(source.stable || ""),
+    lat: Number(source.lat),
+    lng: Number(source.lng),
+    photo: String(source.photo || ""),
     notes: String(source.notes || ""),
     updatedAt: String(source.updatedAt || new Date().toISOString())
   };
@@ -1177,6 +1421,7 @@ function importData(event) {
 
       state.workEntries = data.workEntries;
       state.tasks = data.tasks;
+      state.horses = data.horses;
       state.clock = data.clock;
       state.theme = data.theme;
 
@@ -1315,8 +1560,14 @@ function bindEvents() {
 
   $("#workForm").addEventListener("submit", saveWork);
   $("#taskForm").addEventListener("submit", saveTask);
+  $("#horseForm").addEventListener("submit", saveHorse);
   $("#resetWorkBtn").addEventListener("click", resetWorkForm);
   $("#resetTaskBtn").addEventListener("click", resetTaskForm);
+  $("#resetHorseBtn").addEventListener("click", resetHorseForm);
+  $("#findHorseBtn").addEventListener("click", findHorseFromInput);
+  $("#voiceHorseBtn").addEventListener("click", startHorseVoiceSearch);
+  $("#horsePhotoInput").addEventListener("change", handleHorsePhoto);
+  $("#useLocationBtn").addEventListener("click", useCurrentLocationForStable);
   $("#taskFilter").addEventListener("change", renderTasks);
   $("#manualDate").addEventListener("change", () => loadManualSegmentsForDate($("#manualDate").value));
   $("#addSegmentBtn").addEventListener("click", addManualSegment);
@@ -1353,6 +1604,9 @@ function bindEvents() {
     const deleteWorkButton = event.target.closest("[data-delete-work]");
     const editTaskButton = event.target.closest("[data-edit-task]");
     const deleteTaskButton = event.target.closest("[data-delete-task]");
+    const findHorseButton = event.target.closest("[data-find-horse]");
+    const editHorseButton = event.target.closest("[data-edit-horse]");
+    const deleteHorseButton = event.target.closest("[data-delete-horse]");
     const removeSegmentButton = event.target.closest("[data-remove-segment]");
     const calendarDay = event.target.closest("[data-calendar-date]");
 
@@ -1360,6 +1614,9 @@ function bindEvents() {
     if (deleteWorkButton) deleteWork(deleteWorkButton.dataset.deleteWork);
     if (editTaskButton) editTask(editTaskButton.dataset.editTask);
     if (deleteTaskButton) deleteTask(deleteTaskButton.dataset.deleteTask);
+    if (findHorseButton) showHorseResult(state.horses.find((horse) => horse.id === findHorseButton.dataset.findHorse));
+    if (editHorseButton) editHorse(editHorseButton.dataset.editHorse);
+    if (deleteHorseButton) deleteHorse(deleteHorseButton.dataset.deleteHorse);
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
     if (calendarDay) openWorkDate(calendarDay.dataset.calendarDate);
   });
