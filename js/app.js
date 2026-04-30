@@ -858,6 +858,7 @@ function showHorseDetail(id) {
       </div>
       <div class="horse-detail-actions">
         <button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
+        <button class="small-button" data-share-horse="${horse.id}" type="button">Compartir</button>
         <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>
       </div>
     </div>
@@ -1071,9 +1072,8 @@ function fillHorseForm(horse) {
 function openHorseFromObservation(id) {
   rememberNavigation();
   switchView("cuadras", false);
-  switchHorseSection("ficha", false);
-  const horse = state.horses.find((item) => item.id === id);
-  if (horse) fillHorseForm(horse);
+  switchHorseSection("listado", false);
+  showHorseDetail(id);
 }
 
 function completeHorseObservation(id) {
@@ -1094,6 +1094,28 @@ function updateHorseFormTitle() {
     <span>${escapeHtml(number ? `Caballo ${number}` : "Ficha de caballo")}</span>
     <strong>${escapeHtml(name || "Nuevo caballo")}</strong>
   `;
+}
+
+function shareHorse(id) {
+  const horse = state.horses.find((h) => h.id === id);
+  if (!horse) return;
+
+  const lines = [
+    `🐴 ${horseLabel(horse)}`,
+    horse.stable  ? `📍 Cuadra: ${horse.stable}`  : null,
+    horse.paddock ? `🌿 Paddock: ${horse.paddock}` : null,
+    horseHasLocation(horse, "stable")  ? `🗺️ Ubicación cuadra: ${horse.lat}, ${horse.lng}` : null,
+    horseHasLocation(horse, "stable")  ? googleMapsUrl(horse, "stable")  : null,
+    horseHasLocation(horse, "paddock") ? `🗺️ Ubicación paddock: ${horse.paddockLat}, ${horse.paddockLng}` : null,
+    horseHasLocation(horse, "paddock") ? googleMapsUrl(horse, "paddock") : null,
+    horse.notes ? `📝 Notas: ${horse.notes}` : null,
+  ].filter(Boolean).join("\n");
+
+  if (navigator.share) {
+    navigator.share({ title: horseLabel(horse), text: lines }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(lines).then(() => alert("Información copiada al portapapeles.")).catch(() => alert("No se pudo compartir ni copiar."));
+  }
 }
 
 function deleteHorse(id) {
@@ -1889,6 +1911,7 @@ function bindEvents() {
     const deleteWorkButton = event.target.closest("[data-delete-work]");
     const editTaskButton = event.target.closest("[data-edit-task]");
     const deleteTaskButton = event.target.closest("[data-delete-task]");
+    const shareHorseButton = event.target.closest("[data-share-horse]");
     const openHorseListButton = event.target.closest("[data-open-horse-list]");
     const browseHorseRow = event.target.closest("[data-browse-horse]");
     const findHorseButton = event.target.closest("[data-find-horse]");
@@ -1903,6 +1926,7 @@ function bindEvents() {
     if (deleteWorkButton) deleteWork(deleteWorkButton.dataset.deleteWork);
     if (editTaskButton) editTask(editTaskButton.dataset.editTask);
     if (deleteTaskButton) deleteTask(deleteTaskButton.dataset.deleteTask);
+    if (shareHorseButton) shareHorse(shareHorseButton.dataset.shareHorse);
     if (openHorseListButton) {
       switchHorseSection("listado");
       showHorseDetail(openHorseListButton.dataset.openHorseList);

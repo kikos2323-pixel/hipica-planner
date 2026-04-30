@@ -181,9 +181,11 @@ label,
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 0;
   opacity: 0;
   transition: opacity 0.18s;
   border-radius: inherit;
+  pointer-events: none;
 }
 
 .nav-link:hover {
@@ -232,6 +234,8 @@ label,
 
 /* Icono del nav */
 .nav-icon {
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 36px;
@@ -250,6 +254,8 @@ label,
 }
 
 .nav-label {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
   white-space: nowrap;
