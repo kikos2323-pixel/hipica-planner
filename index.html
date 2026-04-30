@@ -8,6 +8,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
+    <div id="photoLightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+      <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">✕</button>
+      <img id="lightboxImg" src="" alt="Foto del caballo">
+    </div>
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand">
@@ -391,16 +395,14 @@
             <input type="hidden" id="horseId">
             <input type="hidden" id="horsePhotoData">
             <div class="horse-photo-editor full">
-              <div class="horse-photo-preview" id="horsePhotoPreview">
-                <span>Foto</span>
-              </div>
+              <label class="horse-photo-preview photo-button" id="horsePhotoPreview" title="Pulsa para añadir foto">
+                <span class="photo-placeholder">📷<br><small>Añadir foto</small></span>
+                <input id="horsePhotoInput" type="file" accept="image/*">
+              </label>
               <div class="horse-form-title" id="horseFormTitle">
                 <span>Ficha de caballo</span>
                 <strong>Nuevo caballo</strong>
               </div>
-              <label class="ghost-button photo-button">Anadir foto
-                <input id="horsePhotoInput" type="file" accept="image/*">
-              </label>
             </div>
             <label>Nombre del caballo
               <input id="horseName" type="text" placeholder="Nombre del caballo">
@@ -497,6 +499,7 @@
                 <div id="horseList" class="horse-list-compact"></div>
               </aside>
               <div class="horse-browser-detail panel" id="horseBrowserDetail">
+                <button class="horse-browser-back ghost-button" id="horseBrowserBack" type="button">← Volver a la lista</button>
                 <div class="horse-browser-empty" id="horseBrowserEmpty">
                   <span class="icon-slot" data-icon="stable"></span>
                   <p>Selecciona un caballo de la lista para ver su ficha</p>

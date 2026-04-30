@@ -303,7 +303,7 @@ label,
   position: relative;
   z-index: 1;
   width: min(1180px, 100%);
-  padding: 28px;
+  padding: 0 28px 28px;
 }
 
 .topbar {
@@ -311,7 +311,14 @@ label,
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 22px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 18px 0 14px;
+  margin-bottom: 8px;
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--line);
 }
 
 .topbar-actions {
@@ -944,6 +951,70 @@ th {
   background: var(--glass-strong);
 }
 
+/* ── Lightbox foto ───────────────────────────────────────── */
+.photo-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.18s ease;
+}
+
+.photo-lightbox.open {
+  display: flex;
+}
+
+.photo-lightbox img {
+  max-width: min(92vw, 820px);
+  max-height: 88vh;
+  border-radius: 16px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  object-fit: contain;
+  animation: zoomIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+
+.lightbox-close:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Horse browser back button (solo móvil) ──────────────── */
+.horse-browser-back {
+  display: none;
+  margin-bottom: 12px;
+  width: fit-content;
+}
+
 /* ── Horse browser (listado dos paneles) ─────────────────── */
 .horse-browser {
   display: grid;
@@ -1133,16 +1204,34 @@ th {
 }
 
 /* ── Horse browser responsive ─────────────────────────── */
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .horse-browser {
     grid-template-columns: 1fr;
+    position: relative;
   }
+
+  /* Por defecto en móvil: lista visible, detalle oculto */
+  .horse-browser-detail {
+    display: none;
+  }
+
+  /* Cuando hay caballo seleccionado: ocultar lista, mostrar detalle */
+  .horse-browser.has-detail .horse-browser-sidebar {
+    display: none;
+  }
+  .horse-browser.has-detail .horse-browser-detail {
+    display: block;
+  }
+  .horse-browser.has-detail .horse-browser-back {
+    display: inline-flex;
+  }
+
   .horse-browser-sidebar {
     position: static;
     max-height: none;
   }
   .horse-list-compact {
-    max-height: 240px;
+    max-height: 60vh;
   }
   .horse-detail-header {
     grid-template-columns: 80px 1fr;
@@ -1150,10 +1239,14 @@ th {
   .horse-detail-actions {
     grid-column: 1 / -1;
     flex-direction: row;
+    flex-wrap: wrap;
   }
   .horse-detail-photo {
     width: 80px;
     height: 80px;
+  }
+  .horse-detail-meta {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1369,6 +1462,35 @@ th {
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 900;
+}
+
+.horse-photo-preview.photo-button {
+  cursor: pointer;
+  border: 2px dashed var(--line);
+  transition: border-color 0.15s, background 0.15s;
+  width: 110px;
+  height: 110px;
+}
+
+.horse-photo-preview.photo-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--muted);
+  text-align: center;
+}
+
+.photo-placeholder small {
+  font-size: 0.7rem;
+  font-weight: 800;
 }
 
 .horse-photo-preview img,
@@ -1705,7 +1827,11 @@ th {
   }
 
   .content {
-    padding: 18px;
+    padding: 0 14px 100px;
+  }
+
+  .topbar {
+    padding: 12px 0 10px;
   }
 
   .stats-grid,

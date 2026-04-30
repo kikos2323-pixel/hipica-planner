@@ -820,6 +820,22 @@ function renderHorseList() {
   }).join("") || emptyState("No hay caballos con ese criterio.");
 }
 
+function openLightbox(src) {
+  const lb = $("#photoLightbox");
+  const img = $("#lightboxImg");
+  if (!lb || !img || !src) return;
+  img.src = src;
+  lb.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+  const lb = $("#photoLightbox");
+  if (!lb) return;
+  lb.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
 function showHorseDetail(id) {
   const horse = state.horses.find((h) => h.id === id);
   state.selectedHorseId = id;
@@ -831,6 +847,7 @@ function showHorseDetail(id) {
 
   empty.style.display = "none";
   card.style.display = "grid";
+  document.querySelector(".horse-browser")?.classList.add("has-detail");
 
   const stableLink = horseHasLocation(horse, "stable")
     ? `<a class="map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener">Ver cuadra en Maps</a>`
@@ -840,7 +857,7 @@ function showHorseDetail(id) {
     : horse.paddock ? `<span class="muted">Paddock sin ubicación</span>` : "";
 
   const photo = horse.photo
-    ? `<img src="${horse.photo}" alt="">`
+    ? `<img src="${horse.photo}" alt="" class="lightbox-trigger" data-lightbox="${horse.photo}" title="Ver foto completa" style="cursor:zoom-in">`
     : `<span>${escapeHtml(horse.number || "?")}</span>`;
 
   card.innerHTML = `
@@ -1241,7 +1258,11 @@ function horseLocationStatus(horse) {
 function renderHorsePhotoPreview(photoData) {
   const preview = $("#horsePhotoPreview");
   if (!preview) return;
-  preview.innerHTML = photoData ? `<img src="${photoData}" alt="">` : `<span>Foto</span>`;
+  const input = preview.querySelector("#horsePhotoInput");
+  preview.innerHTML = photoData
+    ? `<img src="${photoData}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+    : `<span class="photo-placeholder">📷<br><small>Añadir foto</small></span>`;
+  if (input) preview.appendChild(input);
 }
 
 function handleHorsePhoto(event) {
@@ -1920,6 +1941,16 @@ function bindEvents() {
   $("#addSegmentBtn").addEventListener("click", addManualSegment);
   $("#loadScheduleBtn").addEventListener("click", loadScheduleIntoManualEditor);
   $("#saveManualSegmentsBtn").addEventListener("click", saveManualSegments);
+  $("#lightboxClose").addEventListener("click", closeLightbox);
+  $("#photoLightbox").addEventListener("click", (e) => { if (e.target === e.currentTarget || e.target === $("#lightboxImg")) closeLightbox(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
+
+  $("#horseBrowserBack").addEventListener("click", () => {
+    document.querySelector(".horse-browser")?.classList.remove("has-detail");
+    state.selectedHorseId = null;
+    renderHorseList();
+  });
+
   $("#exportDataBtn").addEventListener("click", exportData);
   $("#importDataInput").addEventListener("change", importData);
   $("#showAllWorkEntriesBtn").addEventListener("click", showAllWorkEntries);
@@ -1951,6 +1982,7 @@ function bindEvents() {
     const deleteWorkButton = event.target.closest("[data-delete-work]");
     const editTaskButton = event.target.closest("[data-edit-task]");
     const deleteTaskButton = event.target.closest("[data-delete-task]");
+    const lightboxTrigger = event.target.closest("[data-lightbox]");
     const shareHorseButton = event.target.closest("[data-share-horse]");
     const openHorseListButton = event.target.closest("[data-open-horse-list]");
     const browseHorseRow = event.target.closest("[data-browse-horse]");
@@ -1966,6 +1998,7 @@ function bindEvents() {
     if (deleteWorkButton) deleteWork(deleteWorkButton.dataset.deleteWork);
     if (editTaskButton) editTask(editTaskButton.dataset.editTask);
     if (deleteTaskButton) deleteTask(deleteTaskButton.dataset.deleteTask);
+    if (lightboxTrigger) openLightbox(lightboxTrigger.dataset.lightbox);
     if (shareHorseButton) shareHorse(shareHorseButton.dataset.shareHorse);
     if (openHorseListButton) {
       switchHorseSection("listado");
