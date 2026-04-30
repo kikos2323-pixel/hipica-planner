@@ -1306,6 +1306,22 @@ th {
   text-decoration: none;
 }
 
+.coord-map-link {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  font-size: 1rem;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.15s;
+  vertical-align: middle;
+}
+
+.coord-map-link:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
 .map-link-row {
   display: flex;
   gap: 8px;

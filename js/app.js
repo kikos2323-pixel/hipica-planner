@@ -851,10 +851,6 @@ function showHorseDetail(id) {
           <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
           <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
         </div>
-        <div class="meta" style="margin-top:8px">
-          ${stableLink}
-          ${paddockLink}
-        </div>
       </div>
       <div class="horse-detail-actions">
         <button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
@@ -862,20 +858,7 @@ function showHorseDetail(id) {
         <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>
       </div>
     </div>
-    <div class="horse-detail-meta">
-      <div class="horse-detail-field">
-        <label>Cuadra</label>
-        <p>${escapeHtml(horse.stable || "—")}</p>
-      </div>
-      ${horse.paddock ? `<div class="horse-detail-field"><label>Paddock</label><p>${escapeHtml(horse.paddock)}</p></div>` : ""}
-      <div class="horse-detail-field">
-        <label>Ubicación cuadra</label>
-        <p>${horseHasLocation(horse, "stable") ? `${horse.lat}, ${horse.lng}` : "No guardada"}</p>
-      </div>
-      ${horse.paddock ? `<div class="horse-detail-field"><label>Ubicación paddock</label><p>${horseHasLocation(horse, "paddock") ? `${horse.paddockLat}, ${horse.paddockLng}` : "No guardada"}</p></div>` : ""}
-    </div>
-    ${horse.notes ? `<div class="horse-detail-notes"><label>Observaciones</label><p>${escapeHtml(horse.notes)}</p></div>` : ""}
-    ${(horse.feedMorning || horse.feedNoon || horse.feedEvening) ? `
+
     <div class="horse-detail-feed">
       <h4 class="feed-title">Alimentación</h4>
       <div class="feed-grid">
@@ -892,6 +875,32 @@ function showHorseDetail(id) {
           <div><label>Tarde</label><p>${escapeHtml(horse.feedEvening || "—")}</p></div>
         </div>
       </div>
+    </div>
+
+    <div class="horse-detail-meta">
+      <div class="horse-detail-field">
+        <label>Cuadra</label>
+        <p>
+          ${escapeHtml(horse.stable || "—")}
+          ${horseHasLocation(horse, "stable") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener" title="Ver en Maps">🗺️</a>` : ""}
+        </p>
+      </div>
+      ${horse.paddock ? `
+      <div class="horse-detail-field">
+        <label>Paddock</label>
+        <p>
+          ${escapeHtml(horse.paddock)}
+          ${horseHasLocation(horse, "paddock") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener" title="Ver en Maps">🗺️</a>` : ""}
+        </p>
+      </div>` : ""}
+    </div>
+
+    ${horse.notes ? `<div class="horse-detail-notes"><label>Observaciones</label><p>${escapeHtml(horse.notes)}</p></div>` : ""}
+
+    ${(horseHasLocation(horse, "stable") || horseHasLocation(horse, "paddock")) ? `
+    <div class="map-link-row">
+      ${horseHasLocation(horse, "stable") ? `<a class="map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener">Ver cuadra en Maps</a>` : ""}
+      ${horseHasLocation(horse, "paddock") ? `<a class="map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener">Ver paddock en Maps</a>` : ""}
     </div>` : ""}
   `;
 }
