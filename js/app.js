@@ -15,6 +15,7 @@ const state = {
   workEntries: [],
   tasks: [],
   currentView: "dashboard",
+  currentWorkSection: "fichaje",
   calendarDate: new Date(),
   selectedWorkDate: "",
   manualSegments: [],
@@ -30,6 +31,9 @@ const state = {
 
 let charts = {};
 let clockInterval = null;
+let navigationStack = [];
+let isRestoringNavigation = false;
+let activeRecognition = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -547,8 +551,9 @@ function saveManualSegments() {
 }
 
 function openTodayCorrection() {
-  switchView("jornada");
-  switchWorkSection("corregir");
+  rememberNavigation();
+  switchView("jornada", false);
+  switchWorkSection("corregir", false);
   $("#manualDate").value = todayISO();
   loadManualSegmentsForDate(todayISO());
   document.querySelector(".manual-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -558,7 +563,45 @@ function cssVar(name) {
   return getComputedStyle(document.body).getPropertyValue(name).trim();
 }
 
-function switchView(view) {
+function currentNavigationState() {
+  return {
+    view: state.currentView,
+    workSection: state.currentWorkSection,
+    selectedWorkDate: state.selectedWorkDate
+  };
+}
+
+function rememberNavigation() {
+  if (isRestoringNavigation) return;
+  const last = navigationStack[navigationStack.length - 1];
+  const current = currentNavigationState();
+  if (last && last.view === current.view && last.workSection === current.workSection && last.selectedWorkDate === current.selectedWorkDate) return;
+  navigationStack.push(current);
+  updateBackButton();
+}
+
+function updateBackButton() {
+  const button = $("#backBtn");
+  if (button) button.disabled = navigationStack.length === 0;
+}
+
+function goBack() {
+  const previous = navigationStack.pop();
+  if (!previous) {
+    updateBackButton();
+    return;
+  }
+  isRestoringNavigation = true;
+  state.selectedWorkDate = previous.selectedWorkDate || "";
+  switchView(previous.view, false);
+  switchWorkSection(previous.workSection || "fichaje", false);
+  renderWorkTable();
+  isRestoringNavigation = false;
+  updateBackButton();
+}
+
+function switchView(view, track = true) {
+  if (track && view !== state.currentView) rememberNavigation();
   state.currentView = view;
   $$(".view").forEach((el) => el.classList.toggle("active", el.id === view));
   $$(".nav-link").forEach((btn) => btn.classList.toggle("active", btn.dataset.view === view));
@@ -571,17 +614,22 @@ function switchView(view) {
     historial: "Historial"
   }[view];
   renderStats();
+  updateBackButton();
 }
 
-function switchWorkSection(section) {
+function switchWorkSection(section, track = true) {
+  if (track && section !== state.currentWorkSection) rememberNavigation();
+  state.currentWorkSection = section;
   $$(".work-section").forEach((el) => el.classList.toggle("active", el.id === `work-section-${section}`));
   $$(".section-tab").forEach((btn) => btn.classList.toggle("active", btn.dataset.workSection === section));
+  updateBackButton();
 }
 
 function openWorkDate(dateString) {
+  rememberNavigation();
   state.selectedWorkDate = dateString;
-  switchView("jornada");
-  switchWorkSection("listado");
+  switchView("jornada", false);
+  switchWorkSection("listado", false);
   $("#manualDate").value = dateString;
   $("#workDate").value = dateString;
   $("#expectedHours").value = scheduleExpectedHours(dateString) || STANDARD_DAY_HOURS;
@@ -591,9 +639,10 @@ function openWorkDate(dateString) {
 }
 
 function showAllWorkEntries() {
+  rememberNavigation();
   state.selectedWorkDate = "";
-  switchView("jornada");
-  switchWorkSection("listado");
+  switchView("jornada", false);
+  switchWorkSection("listado", false);
   renderWorkTable();
 }
 
@@ -955,8 +1004,9 @@ function resetTaskForm() {
 function editWork(id) {
   const entry = state.workEntries.find((item) => item.id === id);
   if (!entry) return;
-  switchView("jornada");
-  switchWorkSection("registro");
+  rememberNavigation();
+  switchView("jornada", false);
+  switchWorkSection("registro", false);
   $("#workId").value = entry.id;
   $("#workDate").value = entry.date;
   $("#workDayType").value = entry.dayType;
@@ -1157,6 +1207,104 @@ function emptyState(text) {
   return `<div class="empty-state">${text}</div>`;
 }
 
+function setupVoiceInputs() {
+  const fields = ["#workNotes", "#taskName", "#taskNotes"];
+  fields.forEach((selector) => {
+    const field = $(selector);
+    if (!field || field.closest(".voice-control")) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "voice-control";
+    field.parentNode.insertBefore(wrapper, field);
+    wrapper.appendChild(field);
+
+    const button = document.createElement("button");
+    button.className = "voice-button";
+    button.type = "button";
+    button.title = "Dictar texto";
+    button.setAttribute("aria-label", "Dictar texto");
+    button.innerHTML = microphoneIcon();
+    wrapper.appendChild(button);
+
+    button.addEventListener("click", () => startDictation(field, button));
+  });
+  updateVoiceAvailability();
+}
+
+function microphoneIcon() {
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"></path>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+      <path d="M12 19v3"></path>
+      <path d="M8 22h8"></path>
+    </svg>
+  `;
+}
+
+function speechRecognitionConstructor() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function updateVoiceAvailability() {
+  const supported = Boolean(speechRecognitionConstructor());
+  $$(".voice-button").forEach((button) => {
+    button.disabled = !supported;
+    button.title = supported ? "Dictar texto" : "Dictado no disponible en este navegador";
+  });
+}
+
+function startDictation(field, button) {
+  const Recognition = speechRecognitionConstructor();
+  if (!Recognition) {
+    alert("Tu navegador no permite dictado por voz aqui. Prueba con Chrome o Edge.");
+    return;
+  }
+
+  if (activeRecognition) {
+    activeRecognition.stop();
+    activeRecognition = null;
+  }
+
+  const recognition = new Recognition();
+  activeRecognition = recognition;
+  recognition.lang = "es-ES";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.addEventListener("start", () => {
+    button.classList.add("listening");
+  });
+
+  recognition.addEventListener("result", (event) => {
+    const text = Array.from(event.results)
+      .map((result) => result[0]?.transcript || "")
+      .join(" ")
+      .trim();
+    if (text) insertDictatedText(field, text);
+  });
+
+  recognition.addEventListener("end", () => {
+    button.classList.remove("listening");
+    if (activeRecognition === recognition) activeRecognition = null;
+  });
+
+  recognition.addEventListener("error", () => {
+    button.classList.remove("listening");
+    if (activeRecognition === recognition) activeRecognition = null;
+  });
+
+  recognition.start();
+}
+
+function insertDictatedText(field, text) {
+  const current = field.value.trim();
+  const separator = current ? " " : "";
+  field.value = `${current}${separator}${text}`;
+  field.dispatchEvent(new Event("input", { bubbles: true }));
+  field.focus();
+}
+
 function bindEvents() {
   $$(".nav-link").forEach((button) => {
     button.addEventListener("click", () => switchView(button.dataset.view));
@@ -1177,6 +1325,7 @@ function bindEvents() {
   $("#exportDataBtn").addEventListener("click", exportData);
   $("#importDataInput").addEventListener("change", importData);
   $("#showAllWorkEntriesBtn").addEventListener("click", showAllWorkEntries);
+  $("#backBtn").addEventListener("click", goBack);
   $("#workDate").addEventListener("change", () => {
     $("#expectedHours").value = scheduleExpectedHours($("#workDate").value) || STANDARD_DAY_HOURS;
   });
@@ -1228,10 +1377,12 @@ function init() {
   loadTheme();
   loadData();
   setDefaultDates();
+  setupVoiceInputs();
   bindEvents();
   loadManualSegmentsForDate(todayISO());
   applyTheme();
   render();
+  updateBackButton();
   clockInterval = setInterval(renderClock, 1000);
 }
 

@@ -223,6 +223,27 @@ label,
   flex-wrap: wrap;
 }
 
+.back-button {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--glass-strong);
+  color: var(--primary-dark);
+  box-shadow: var(--shadow);
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.back-button:disabled {
+  cursor: default;
+  opacity: 0.42;
+  box-shadow: none;
+}
+
 h1,
 h2,
 h3,
@@ -543,6 +564,46 @@ textarea:focus {
 
 textarea {
   resize: vertical;
+}
+
+.voice-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.voice-control textarea {
+  min-height: 86px;
+}
+
+.voice-button {
+  display: grid;
+  width: 48px;
+  min-height: 48px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--glass-strong);
+  color: var(--primary-dark);
+  box-shadow: var(--shadow);
+}
+
+.voice-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.voice-button.listening {
+  background: color-mix(in srgb, var(--primary) 18%, var(--glass-strong));
+  border-color: color-mix(in srgb, var(--primary) 48%, var(--line));
+  color: var(--primary-dark);
+}
+
+.voice-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  box-shadow: none;
 }
 
 .full {
