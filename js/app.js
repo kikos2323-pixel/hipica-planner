@@ -875,6 +875,24 @@ function showHorseDetail(id) {
       ${horse.paddock ? `<div class="horse-detail-field"><label>Ubicación paddock</label><p>${horseHasLocation(horse, "paddock") ? `${horse.paddockLat}, ${horse.paddockLng}` : "No guardada"}</p></div>` : ""}
     </div>
     ${horse.notes ? `<div class="horse-detail-notes"><label>Observaciones</label><p>${escapeHtml(horse.notes)}</p></div>` : ""}
+    ${(horse.feedMorning || horse.feedNoon || horse.feedEvening) ? `
+    <div class="horse-detail-feed">
+      <h4 class="feed-title">Alimentación</h4>
+      <div class="feed-grid">
+        <div class="feed-slot">
+          <span class="feed-icon">🌅</span>
+          <div><label>Mañana</label><p>${escapeHtml(horse.feedMorning || "—")}</p></div>
+        </div>
+        <div class="feed-slot">
+          <span class="feed-icon">☀️</span>
+          <div><label>Mediodía</label><p>${escapeHtml(horse.feedNoon || "—")}</p></div>
+        </div>
+        <div class="feed-slot">
+          <span class="feed-icon">🌙</span>
+          <div><label>Tarde</label><p>${escapeHtml(horse.feedEvening || "—")}</p></div>
+        </div>
+      </div>
+    </div>` : ""}
   `;
 }
 
@@ -1008,6 +1026,9 @@ function saveHorse(event) {
     paddockLng: coordinateValue("#paddockLng"),
     photo: $("#horsePhotoData").value,
     notes: $("#horseNotes").value.trim(),
+    feedMorning: $("#horseFeedMorning").value.trim(),
+    feedNoon: $("#horseFeedNoon").value.trim(),
+    feedEvening: $("#horseFeedEvening").value.trim(),
     updatedAt: new Date().toISOString()
   };
 
@@ -1067,6 +1088,9 @@ function fillHorseForm(horse) {
   updateHorseFormTitle();
   renderHorsePhotoPreview(horse.photo || "");
   $("#horseNotes").value = horse.notes;
+  $("#horseFeedMorning").value = horse.feedMorning || "";
+  $("#horseFeedNoon").value = horse.feedNoon || "";
+  $("#horseFeedEvening").value = horse.feedEvening || "";
 }
 
 function openHorseFromObservation(id) {
@@ -1109,6 +1133,10 @@ function shareHorse(id) {
     horseHasLocation(horse, "paddock") ? `🗺️ Ubicación paddock: ${horse.paddockLat}, ${horse.paddockLng}` : null,
     horseHasLocation(horse, "paddock") ? googleMapsUrl(horse, "paddock") : null,
     horse.notes ? `📝 Notas: ${horse.notes}` : null,
+    (horse.feedMorning || horse.feedNoon || horse.feedEvening) ? `\n🍽️ Alimentación:` : null,
+    horse.feedMorning ? `  🌅 Mañana: ${horse.feedMorning}` : null,
+    horse.feedNoon    ? `  ☀️ Mediodía: ${horse.feedNoon}`   : null,
+    horse.feedEvening ? `  🌙 Tarde: ${horse.feedEvening}`   : null,
   ].filter(Boolean).join("\n");
 
   if (navigator.share) {
@@ -1672,6 +1700,9 @@ function normalizeHorse(horse) {
     paddockLng,
     photo: String(source.photo || ""),
     notes: String(source.notes || ""),
+    feedMorning: String(source.feedMorning || ""),
+    feedNoon: String(source.feedNoon || ""),
+    feedEvening: String(source.feedEvening || ""),
     updatedAt: String(source.updatedAt || new Date().toISOString())
   };
 }
