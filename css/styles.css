@@ -785,6 +785,219 @@ th {
   background: var(--glass-strong);
 }
 
+/* ── Horse browser (listado dos paneles) ─────────────────── */
+.horse-browser {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.horse-browser-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 160px);
+  position: sticky;
+  top: 80px;
+}
+
+.horse-browser-search input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.horse-list-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
+  padding-right: 2px;
+}
+
+.horse-list-row {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: var(--glass-soft);
+  border: 1.5px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.horse-list-row:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.horse-list-row.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.horse-list-row-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--glass);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.horse-list-row-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.horse-list-row-info strong {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.horse-list-row-info small {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.horse-browser-detail {
+  min-height: 200px;
+}
+
+.horse-browser-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 60px 20px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.horse-browser-empty .icon-slot {
+  font-size: 2.5rem;
+  opacity: 0.35;
+}
+
+.horse-detail-card {
+  display: grid;
+  gap: 14px;
+}
+
+.horse-detail-header {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.horse-detail-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--glass);
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.horse-detail-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.horse-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.horse-detail-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.horse-detail-field {
+  background: var(--glass-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.horse-detail-field label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
+}
+
+.horse-detail-field p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.horse-detail-notes {
+  background: var(--glass-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.horse-detail-notes label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+/* ── Horse browser responsive ─────────────────────────── */
+@media (max-width: 700px) {
+  .horse-browser {
+    grid-template-columns: 1fr;
+  }
+  .horse-browser-sidebar {
+    position: static;
+    max-height: none;
+  }
+  .horse-list-compact {
+    max-height: 240px;
+  }
+  .horse-detail-header {
+    grid-template-columns: 80px 1fr;
+  }
+  .horse-detail-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+  }
+  .horse-detail-photo {
+    width: 80px;
+    height: 80px;
+  }
+}
+
 .horse-observations-list {
   display: grid;
   gap: 10px;

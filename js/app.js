@@ -18,6 +18,7 @@ const state = {
   currentView: "dashboard",
   currentWorkSection: "fichaje",
   currentHorseSection: "buscar",
+  selectedHorseId: null,
   calendarDate: new Date(),
   selectedWorkDate: "",
   manualSegments: [],
@@ -725,15 +726,15 @@ function renderWorkTable() {
     .sort((a, b) => b.date.localeCompare(a.date))
     .map((entry) => `
       <tr>
-        <td>${formatDate(entry.date)}</td>
-        <td><span class="badge">${entry.dayType}</span></td>
-        <td>${workScheduleLabel(entry)}</td>
-        <td>${workHoursChip(entry)}</td>
-        <td>${breakHoursChip(entry)}</td>
-        <td>${workStatusHtml(entry)}</td>
-        <td>${calculateWorkHours(entry)} h</td>
-        <td>${calculateExtraHours(entry)} h</td>
-        <td>
+        <td data-label="Fecha">${formatDate(entry.date)}</td>
+        <td data-label="Tipo"><span class="badge">${entry.dayType}</span></td>
+        <td data-label="Horario">${workScheduleLabel(entry)}</td>
+        <td data-label="Trabajo">${workHoursChip(entry)}</td>
+        <td data-label="Pausa">${breakHoursChip(entry)}</td>
+        <td data-label="Estado">${workStatusHtml(entry)}</td>
+        <td data-label="Total">${calculateWorkHours(entry)} h</td>
+        <td data-label="Extra">${calculateExtraHours(entry)} h</td>
+        <td data-label="Acciones">
           <button class="small-button" data-edit-work="${entry.id}" type="button">Editar</button>
           <button class="small-button" data-delete-work="${entry.id}" type="button">Borrar</button>
         </td>
@@ -787,11 +788,93 @@ function taskIconKey(taskName) {
 }
 
 function renderHorses() {
+  renderHorseList();
+  renderHorseObservations();
+}
+
+function renderHorseList() {
   const list = $("#horseList");
   if (!list) return;
-  const horses = [...state.horses].sort((a, b) => naturalHorseSort(a, b));
-  list.innerHTML = horses.map(horseCardHtml).join("") || emptyState("Todavia no hay caballos registrados.");
-  renderHorseObservations();
+  const query = normalizeSearch($("#horseListSearch")?.value || "");
+  const horses = [...state.horses]
+    .sort((a, b) => naturalHorseSort(a, b))
+    .filter((horse) => {
+      if (!query) return true;
+      return normalizeSearch(`${horse.number} ${horse.name} ${horse.stable}`).includes(query);
+    });
+
+  list.innerHTML = horses.map((horse) => {
+    const thumb = horse.photo
+      ? `<img src="${horse.photo}" alt="">`
+      : `<span>${escapeHtml(horse.number || "?")}</span>`;
+    const selected = state.selectedHorseId === horse.id ? "selected" : "";
+    return `
+      <div class="horse-list-row ${selected}" data-browse-horse="${horse.id}" tabindex="0" role="button" aria-label="${escapeHtml(horseLabel(horse))}">
+        <div class="horse-list-row-thumb">${thumb}</div>
+        <div class="horse-list-row-info">
+          <strong>${escapeHtml(horse.name || horseLabel(horse))}</strong>
+          <small>${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Sin número")} · ${escapeHtml(horse.stable || "Sin cuadra")}</small>
+        </div>
+      </div>
+    `;
+  }).join("") || emptyState("No hay caballos con ese criterio.");
+}
+
+function showHorseDetail(id) {
+  const horse = state.horses.find((h) => h.id === id);
+  state.selectedHorseId = id;
+  renderHorseList();
+
+  const empty = $("#horseBrowserEmpty");
+  const card = $("#horseBrowserCard");
+  if (!horse || !empty || !card) return;
+
+  empty.style.display = "none";
+  card.style.display = "grid";
+
+  const stableLink = horseHasLocation(horse, "stable")
+    ? `<a class="map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener">Ver cuadra en Maps</a>`
+    : `<span class="muted">Cuadra sin ubicación</span>`;
+  const paddockLink = horse.paddock && horseHasLocation(horse, "paddock")
+    ? `<a class="map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener">Ver paddock en Maps</a>`
+    : horse.paddock ? `<span class="muted">Paddock sin ubicación</span>` : "";
+
+  const photo = horse.photo
+    ? `<img src="${horse.photo}" alt="">`
+    : `<span>${escapeHtml(horse.number || "?")}</span>`;
+
+  card.innerHTML = `
+    <div class="horse-detail-header">
+      <div class="horse-detail-photo">${photo}</div>
+      <div>
+        <div class="horse-title-block">
+          <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
+          <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
+        </div>
+        <div class="meta" style="margin-top:8px">
+          ${stableLink}
+          ${paddockLink}
+        </div>
+      </div>
+      <div class="horse-detail-actions">
+        <button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
+        <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>
+      </div>
+    </div>
+    <div class="horse-detail-meta">
+      <div class="horse-detail-field">
+        <label>Cuadra</label>
+        <p>${escapeHtml(horse.stable || "—")}</p>
+      </div>
+      ${horse.paddock ? `<div class="horse-detail-field"><label>Paddock</label><p>${escapeHtml(horse.paddock)}</p></div>` : ""}
+      <div class="horse-detail-field">
+        <label>Ubicación cuadra</label>
+        <p>${horseHasLocation(horse, "stable") ? `${horse.lat}, ${horse.lng}` : "No guardada"}</p>
+      </div>
+      ${horse.paddock ? `<div class="horse-detail-field"><label>Ubicación paddock</label><p>${horseHasLocation(horse, "paddock") ? `${horse.paddockLat}, ${horse.paddockLng}` : "No guardada"}</p></div>` : ""}
+    </div>
+    ${horse.notes ? `<div class="horse-detail-notes"><label>Observaciones</label><p>${escapeHtml(horse.notes)}</p></div>` : ""}
+  `;
 }
 
 function renderHorseObservations() {
@@ -998,6 +1081,13 @@ function updateHorseFormTitle() {
 function deleteHorse(id) {
   if (!confirm("Quieres borrar este caballo del registro?")) return;
   state.horses = state.horses.filter((item) => item.id !== id);
+  if (state.selectedHorseId === id) {
+    state.selectedHorseId = null;
+    const empty = $("#horseBrowserEmpty");
+    const card = $("#horseBrowserCard");
+    if (empty) empty.style.display = "";
+    if (card) card.style.display = "none";
+  }
   render();
 }
 
@@ -1043,6 +1133,7 @@ function showHorseResult(horse) {
       <div class="map-link-row">
         ${horseHasLocation(horse, "stable") ? `<a class="map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener">Google Maps cuadra</a>` : ""}
         ${horseHasLocation(horse, "paddock") ? `<a class="map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener">Google Maps paddock</a>` : ""}
+        <button class="ghost-button" data-open-horse-list="${horse.id}" type="button">Ver ficha</button>
       </div>
     </article>
   `;
@@ -1780,6 +1871,8 @@ function bindEvents() {
     const deleteWorkButton = event.target.closest("[data-delete-work]");
     const editTaskButton = event.target.closest("[data-edit-task]");
     const deleteTaskButton = event.target.closest("[data-delete-task]");
+    const openHorseListButton = event.target.closest("[data-open-horse-list]");
+    const browseHorseRow = event.target.closest("[data-browse-horse]");
     const findHorseButton = event.target.closest("[data-find-horse]");
     const editHorseButton = event.target.closest("[data-edit-horse]");
     const deleteHorseButton = event.target.closest("[data-delete-horse]");
@@ -1792,6 +1885,11 @@ function bindEvents() {
     if (deleteWorkButton) deleteWork(deleteWorkButton.dataset.deleteWork);
     if (editTaskButton) editTask(editTaskButton.dataset.editTask);
     if (deleteTaskButton) deleteTask(deleteTaskButton.dataset.deleteTask);
+    if (openHorseListButton) {
+      switchHorseSection("listado");
+      showHorseDetail(openHorseListButton.dataset.openHorseList);
+    }
+    if (browseHorseRow) showHorseDetail(browseHorseRow.dataset.browseHorse);
     if (findHorseButton) showHorseResult(state.horses.find((horse) => horse.id === findHorseButton.dataset.findHorse));
     if (editHorseButton) editHorse(editHorseButton.dataset.editHorse);
     if (deleteHorseButton) deleteHorse(deleteHorseButton.dataset.deleteHorse);
@@ -1802,6 +1900,7 @@ function bindEvents() {
   });
 
   document.body.addEventListener("input", (event) => {
+    if (event.target.id === "horseListSearch") renderHorseList();
     const startInput = event.target.closest("[data-manual-start]");
     const endInput = event.target.closest("[data-manual-end]");
     if (startInput) updateManualSegment(Number(startInput.dataset.manualStart), "start", startInput.value);

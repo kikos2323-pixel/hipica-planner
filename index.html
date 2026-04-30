@@ -302,7 +302,7 @@
         <section class="view" id="cuadras">
           <div class="section-tabs horse-tabs" aria-label="Apartados de caballos">
             <button class="section-tab active" data-horse-section="buscar" type="button">Buscar</button>
-            <button class="section-tab" data-horse-section="ficha" type="button">Ficha</button>
+            <button class="section-tab" data-horse-section="ficha" type="button">Nueva ficha</button>
             <button class="section-tab" data-horse-section="listado" type="button">Listado</button>
             <button class="section-tab" data-horse-section="observaciones" type="button">Observaciones</button>
           </div>
@@ -396,12 +396,24 @@
           </section>
 
           <section class="horse-section" id="horse-section-listado">
-          <section class="panel">
-            <div class="panel-heading">
-              <h2><span class="icon-slot" data-icon="stable"></span>Caballos registrados</h2>
+            <div class="horse-browser">
+              <aside class="horse-browser-sidebar panel">
+                <div class="panel-heading">
+                  <h2><span class="icon-slot" data-icon="stable"></span>Caballos</h2>
+                </div>
+                <div class="horse-browser-search">
+                  <input type="search" id="horseListSearch" placeholder="Buscar por nombre o código…" autocomplete="off">
+                </div>
+                <div id="horseList" class="horse-list-compact"></div>
+              </aside>
+              <div class="horse-browser-detail panel" id="horseBrowserDetail">
+                <div class="horse-browser-empty" id="horseBrowserEmpty">
+                  <span class="icon-slot" data-icon="stable"></span>
+                  <p>Selecciona un caballo de la lista para ver su ficha</p>
+                </div>
+                <div id="horseBrowserCard" class="horse-detail-card" style="display:none"></div>
+              </div>
             </div>
-            <div id="horseList" class="horse-list"></div>
-          </section>
           </section>
 
           <section class="horse-section" id="horse-section-observaciones">
