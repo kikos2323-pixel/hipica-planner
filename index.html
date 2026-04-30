@@ -103,6 +103,14 @@
         </section>
 
         <section class="view" id="jornada">
+          <div class="section-tabs" aria-label="Apartados de jornada">
+            <button class="section-tab active" data-work-section="fichaje" type="button">Fichaje</button>
+            <button class="section-tab" data-work-section="corregir" type="button">Corregir fichaje</button>
+            <button class="section-tab" data-work-section="registro" type="button">Registro manual</button>
+            <button class="section-tab" data-work-section="listado" type="button">Jornadas registradas</button>
+          </div>
+
+          <section class="work-section active" id="work-section-fichaje">
           <section class="panel clock-panel compact-clock">
             <div class="clock-info">
               <span class="clock-icon icon-slot" data-icon="timer"></span>
@@ -113,7 +121,9 @@
               </div>
             </div>
           </section>
+          </section>
 
+          <section class="work-section" id="work-section-corregir">
           <section class="panel manual-editor">
             <div class="panel-heading split">
               <h2><span class="icon-slot" data-icon="edit"></span>Corregir fichaje</h2>
@@ -134,7 +144,9 @@
               <button class="primary-button" id="saveManualSegmentsBtn" type="button">Guardar correccion</button>
             </div>
           </section>
+          </section>
 
+          <section class="work-section" id="work-section-registro">
           <form class="form-grid panel" id="workForm">
             <input type="hidden" id="workId">
             <label>Fecha
@@ -169,10 +181,16 @@
               <button class="ghost-button" id="resetWorkBtn" type="button">Limpiar</button>
             </div>
           </form>
+          </section>
 
+          <section class="work-section" id="work-section-listado">
           <section class="panel">
-            <div class="panel-heading">
+            <div class="panel-heading split">
               <h2><span class="icon-slot" data-icon="log"></span>Jornadas registradas</h2>
+              <div class="list-filter-actions">
+                <div class="selected-day-label" id="selectedWorkDateLabel">Todos los dias</div>
+                <button class="ghost-button" id="showAllWorkEntriesBtn" type="button">Ver todos</button>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
@@ -181,6 +199,9 @@
                     <th>Fecha</th>
                     <th>Tipo</th>
                     <th>Horario</th>
+                    <th>Trabajo</th>
+                    <th>Pausa</th>
+                    <th>Estado</th>
                     <th>Total</th>
                     <th>Extra</th>
                     <th></th>
@@ -189,6 +210,7 @@
                 <tbody id="workTable"></tbody>
               </table>
             </div>
+          </section>
           </section>
         </section>
 

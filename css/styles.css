@@ -322,6 +322,45 @@ h2 {
   grid-column: 1 / -1;
 }
 
+.section-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow);
+}
+
+.section-tab {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font-weight: 900;
+}
+
+.section-tab.active,
+.section-tab:hover {
+  background: var(--glass-strong);
+  border-color: var(--line);
+  color: var(--primary-dark);
+  box-shadow: var(--shadow);
+}
+
+.work-section {
+  display: none;
+}
+
+.work-section.active {
+  display: block;
+}
+
 .clock-panel {
   display: flex;
   align-items: center;
@@ -401,6 +440,60 @@ h2 {
 
 .compact-clock .clock-info strong {
   font-size: clamp(1.6rem, 4vw, 2.4rem);
+}
+
+.manual-editor {
+  margin-bottom: 16px;
+}
+
+.manual-editor-top {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.manual-total {
+  min-width: 170px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--glass-strong);
+}
+
+.manual-total span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.manual-total strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.35rem;
+}
+
+.manual-segments {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.manual-segment-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--glass-strong);
+}
+
+.manual-segment-row .small-button {
+  min-height: 48px;
 }
 
 .panel-heading {
@@ -516,7 +609,7 @@ textarea {
 
 table {
   width: 100%;
-  min-width: 680px;
+  min-width: 860px;
   border-collapse: collapse;
 }
 
@@ -530,6 +623,75 @@ td {
 th {
   color: var(--muted);
   font-size: 0.86rem;
+}
+
+.time-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.time-chip.work {
+  background: rgba(47, 155, 99, 0.16);
+  color: #247c4f;
+}
+
+.time-chip.break {
+  background: rgba(228, 184, 77, 0.22);
+  color: #8a6108;
+}
+
+.time-chip.rest {
+  background: var(--glass-soft);
+  color: var(--muted);
+}
+
+.time-chip.alert {
+  background: rgba(217, 87, 87, 0.16);
+  color: #b13d3d;
+}
+
+.work-status {
+  display: grid;
+  gap: 4px;
+}
+
+.work-status small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.selected-day-label {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--glass-strong);
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.list-filter-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.calendar-day {
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease;
+}
+
+.calendar-day:not(.empty):hover {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--line));
+  transform: translateY(-1px);
 }
 
 .task-list,
@@ -605,6 +767,28 @@ th {
   display: flex;
   align-items: start;
   gap: 8px;
+}
+
+.backup-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.import-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.import-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .calendar-weekdays,
@@ -791,6 +975,15 @@ th {
     justify-content: flex-start;
   }
 
+  .section-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .section-tab {
+    padding: 10px 8px;
+  }
+
   .clock-panel {
     align-items: stretch;
     flex-direction: column;
@@ -798,6 +991,15 @@ th {
 
   .clock-actions {
     justify-content: flex-start;
+  }
+
+  .manual-editor-top,
+  .manual-segment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .manual-total {
+    min-width: 0;
   }
 
   .calendar-grid,

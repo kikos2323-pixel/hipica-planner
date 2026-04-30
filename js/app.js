@@ -16,6 +16,7 @@ const state = {
   tasks: [],
   currentView: "dashboard",
   calendarDate: new Date(),
+  selectedWorkDate: "",
   manualSegments: [],
   clock: {
     date: todayISO(),
@@ -381,6 +382,53 @@ function workScheduleLabel(entry) {
   return `${entry.startTime || "-"} - ${entry.endTime || "-"}`;
 }
 
+function entrySegmentsForTimeline(entry) {
+  if (Array.isArray(entry.segments) && entry.segments.length) {
+    return entry.segments
+      .map((segment) => ({ start: segment.start, end: segment.end }))
+      .filter((segment) => segment.start)
+      .sort((a, b) => new Date(a.start) - new Date(b.start));
+  }
+  if (entry.startTime && entry.endTime) {
+    return [{
+      start: isoFromDateAndTime(entry.date, entry.startTime),
+      end: isoFromDateAndTime(entry.date, entry.endTime)
+    }];
+  }
+  return [];
+}
+
+function workHoursChip(entry) {
+  if (entry.dayType !== "trabajado") return `<span class="time-chip rest">0 h</span>`;
+  return `<span class="time-chip work">${calculateWorkHours(entry)} h</span>`;
+}
+
+function breakHoursChip(entry) {
+  const segments = entrySegmentsForTimeline(entry);
+  const breakHours = roundHours(calculateBreakMinutesFromSegments(segments) / 60);
+  if (!breakHours) return `<span class="time-chip rest">Sin pausa</span>`;
+  return `<span class="time-chip break">${breakHours} h</span>`;
+}
+
+function workStatusHtml(entry) {
+  if (entry.dayType !== "trabajado") {
+    return `<span class="time-chip rest">${entry.dayType}</span>`;
+  }
+  const segments = entrySegmentsForTimeline(entry);
+  if (!segments.length) {
+    return `<span class="time-chip alert">Sin horario</span>`;
+  }
+  if (segments.some((segment) => !segment.end)) {
+    return `<div class="work-status"><span class="time-chip alert">Tramo abierto</span><small>Falta hora de fin</small></div>`;
+  }
+  const expected = Number(entry.expectedHours) || scheduleExpectedHours(entry.date) || STANDARD_DAY_HOURS;
+  const worked = calculateWorkHours(entry);
+  if (worked >= expected) {
+    return `<span class="time-chip work">Completa</span>`;
+  }
+  return `<div class="work-status"><span class="time-chip break">Parcial</span><small>Faltan ${roundHours(expected - worked)} h</small></div>`;
+}
+
 function loadManualSegmentsForDate(dateString = $("#manualDate").value || todayISO()) {
   const entry = state.workEntries.find((item) => item.date === dateString);
   if (entry && Array.isArray(entry.segments) && entry.segments.length) {
@@ -500,6 +548,7 @@ function saveManualSegments() {
 
 function openTodayCorrection() {
   switchView("jornada");
+  switchWorkSection("corregir");
   $("#manualDate").value = todayISO();
   loadManualSegmentsForDate(todayISO());
   document.querySelector(".manual-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -522,6 +571,30 @@ function switchView(view) {
     historial: "Historial"
   }[view];
   renderStats();
+}
+
+function switchWorkSection(section) {
+  $$(".work-section").forEach((el) => el.classList.toggle("active", el.id === `work-section-${section}`));
+  $$(".section-tab").forEach((btn) => btn.classList.toggle("active", btn.dataset.workSection === section));
+}
+
+function openWorkDate(dateString) {
+  state.selectedWorkDate = dateString;
+  switchView("jornada");
+  switchWorkSection("listado");
+  $("#manualDate").value = dateString;
+  $("#workDate").value = dateString;
+  $("#expectedHours").value = scheduleExpectedHours(dateString) || STANDARD_DAY_HOURS;
+  loadManualSegmentsForDate(dateString);
+  renderWorkTable();
+  document.querySelector("#work-section-listado")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function showAllWorkEntries() {
+  state.selectedWorkDate = "";
+  switchView("jornada");
+  switchWorkSection("listado");
+  renderWorkTable();
 }
 
 function renderDashboard() {
@@ -576,13 +649,23 @@ function renderWeeklySchedule() {
 }
 
 function renderWorkTable() {
-  const rows = [...state.workEntries]
+  const entries = state.selectedWorkDate
+    ? state.workEntries.filter((entry) => entry.date === state.selectedWorkDate)
+    : state.workEntries;
+  $("#selectedWorkDateLabel").textContent = state.selectedWorkDate
+    ? `Mostrando ${formatDate(state.selectedWorkDate)}`
+    : "Todos los dias";
+
+  const rows = [...entries]
     .sort((a, b) => b.date.localeCompare(a.date))
     .map((entry) => `
       <tr>
         <td>${formatDate(entry.date)}</td>
         <td><span class="badge">${entry.dayType}</span></td>
         <td>${workScheduleLabel(entry)}</td>
+        <td>${workHoursChip(entry)}</td>
+        <td>${breakHoursChip(entry)}</td>
+        <td>${workStatusHtml(entry)}</td>
         <td>${calculateWorkHours(entry)} h</td>
         <td>${calculateExtraHours(entry)} h</td>
         <td>
@@ -591,7 +674,7 @@ function renderWorkTable() {
         </td>
       </tr>
     `);
-  $("#workTable").innerHTML = rows.join("") || `<tr><td colspan="6">${emptyState("No hay jornadas registradas.")}</td></tr>`;
+  $("#workTable").innerHTML = rows.join("") || `<tr><td colspan="9">${emptyState(state.selectedWorkDate ? "No hay jornada registrada para este dia." : "No hay jornadas registradas.")}</td></tr>`;
 }
 
 function renderTasks() {
@@ -672,7 +755,7 @@ function renderCalendar() {
       ...tasks.map((task) => `<span class="calendar-event task">${escapeHtml(task.name)}</span>`)
     ].join("");
     cells.push(`
-      <div class="calendar-day ${isToday ? "today" : ""}">
+      <div class="calendar-day ${isToday ? "today" : ""}" data-calendar-date="${iso}">
         <span class="day-number">${day}</span>
         ${events}
       </div>
@@ -873,6 +956,7 @@ function editWork(id) {
   const entry = state.workEntries.find((item) => item.id === id);
   if (!entry) return;
   switchView("jornada");
+  switchWorkSection("registro");
   $("#workId").value = entry.id;
   $("#workDate").value = entry.date;
   $("#workDayType").value = entry.dayType;
@@ -1077,6 +1161,9 @@ function bindEvents() {
   $$(".nav-link").forEach((button) => {
     button.addEventListener("click", () => switchView(button.dataset.view));
   });
+  $$(".section-tab").forEach((button) => {
+    button.addEventListener("click", () => switchWorkSection(button.dataset.workSection));
+  });
 
   $("#workForm").addEventListener("submit", saveWork);
   $("#taskForm").addEventListener("submit", saveTask);
@@ -1089,6 +1176,7 @@ function bindEvents() {
   $("#saveManualSegmentsBtn").addEventListener("click", saveManualSegments);
   $("#exportDataBtn").addEventListener("click", exportData);
   $("#importDataInput").addEventListener("change", importData);
+  $("#showAllWorkEntriesBtn").addEventListener("click", showAllWorkEntries);
   $("#workDate").addEventListener("change", () => {
     $("#expectedHours").value = scheduleExpectedHours($("#workDate").value) || STANDARD_DAY_HOURS;
   });
@@ -1117,12 +1205,14 @@ function bindEvents() {
     const editTaskButton = event.target.closest("[data-edit-task]");
     const deleteTaskButton = event.target.closest("[data-delete-task]");
     const removeSegmentButton = event.target.closest("[data-remove-segment]");
+    const calendarDay = event.target.closest("[data-calendar-date]");
 
     if (editWorkButton) editWork(editWorkButton.dataset.editWork);
     if (deleteWorkButton) deleteWork(deleteWorkButton.dataset.deleteWork);
     if (editTaskButton) editTask(editTaskButton.dataset.editTask);
     if (deleteTaskButton) deleteTask(deleteTaskButton.dataset.deleteTask);
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
+    if (calendarDay) openWorkDate(calendarDay.dataset.calendarDate);
   });
 
   document.body.addEventListener("input", (event) => {
