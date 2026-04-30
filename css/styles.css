@@ -382,6 +382,14 @@ h2 {
   display: block;
 }
 
+.horse-section {
+  display: none;
+}
+
+.horse-section.active {
+  display: block;
+}
+
 .clock-panel {
   display: flex;
   align-items: center;
@@ -769,11 +777,28 @@ th {
 .history-item,
 .rank-item,
 .horse-card,
-.horse-result-card {
+.horse-result-card,
+.observation-card {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--glass-strong);
+}
+
+.horse-observations-list {
+  display: grid;
+  gap: 10px;
+}
+
+.observation-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.observation-card p {
+  margin-bottom: 8px;
 }
 
 .stable-search {
@@ -800,14 +825,30 @@ th {
 
 .horse-card {
   display: grid;
-  grid-template-columns: 86px 1fr auto;
-  gap: 12px;
+  grid-template-columns: 96px 1fr auto;
+  gap: 16px;
   align-items: start;
 }
 
 .horse-card h3,
 .horse-result-card h3 {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: clamp(1.25rem, 3vw, 1.7rem);
+  line-height: 1.1;
+}
+
+.horse-title-block {
+  display: grid;
+  gap: 3px;
+}
+
+.horse-code {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .map-link {
@@ -824,18 +865,45 @@ th {
   text-decoration: none;
 }
 
+.map-link-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .horse-photo-editor {
   display: flex;
-  align-items: end;
+  align-items: center;
   gap: 14px;
   flex-wrap: wrap;
+}
+
+.horse-form-title {
+  display: grid;
+  min-width: min(360px, 100%);
+  flex: 1;
+  gap: 4px;
+}
+
+.horse-form-title span {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.horse-form-title strong {
+  color: var(--text);
+  font-size: clamp(1.9rem, 5vw, 3rem);
+  line-height: 1;
 }
 
 .horse-photo-preview,
 .horse-photo-thumb {
   display: grid;
-  width: 86px;
-  height: 86px;
+  width: 96px;
+  height: 96px;
   place-items: center;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -872,6 +940,45 @@ th {
 .location-help {
   align-self: center;
   font-size: 0.86rem;
+}
+
+.coordinate-field {
+  display: none;
+}
+
+.manual-coordinates {
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--glass-strong) 62%, transparent);
+}
+
+.manual-coordinates summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.manual-coordinate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.manual-coordinate-grid label {
+  font-size: 0.78rem;
+}
+
+.manual-coordinate-grid input {
+  min-height: 42px;
+}
+
+.location-status {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .task-card {
@@ -1157,7 +1264,8 @@ th {
 
   .manual-editor-top,
   .manual-segment-row,
-  .stable-search {
+  .stable-search,
+  .manual-coordinate-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1210,6 +1318,11 @@ th {
 
   .horse-card {
     grid-template-columns: 72px 1fr;
+    gap: 12px;
+  }
+
+  .observation-card {
+    grid-template-columns: auto 1fr;
   }
 
   .horse-photo-thumb {

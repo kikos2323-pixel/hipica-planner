@@ -300,6 +300,14 @@
         </section>
 
         <section class="view" id="cuadras">
+          <div class="section-tabs horse-tabs" aria-label="Apartados de caballos">
+            <button class="section-tab active" data-horse-section="buscar" type="button">Buscar</button>
+            <button class="section-tab" data-horse-section="ficha" type="button">Ficha</button>
+            <button class="section-tab" data-horse-section="listado" type="button">Listado</button>
+            <button class="section-tab" data-horse-section="observaciones" type="button">Observaciones</button>
+          </div>
+
+          <section class="horse-section active" id="horse-section-buscar">
           <section class="panel">
             <div class="panel-heading split">
               <h2><span class="icon-slot" data-icon="map"></span>Localizar cuadra</h2>
@@ -313,7 +321,9 @@
             </div>
             <div id="horseResult" class="horse-result"></div>
           </section>
+          </section>
 
+          <section class="horse-section" id="horse-section-ficha">
           <form class="form-grid panel" id="horseForm">
             <input type="hidden" id="horseId">
             <input type="hidden" id="horsePhotoData">
@@ -321,28 +331,59 @@
               <div class="horse-photo-preview" id="horsePhotoPreview">
                 <span>Foto</span>
               </div>
-              <label class="ghost-button photo-button">Añadir foto
+              <div class="horse-form-title" id="horseFormTitle">
+                <span>Ficha de caballo</span>
+                <strong>Nuevo caballo</strong>
+              </div>
+              <label class="ghost-button photo-button">Anadir foto
                 <input id="horsePhotoInput" type="file" accept="image/*" capture="environment">
               </label>
             </div>
-            <label>Numero o codigo
-              <input id="horseNumber" type="text" placeholder="8" required>
-            </label>
             <label>Nombre del caballo
               <input id="horseName" type="text" placeholder="Nombre del caballo">
+            </label>
+            <label>Numero o codigo
+              <input id="horseNumber" type="text" placeholder="8" required>
             </label>
             <label>Cuadra / zona
               <input id="stableName" type="text" placeholder="Cuadra norte, box 12..." required>
             </label>
-            <label>Latitud
+            <label>Paddock / zona exterior
+              <input id="paddockName" type="text" placeholder="Paddock 3, prado sur...">
+            </label>
+            <label class="coordinate-field">Latitud
               <input id="stableLat" type="number" step="0.000001" placeholder="40.123456" required>
             </label>
-            <label>Longitud
+            <label class="coordinate-field">Longitud
               <input id="stableLng" type="number" step="0.000001" placeholder="-3.123456" required>
             </label>
+            <label class="coordinate-field">Latitud paddock
+              <input id="paddockLat" type="number" step="0.000001">
+            </label>
+            <label class="coordinate-field">Longitud paddock
+              <input id="paddockLng" type="number" step="0.000001">
+            </label>
+            <details class="manual-coordinates full">
+              <summary>Editar coordenadas manualmente</summary>
+              <div class="manual-coordinate-grid">
+                <label>Latitud cuadra
+                  <input id="manualStableLat" type="number" step="0.000001" placeholder="40.123456">
+                </label>
+                <label>Longitud cuadra
+                  <input id="manualStableLng" type="number" step="0.000001" placeholder="-3.123456">
+                </label>
+                <label>Latitud paddock
+                  <input id="manualPaddockLat" type="number" step="0.000001">
+                </label>
+                <label>Longitud paddock
+                  <input id="manualPaddockLng" type="number" step="0.000001">
+                </label>
+              </div>
+            </details>
             <div class="form-actions full">
-              <button class="ghost-button" id="useLocationBtn" type="button">Guardar coordenadas actuales</button>
-              <span class="muted location-help" id="locationHelp">Pulsa estando junto a la cuadra del caballo.</span>
+              <button class="ghost-button" id="useStableLocationBtn" type="button">Guardar ubicacion cuadra</button>
+              <button class="ghost-button" id="usePaddockLocationBtn" type="button">Guardar ubicacion paddock</button>
+              <span class="muted location-help" id="locationHelp">Pulsa estando junto a la cuadra o paddock.</span>
             </div>
             <label class="full">Observaciones
               <textarea id="horseNotes" rows="3" placeholder="Detalles para encontrar la cuadra, referencias, acceso..."></textarea>
@@ -352,12 +393,24 @@
               <button class="ghost-button" id="resetHorseBtn" type="button">Limpiar</button>
             </div>
           </form>
+          </section>
 
+          <section class="horse-section" id="horse-section-listado">
           <section class="panel">
             <div class="panel-heading">
               <h2><span class="icon-slot" data-icon="stable"></span>Caballos registrados</h2>
             </div>
             <div id="horseList" class="horse-list"></div>
+          </section>
+          </section>
+
+          <section class="horse-section" id="horse-section-observaciones">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2><span class="icon-slot" data-icon="notes"></span>Observaciones pendientes</h2>
+              </div>
+              <div id="horseObservationsList" class="horse-observations-list"></div>
+            </section>
           </section>
         </section>
 

@@ -17,6 +17,7 @@ const state = {
   horses: [],
   currentView: "dashboard",
   currentWorkSection: "fichaje",
+  currentHorseSection: "buscar",
   calendarDate: new Date(),
   selectedWorkDate: "",
   manualSegments: [],
@@ -571,6 +572,7 @@ function currentNavigationState() {
   return {
     view: state.currentView,
     workSection: state.currentWorkSection,
+    horseSection: state.currentHorseSection,
     selectedWorkDate: state.selectedWorkDate
   };
 }
@@ -579,7 +581,7 @@ function rememberNavigation() {
   if (isRestoringNavigation) return;
   const last = navigationStack[navigationStack.length - 1];
   const current = currentNavigationState();
-  if (last && last.view === current.view && last.workSection === current.workSection && last.selectedWorkDate === current.selectedWorkDate) return;
+  if (last && last.view === current.view && last.workSection === current.workSection && last.horseSection === current.horseSection && last.selectedWorkDate === current.selectedWorkDate) return;
   navigationStack.push(current);
   updateBackButton();
 }
@@ -599,6 +601,7 @@ function goBack() {
   state.selectedWorkDate = previous.selectedWorkDate || "";
   switchView(previous.view, false);
   switchWorkSection(previous.workSection || "fichaje", false);
+  switchHorseSection(previous.horseSection || "buscar", false);
   renderWorkTable();
   isRestoringNavigation = false;
   updateBackButton();
@@ -626,7 +629,15 @@ function switchWorkSection(section, track = true) {
   if (track && section !== state.currentWorkSection) rememberNavigation();
   state.currentWorkSection = section;
   $$(".work-section").forEach((el) => el.classList.toggle("active", el.id === `work-section-${section}`));
-  $$(".section-tab").forEach((btn) => btn.classList.toggle("active", btn.dataset.workSection === section));
+  $$("[data-work-section]").forEach((btn) => btn.classList.toggle("active", btn.dataset.workSection === section));
+  updateBackButton();
+}
+
+function switchHorseSection(section, track = true) {
+  if (track && section !== state.currentHorseSection) rememberNavigation();
+  state.currentHorseSection = section;
+  $$(".horse-section").forEach((el) => el.classList.toggle("active", el.id === `horse-section-${section}`));
+  $$("[data-horse-section]").forEach((btn) => btn.classList.toggle("active", btn.dataset.horseSection === section));
   updateBackButton();
 }
 
@@ -780,6 +791,36 @@ function renderHorses() {
   if (!list) return;
   const horses = [...state.horses].sort((a, b) => naturalHorseSort(a, b));
   list.innerHTML = horses.map(horseCardHtml).join("") || emptyState("Todavia no hay caballos registrados.");
+  renderHorseObservations();
+}
+
+function renderHorseObservations() {
+  const list = $("#horseObservationsList");
+  if (!list) return;
+  const horsesWithNotes = state.horses
+    .filter((horse) => horse.notes && horse.notes.trim())
+    .sort((a, b) => naturalHorseSort(a, b));
+
+  list.innerHTML = horsesWithNotes.map((horse) => `
+    <article class="observation-card">
+      <span class="icon-slot" data-icon="notes"></span>
+      <div>
+        <div class="horse-title-block">
+          <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
+          <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
+        </div>
+        <p>${escapeHtml(horse.notes)}</p>
+        <div class="meta">
+          <span>${escapeHtml(horse.stable || "Sin cuadra")}</span>
+          ${horse.paddock ? `<span>${escapeHtml(horse.paddock)}</span>` : ""}
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="small-button" data-open-horse="${horse.id}" type="button">Abrir ficha</button>
+        <button class="small-button" data-complete-horse-note="${horse.id}" type="button">Hecho</button>
+      </div>
+    </article>
+  `).join("") || emptyState("No hay observaciones pendientes.");
 }
 
 function naturalHorseSort(a, b) {
@@ -794,10 +835,15 @@ function horseCardHtml(horse) {
     <article class="horse-card">
       <div class="horse-photo-thumb">${horse.photo ? `<img src="${horse.photo}" alt="">` : `<span>${escapeHtml(horse.number || "?")}</span>`}</div>
       <div>
-        <h3>${escapeHtml(horseLabel(horse))}</h3>
+        <div class="horse-title-block">
+          <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
+          <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
+        </div>
         <div class="meta">
           <span>${escapeHtml(horse.stable || "Sin cuadra")}</span>
-          <span>${Number(horse.lat).toFixed(6)}, ${Number(horse.lng).toFixed(6)}</span>
+          <span class="location-status">${horseHasLocation(horse, "stable") ? "Cuadra guardada" : "Cuadra sin ubicacion"}</span>
+          ${horse.paddock ? `<span>${escapeHtml(horse.paddock)}</span>` : ""}
+          ${horse.paddock ? `<span class="location-status">${horseHasLocation(horse, "paddock") ? "Paddock guardado" : "Paddock sin ubicacion"}</span>` : ""}
         </div>
         ${horse.notes ? `<p class="muted">${escapeHtml(horse.notes)}</p>` : ""}
       </div>
@@ -815,34 +861,73 @@ function horseLabel(horse) {
   return horse.name ? `${number} - ${horse.name}` : number;
 }
 
-function googleMapsUrl(horse) {
-  const query = encodeURIComponent(`${horse.lat},${horse.lng}`);
+function googleMapsUrl(horse, locationType = "stable") {
+  const location = horseLocation(horse, locationType);
+  const query = encodeURIComponent(`${location.lat},${location.lng}`);
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
+function coordinateValue(selector) {
+  const value = $(selector).value;
+  return value === "" ? null : Number(value);
+}
+
+function syncManualCoordinateInputsToHidden() {
+  const pairs = [
+    ["#manualStableLat", "#stableLat"],
+    ["#manualStableLng", "#stableLng"],
+    ["#manualPaddockLat", "#paddockLat"],
+    ["#manualPaddockLng", "#paddockLng"]
+  ];
+  pairs.forEach(([manualSelector, hiddenSelector]) => {
+    const manual = $(manualSelector);
+    const hidden = $(hiddenSelector);
+    if (manual && hidden) hidden.value = manual.value;
+  });
+}
+
+function syncHiddenCoordinatesToManualInputs() {
+  const pairs = [
+    ["#stableLat", "#manualStableLat"],
+    ["#stableLng", "#manualStableLng"],
+    ["#paddockLat", "#manualPaddockLat"],
+    ["#paddockLng", "#manualPaddockLng"]
+  ];
+  pairs.forEach(([hiddenSelector, manualSelector]) => {
+    const hidden = $(hiddenSelector);
+    const manual = $(manualSelector);
+    if (manual && hidden) manual.value = hidden.value;
+  });
 }
 
 function saveHorse(event) {
   event.preventDefault();
+  syncManualCoordinateInputsToHidden();
   const id = $("#horseId").value || uid();
   const horse = {
     id,
     number: $("#horseNumber").value.trim(),
     name: $("#horseName").value.trim(),
     stable: $("#stableName").value.trim(),
-    lat: Number($("#stableLat").value),
-    lng: Number($("#stableLng").value),
+    paddock: $("#paddockName").value.trim(),
+    lat: coordinateValue("#stableLat"),
+    lng: coordinateValue("#stableLng"),
+    paddockLat: coordinateValue("#paddockLat"),
+    paddockLng: coordinateValue("#paddockLng"),
     photo: $("#horsePhotoData").value,
     notes: $("#horseNotes").value.trim(),
     updatedAt: new Date().toISOString()
   };
 
-  if (!Number.isFinite(horse.lat) || !Number.isFinite(horse.lng)) {
-    alert("Introduce latitud y longitud validas.");
+  if (!horseHasLocation(horse, "stable") && !horseHasLocation(horse, "paddock")) {
+    alert("Guarda al menos la ubicacion de la cuadra o del paddock.");
     return;
   }
 
   state.horses = state.horses.filter((item) => item.id !== id);
   state.horses.push(horse);
   resetHorseForm();
+  switchHorseSection("listado");
   render();
 }
 
@@ -850,6 +935,9 @@ function resetHorseForm() {
   $("#horseForm").reset();
   $("#horseId").value = "";
   $("#horsePhotoData").value = "";
+  $("#locationHelp").textContent = "Pulsa estando junto a la cuadra del caballo.";
+  syncHiddenCoordinatesToManualInputs();
+  updateHorseFormTitle();
   renderHorsePhotoPreview("");
 }
 
@@ -857,15 +945,54 @@ function editHorse(id) {
   const horse = state.horses.find((item) => item.id === id);
   if (!horse) return;
   switchView("cuadras");
+  switchHorseSection("ficha");
+  fillHorseForm(horse);
+}
+
+function fillHorseForm(horse) {
   $("#horseId").value = horse.id;
   $("#horseNumber").value = horse.number;
   $("#horseName").value = horse.name;
   $("#stableName").value = horse.stable;
+  $("#paddockName").value = horse.paddock || "";
   $("#stableLat").value = horse.lat;
   $("#stableLng").value = horse.lng;
+  $("#paddockLat").value = horse.paddockLat || "";
+  $("#paddockLng").value = horse.paddockLng || "";
+  syncHiddenCoordinatesToManualInputs();
   $("#horsePhotoData").value = horse.photo || "";
+  $("#locationHelp").textContent = horseLocationStatus(horse);
+  updateHorseFormTitle();
   renderHorsePhotoPreview(horse.photo || "");
   $("#horseNotes").value = horse.notes;
+}
+
+function openHorseFromObservation(id) {
+  rememberNavigation();
+  switchView("cuadras", false);
+  switchHorseSection("ficha", false);
+  const horse = state.horses.find((item) => item.id === id);
+  if (horse) fillHorseForm(horse);
+}
+
+function completeHorseObservation(id) {
+  const horse = state.horses.find((item) => item.id === id);
+  if (!horse) return;
+  if (!confirm("Marcar esta observacion como hecha? Se borrara de la ficha del caballo.")) return;
+  horse.notes = "";
+  horse.updatedAt = new Date().toISOString();
+  render();
+}
+
+function updateHorseFormTitle() {
+  const name = $("#horseName")?.value.trim();
+  const number = $("#horseNumber")?.value.trim();
+  const title = $("#horseFormTitle");
+  if (!title) return;
+  title.innerHTML = `
+    <span>${escapeHtml(number ? `Caballo ${number}` : "Ficha de caballo")}</span>
+    <strong>${escapeHtml(name || "Nuevo caballo")}</strong>
+  `;
 }
 
 function deleteHorse(id) {
@@ -901,16 +1028,46 @@ function showHorseResult(horse) {
   }
   result.innerHTML = `
     <article class="horse-result-card">
-      <h3>${escapeHtml(horseLabel(horse))}</h3>
+      <div class="horse-title-block">
+        <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
+        <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
+      </div>
       ${horse.photo ? `<div class="horse-photo-preview"><img src="${horse.photo}" alt=""></div>` : ""}
       <div class="meta">
         <span>${escapeHtml(horse.stable)}</span>
-        <span>${Number(horse.lat).toFixed(6)}, ${Number(horse.lng).toFixed(6)}</span>
+        <span class="location-status">${horseHasLocation(horse, "stable") ? "Cuadra guardada" : "Cuadra sin ubicacion"}</span>
+        ${horse.paddock ? `<span>${escapeHtml(horse.paddock)}</span>` : ""}
+        ${horse.paddock ? `<span class="location-status">${horseHasLocation(horse, "paddock") ? "Paddock guardado" : "Paddock sin ubicacion"}</span>` : ""}
       </div>
       ${horse.notes ? `<p class="muted">${escapeHtml(horse.notes)}</p>` : ""}
-      <a class="map-link" href="${googleMapsUrl(horse)}" target="_blank" rel="noopener">Abrir en Google Maps</a>
+      <div class="map-link-row">
+        ${horseHasLocation(horse, "stable") ? `<a class="map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener">Google Maps cuadra</a>` : ""}
+        ${horseHasLocation(horse, "paddock") ? `<a class="map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener">Google Maps paddock</a>` : ""}
+      </div>
     </article>
   `;
+}
+
+function horseHasLocation(horse, locationType = "stable") {
+  const location = horseLocation(horse, locationType);
+  return location.lat !== null && location.lng !== null && Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng));
+}
+
+function horseLocation(horse, locationType = "stable") {
+  if (locationType === "paddock") {
+    return { lat: toCoordinate(horse.paddockLat), lng: toCoordinate(horse.paddockLng) };
+  }
+  return { lat: toCoordinate(horse.lat), lng: toCoordinate(horse.lng) };
+}
+
+function toCoordinate(value) {
+  return value === "" || value === null || value === undefined ? null : Number(value);
+}
+
+function horseLocationStatus(horse) {
+  const stable = horseHasLocation(horse, "stable") ? "cuadra guardada" : "cuadra sin ubicacion";
+  const paddock = horse.paddock ? horseHasLocation(horse, "paddock") ? "paddock guardado" : "paddock sin ubicacion" : "sin paddock";
+  return `${stable}; ${paddock}.`;
 }
 
 function renderHorsePhotoPreview(photoData) {
@@ -949,16 +1106,24 @@ function compressImage(dataUrl, maxSize, quality) {
   });
 }
 
-function useCurrentLocationForStable() {
+function useCurrentLocationForHorse(locationType) {
   if (!navigator.geolocation) {
     alert("Tu navegador no permite obtener ubicacion.");
     return;
   }
   $("#locationHelp").textContent = "Obteniendo coordenadas...";
   navigator.geolocation.getCurrentPosition((position) => {
-    $("#stableLat").value = position.coords.latitude.toFixed(6);
-    $("#stableLng").value = position.coords.longitude.toFixed(6);
-    $("#locationHelp").textContent = `Coordenadas guardadas con precision aprox. ${Math.round(position.coords.accuracy)} m.`;
+    if (locationType === "paddock") {
+      $("#paddockLat").value = position.coords.latitude.toFixed(6);
+      $("#paddockLng").value = position.coords.longitude.toFixed(6);
+      syncHiddenCoordinatesToManualInputs();
+      $("#locationHelp").textContent = `Ubicacion de paddock guardada con precision aprox. ${Math.round(position.coords.accuracy)} m.`;
+    } else {
+      $("#stableLat").value = position.coords.latitude.toFixed(6);
+      $("#stableLng").value = position.coords.longitude.toFixed(6);
+      syncHiddenCoordinatesToManualInputs();
+      $("#locationHelp").textContent = `Ubicacion de cuadra guardada con precision aprox. ${Math.round(position.coords.accuracy)} m.`;
+    }
   }, () => {
     $("#locationHelp").textContent = "No se pudo obtener la ubicacion.";
     alert("No se pudo obtener la ubicacion. Revisa permisos de ubicacion del navegador.");
@@ -1320,7 +1485,7 @@ function normalizeImportedData(data) {
   return {
     workEntries: data.workEntries.map(normalizeWorkEntry).filter((entry) => entry.id && entry.date),
     tasks: data.tasks.map(normalizeTask).filter((task) => task.id && task.name && task.date),
-    horses: Array.isArray(data.horses) ? data.horses.map(normalizeHorse).filter((horse) => horse.id && Number.isFinite(horse.lat) && Number.isFinite(horse.lng)) : [],
+    horses: Array.isArray(data.horses) ? data.horses.map(normalizeHorse).filter((horse) => horse.id && (horseHasLocation(horse, "stable") || horseHasLocation(horse, "paddock"))) : [],
     clock: normalizeClock(data.clock),
     theme: normalizeTheme(data.theme)
   };
@@ -1360,13 +1525,20 @@ function normalizeTask(task) {
 
 function normalizeHorse(horse) {
   const source = horse && typeof horse === "object" ? horse : {};
+  const lat = source.lat === "" || source.lat === null || source.lat === undefined ? null : Number(source.lat);
+  const lng = source.lng === "" || source.lng === null || source.lng === undefined ? null : Number(source.lng);
+  const paddockLat = source.paddockLat === "" || source.paddockLat === null || source.paddockLat === undefined ? null : Number(source.paddockLat);
+  const paddockLng = source.paddockLng === "" || source.paddockLng === null || source.paddockLng === undefined ? null : Number(source.paddockLng);
   return {
     id: String(source.id || uid()),
     number: String(source.number || ""),
     name: String(source.name || ""),
     stable: String(source.stable || ""),
-    lat: Number(source.lat),
-    lng: Number(source.lng),
+    paddock: String(source.paddock || ""),
+    lat,
+    lng,
+    paddockLat,
+    paddockLng,
     photo: String(source.photo || ""),
     notes: String(source.notes || ""),
     updatedAt: String(source.updatedAt || new Date().toISOString())
@@ -1555,7 +1727,8 @@ function bindEvents() {
     button.addEventListener("click", () => switchView(button.dataset.view));
   });
   $$(".section-tab").forEach((button) => {
-    button.addEventListener("click", () => switchWorkSection(button.dataset.workSection));
+    if (button.dataset.workSection) button.addEventListener("click", () => switchWorkSection(button.dataset.workSection));
+    if (button.dataset.horseSection) button.addEventListener("click", () => switchHorseSection(button.dataset.horseSection));
   });
 
   $("#workForm").addEventListener("submit", saveWork);
@@ -1567,7 +1740,10 @@ function bindEvents() {
   $("#findHorseBtn").addEventListener("click", findHorseFromInput);
   $("#voiceHorseBtn").addEventListener("click", startHorseVoiceSearch);
   $("#horsePhotoInput").addEventListener("change", handleHorsePhoto);
-  $("#useLocationBtn").addEventListener("click", useCurrentLocationForStable);
+  $("#useStableLocationBtn").addEventListener("click", () => useCurrentLocationForHorse("stable"));
+  $("#usePaddockLocationBtn").addEventListener("click", () => useCurrentLocationForHorse("paddock"));
+  $("#horseName").addEventListener("input", updateHorseFormTitle);
+  $("#horseNumber").addEventListener("input", updateHorseFormTitle);
   $("#taskFilter").addEventListener("change", renderTasks);
   $("#manualDate").addEventListener("change", () => loadManualSegmentsForDate($("#manualDate").value));
   $("#addSegmentBtn").addEventListener("click", addManualSegment);
@@ -1607,6 +1783,8 @@ function bindEvents() {
     const findHorseButton = event.target.closest("[data-find-horse]");
     const editHorseButton = event.target.closest("[data-edit-horse]");
     const deleteHorseButton = event.target.closest("[data-delete-horse]");
+    const openHorseButton = event.target.closest("[data-open-horse]");
+    const completeHorseNoteButton = event.target.closest("[data-complete-horse-note]");
     const removeSegmentButton = event.target.closest("[data-remove-segment]");
     const calendarDay = event.target.closest("[data-calendar-date]");
 
@@ -1617,6 +1795,8 @@ function bindEvents() {
     if (findHorseButton) showHorseResult(state.horses.find((horse) => horse.id === findHorseButton.dataset.findHorse));
     if (editHorseButton) editHorse(editHorseButton.dataset.editHorse);
     if (deleteHorseButton) deleteHorse(deleteHorseButton.dataset.deleteHorse);
+    if (openHorseButton) openHorseFromObservation(openHorseButton.dataset.openHorse);
+    if (completeHorseNoteButton) completeHorseObservation(completeHorseNoteButton.dataset.completeHorseNote);
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
     if (calendarDay) openWorkDate(calendarDay.dataset.calendarDate);
   });
