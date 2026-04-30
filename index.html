@@ -18,6 +18,7 @@
         <div id="calModalNotes" class="cal-modal-notes"></div>
         <form id="calNoteForm" class="cal-note-form">
           <input type="hidden" id="calNoteDate">
+          <input type="hidden" id="calNoteEditId">
           <div class="cal-note-input-row">
             <select id="calNoteColor" title="Tipo de nota">
               <option value="green">🟢 Nota</option>
@@ -26,7 +27,14 @@
               <option value="red">🔴 Urgente</option>
             </select>
             <input id="calNoteText" type="text" placeholder="Escribe una nota o evento…" autocomplete="off" required>
-            <button class="primary-button" type="submit">Añadir</button>
+          </div>
+          <div class="cal-note-alarm-row">
+            <label class="cal-alarm-label">
+              🔔 Alarma
+              <input id="calNoteAlarm" type="time" title="Hora de aviso">
+            </label>
+            <button class="ghost-button" id="notifPermBtn" type="button">Activar notificaciones</button>
+            <button class="primary-button" id="calNoteSaveBtn" type="submit">Añadir</button>
           </div>
         </form>
       </div>
@@ -369,12 +377,14 @@
         </section>
 
         <section class="view" id="calendario">
-          <section class="panel">
-            <div class="panel-heading">
-              <h2><span class="icon-slot" data-icon="schedule"></span>Horario semanal</h2>
-            </div>
+          <details class="panel schedule-collapsible">
+            <summary class="schedule-summary">
+              <span class="icon-slot" data-icon="schedule"></span>
+              Horario semanal
+              <span class="schedule-chevron">▾</span>
+            </summary>
             <div id="weeklySchedule" class="schedule-grid"></div>
-          </section>
+          </details>
 
           <section class="panel">
             <div class="panel-heading split">

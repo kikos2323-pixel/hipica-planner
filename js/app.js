@@ -853,33 +853,67 @@ function renderCalendarModalInfo(iso) {
 }
 
 function renderCalendarModalNotes(iso) {
-  const notes = state.calendarNotes.filter((n) => n.date === iso).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const notes = state.calendarNotes.filter((n) => n.date === iso).sort((a, b) => (a.alarmTime || "99:99").localeCompare(b.alarmTime || "99:99") || a.createdAt.localeCompare(b.createdAt));
   const colors = { green: "🟢", blue: "🔵", amber: "🟡", red: "🔴" };
   $("#calModalNotes").innerHTML = notes.map((note) => `
     <div class="cal-note-item cal-note-${note.color}">
       <span class="cal-note-dot">${colors[note.color] || "🟢"}</span>
-      <span class="cal-note-body">${escapeHtml(note.text)}</span>
+      <div class="cal-note-body">
+        <span>${escapeHtml(note.text)}</span>
+        ${noteCountdown(note)}
+      </div>
+      <button class="cal-note-edit" data-edit-note="${note.id}" type="button" aria-label="Editar nota">✏️</button>
       <button class="cal-note-delete" data-delete-note="${note.id}" type="button" aria-label="Borrar nota">✕</button>
     </div>
-  `).join("") || "";
+  `).join("") || `<p class="muted" style="font-size:0.85rem">Sin notas para este día. Añade una abajo.</p>`;
 }
 
 function saveCalendarNote(event) {
   event.preventDefault();
   const text = $("#calNoteText").value.trim();
   const date = $("#calNoteDate").value;
+  const editId = $("#calNoteEditId").value;
+  const alarmTime = $("#calNoteAlarm").value;
   if (!text || !date) return;
-  state.calendarNotes.push({
-    id: uid(),
-    date,
-    text,
-    color: $("#calNoteColor").value,
-    createdAt: new Date().toISOString()
-  });
+
+  if (editId) {
+    const note = state.calendarNotes.find((n) => n.id === editId);
+    if (note) {
+      note.text = text;
+      note.color = $("#calNoteColor").value;
+      note.alarmTime = alarmTime || null;
+      note.alarmFired = alarmTime ? false : null;
+    }
+    $("#calNoteEditId").value = "";
+    $("#calNoteSaveBtn").textContent = "Añadir";
+  } else {
+    state.calendarNotes.push({
+      id: uid(),
+      date,
+      text,
+      color: $("#calNoteColor").value,
+      alarmTime: alarmTime || null,
+      alarmFired: alarmTime ? false : null,
+      createdAt: new Date().toISOString()
+    });
+  }
+
   $("#calNoteText").value = "";
+  $("#calNoteAlarm").value = "";
   saveData();
   renderCalendarModalNotes(date);
   renderCalendar();
+}
+
+function editCalendarNote(id) {
+  const note = state.calendarNotes.find((n) => n.id === id);
+  if (!note) return;
+  $("#calNoteEditId").value = note.id;
+  $("#calNoteText").value = note.text;
+  $("#calNoteColor").value = note.color;
+  $("#calNoteAlarm").value = note.alarmTime || "";
+  $("#calNoteSaveBtn").textContent = "Guardar";
+  $("#calNoteText").focus();
 }
 
 function deleteCalendarNote(id) {
@@ -888,6 +922,69 @@ function deleteCalendarNote(id) {
   saveData();
   renderCalendarModalNotes(date);
   renderCalendar();
+}
+
+function requestNotificationPermission() {
+  if (!("Notification" in window)) {
+    alert("Tu navegador no soporta notificaciones.");
+    return;
+  }
+  Notification.requestPermission().then((perm) => {
+    updateNotifPermBtn();
+    if (perm === "granted") {
+      new Notification("Finca Planner", { body: "Las notificaciones están activadas ✅", icon: "" });
+    } else {
+      alert("Permiso denegado. Actívalo en la configuración del navegador.");
+    }
+  });
+}
+
+function updateNotifPermBtn() {
+  const btn = $("#notifPermBtn");
+  if (!btn) return;
+  if (!("Notification" in window)) { btn.style.display = "none"; return; }
+  if (Notification.permission === "granted") {
+    btn.textContent = "Notificaciones activadas ✅";
+    btn.disabled = true;
+  } else if (Notification.permission === "denied") {
+    btn.textContent = "Notificaciones bloqueadas ⛔";
+    btn.disabled = true;
+  } else {
+    btn.textContent = "Activar notificaciones 🔔";
+    btn.disabled = false;
+  }
+}
+
+function checkAlarms() {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const now = new Date();
+  const todayIso = todayISO();
+  const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+  state.calendarNotes.forEach((note) => {
+    if (!note.alarmTime || note.alarmFired !== false) return;
+    if (note.date === todayIso && note.alarmTime === nowTime) {
+      note.alarmFired = true;
+      new Notification("⏰ Finca Planner", {
+        body: note.text,
+        icon: "",
+        tag: note.id
+      });
+      saveData();
+    }
+  });
+}
+
+function noteCountdown(note) {
+  if (!note.alarmTime || note.alarmFired) return "";
+  const now = new Date();
+  const alarm = new Date(`${note.date}T${note.alarmTime}:00`);
+  const diff = alarm - now;
+  if (diff <= 0) return `<span class="note-alarm-tag fired">Alarma pasada</span>`;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const label = h > 0 ? `${h}h ${m}m` : `${m}m`;
+  return `<span class="note-alarm-tag">🔔 ${note.alarmTime} — en ${label}</span>`;
 }
 
 function openLightbox(src) {
@@ -1453,35 +1550,14 @@ function renderCalendar() {
     const hasTasks = tasks.length > 0;
     const hasNotes = notes.length > 0;
 
-    const scheduleTooltip = scheduleLabel(schedule) + ` (${scheduleTotalHours(schedule)} h previstas)`;
-    const workTooltip = hasWork
-      ? work.map((e) => `${e.dayType}: ${calculateWorkHours(e)} h`).join(" · ")
-      : "";
-
-    const scheduleIcon = `
-      <button class="cal-icon-btn" data-cal-schedule="${iso}" title="${escapeHtml(scheduleTooltip)}" type="button">
-        🕐
-        <span class="cal-tooltip">${escapeHtml(scheduleTooltip)}</span>
-      </button>`;
-
-    const workIcon = hasWork ? `
-      <button class="cal-icon-btn cal-icon-work" data-calendar-date="${iso}" title="${escapeHtml(workTooltip)}" type="button">
-        ✅
-        <span class="cal-tooltip">${escapeHtml(workTooltip)}</span>
-      </button>` : "";
-
-    const taskDots = hasTasks ? `<span class="cal-task-dot" title="${tasks.map((t) => escapeHtml(t.name)).join(", ")}">●</span>` : "";
     const notesDots = hasNotes ? notes.slice(0, 3).map((n) => `<span class="cal-note-pip cal-note-pip-${n.color}"></span>`).join("") : "";
+    const workDot = hasWork ? `<span class="cal-work-dot" title="Jornada registrada">✅</span>` : "";
 
     cells.push(`
-      <div class="calendar-day ${isToday ? "today" : ""}" data-open-day="${iso}" style="cursor:pointer">
+      <div class="calendar-day ${isToday ? "today" : ""} ${hasWork ? "has-work" : ""}" data-open-day="${iso}">
         <div class="cal-day-top">
           <span class="day-number">${day}</span>
-          <div class="cal-icons">
-            ${scheduleIcon}
-            ${workIcon}
-            ${taskDots}
-          </div>
+          <div class="cal-icons">${workDot}</div>
         </div>
         ${notesDots ? `<div class="cal-note-pips">${notesDots}</div>` : ""}
         ${tasks.map((task) => `<span class="calendar-event task">${escapeHtml(task.name)}</span>`).join("")}
@@ -2043,6 +2119,7 @@ function bindEvents() {
   $("#calNoteForm").addEventListener("submit", saveCalendarNote);
   $("#calModalClose").addEventListener("click", closeCalendarDayModal);
   $("#calendarDayModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeCalendarDayModal(); });
+  $("#notifPermBtn").addEventListener("click", requestNotificationPermission);
 
   $("#lightboxClose").addEventListener("click", closeLightbox);
   $("#photoLightbox").addEventListener("click", (e) => { if (e.target === e.currentTarget || e.target === $("#lightboxImg")) closeLightbox(); });
@@ -2114,13 +2191,13 @@ function bindEvents() {
     if (openHorseButton) openHorseFromObservation(openHorseButton.dataset.openHorse);
     if (completeHorseNoteButton) completeHorseObservation(completeHorseNoteButton.dataset.completeHorseNote);
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
-    const calScheduleBtn = event.target.closest("[data-cal-schedule]");
     const openDayBtn = event.target.closest("[data-open-day]");
+    const editNoteBtn = event.target.closest("[data-edit-note]");
     const deleteNoteBtn = event.target.closest("[data-delete-note]");
-    if (calScheduleBtn) { event.stopPropagation(); }
-    if (deleteNoteBtn) { event.stopPropagation(); deleteCalendarNote(deleteNoteBtn.dataset.deleteNote); }
-    if (openDayBtn && !calScheduleBtn && !deleteNoteBtn) openCalendarDayModal(openDayBtn.dataset.openDay);
-    if (calendarDay && !calScheduleBtn && !openDayBtn) openWorkDate(calendarDay.dataset.calendarDate);
+    if (editNoteBtn) { event.stopPropagation(); editCalendarNote(editNoteBtn.dataset.editNote); }
+    else if (deleteNoteBtn) { event.stopPropagation(); deleteCalendarNote(deleteNoteBtn.dataset.deleteNote); }
+    else if (openDayBtn) openCalendarDayModal(openDayBtn.dataset.openDay);
+    else if (calendarDay) openWorkDate(calendarDay.dataset.calendarDate);
   });
 
   document.body.addEventListener("input", (event) => {
@@ -2144,6 +2221,8 @@ function init() {
   render();
   updateBackButton();
   clockInterval = setInterval(renderClock, 1000);
+  setInterval(checkAlarms, 30000);
+  updateNotifPermBtn();
 }
 
 init();

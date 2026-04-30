@@ -924,6 +924,11 @@ th {
   transition: transform 0.16s ease, border-color 0.16s ease;
 }
 
+.cal-work-dot {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
 .calendar-day:not(.empty):hover {
   border-color: color-mix(in srgb, var(--primary) 55%, var(--line));
   transform: translateY(-1px);
@@ -1051,17 +1056,90 @@ th {
 
 .cal-note-delete:hover { background: var(--glass-strong); color: var(--danger); }
 
-.cal-note-form { margin-top: 4px; }
+.cal-note-form { margin-top: 4px; display: flex; flex-direction: column; gap: 8px; }
 
 .cal-note-input-row {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   gap: 8px;
   align-items: center;
 }
 
 .cal-note-input-row select { min-height: 44px; width: auto; }
 .cal-note-input-row input  { min-height: 44px; }
+
+.cal-note-alarm-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.cal-alarm-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.cal-alarm-label input[type="time"] {
+  min-height: 40px;
+  width: 110px;
+  font-size: 0.88rem;
+}
+
+.cal-note-edit {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+
+.cal-note-edit:hover { background: var(--glass-strong); }
+
+.note-alarm-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+}
+
+.note-alarm-tag.fired {
+  background: var(--glass-soft);
+  color: var(--muted);
+  border-color: var(--line);
+}
+
+.cal-note-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .cal-note-input-row { grid-template-columns: 1fr; }
+  .cal-note-alarm-row { grid-template-columns: 1fr 1fr; }
+  .cal-note-alarm-row .primary-button { grid-column: 1 / -1; }
+}
 
 /* Colores en el calendario */
 .cal-note-pips {
@@ -1787,6 +1865,39 @@ th {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
+}
+
+.schedule-collapsible {
+  margin-bottom: 16px;
+  border-radius: 18px;
+}
+
+.schedule-collapsible .schedule-grid {
+  margin-top: 14px;
+}
+
+.schedule-summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 800;
+  list-style: none;
+  user-select: none;
+}
+
+.schedule-summary::-webkit-details-marker { display: none; }
+
+.schedule-chevron {
+  margin-left: auto;
+  font-size: 1.1rem;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+
+details[open] .schedule-chevron {
+  transform: rotate(180deg);
 }
 
 .schedule-grid {
