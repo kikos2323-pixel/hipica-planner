@@ -986,11 +986,19 @@ function syncHiddenCoordinatesToManualInputs() {
 function saveHorse(event) {
   event.preventDefault();
   syncManualCoordinateInputsToHidden();
+
+  const number = $("#horseNumber").value.trim();
+  const name = $("#horseName").value.trim();
+  if (!number && !name) {
+    alert("Introduce al menos el código o el nombre del caballo.");
+    return;
+  }
+
   const id = $("#horseId").value || uid();
   const horse = {
     id,
-    number: $("#horseNumber").value.trim(),
-    name: $("#horseName").value.trim(),
+    number,
+    name,
     stable: $("#stableName").value.trim(),
     paddock: $("#paddockName").value.trim(),
     lat: coordinateValue("#stableLat"),
@@ -1002,16 +1010,26 @@ function saveHorse(event) {
     updatedAt: new Date().toISOString()
   };
 
-  if (!horseHasLocation(horse, "stable") && !horseHasLocation(horse, "paddock")) {
-    alert("Guarda al menos la ubicacion de la cuadra o del paddock.");
-    return;
-  }
-
   state.horses = state.horses.filter((item) => item.id !== id);
   state.horses.push(horse);
-  resetHorseForm();
-  switchHorseSection("listado");
   render();
+  triggerHorseSaveAnimation();
+  resetHorseForm();
+}
+
+function triggerHorseSaveAnimation() {
+  const btn = $("#horseSaveBtn");
+  if (!btn) return;
+  btn.classList.add("btn-saving");
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.classList.remove("btn-saving");
+    btn.classList.add("btn-saved");
+    setTimeout(() => {
+      btn.classList.remove("btn-saved");
+      btn.disabled = false;
+    }, 1600);
+  }, 700);
 }
 
 function resetHorseForm() {
@@ -1576,7 +1594,7 @@ function normalizeImportedData(data) {
   return {
     workEntries: data.workEntries.map(normalizeWorkEntry).filter((entry) => entry.id && entry.date),
     tasks: data.tasks.map(normalizeTask).filter((task) => task.id && task.name && task.date),
-    horses: Array.isArray(data.horses) ? data.horses.map(normalizeHorse).filter((horse) => horse.id && (horseHasLocation(horse, "stable") || horseHasLocation(horse, "paddock"))) : [],
+    horses: Array.isArray(data.horses) ? data.horses.map(normalizeHorse).filter((horse) => horse.id && (horse.number || horse.name)) : [],
     clock: normalizeClock(data.clock),
     theme: normalizeTheme(data.theme)
   };
