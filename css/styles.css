@@ -2271,3 +2271,231 @@ details[open] .schedule-chevron {
     justify-content: flex-start;
   }
 }
+
+/* ── Modal día — extras (header info, stats, timeline, FAB) ─── */
+.cal-modal-back {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+.cal-modal-back svg { width: 22px; height: 22px; }
+
+.cal-modal-header-info { display: none; flex: 1; min-width: 0; }
+.cal-modal-header-info small {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.cal-modal-header-info h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  text-transform: capitalize;
+  letter-spacing: -0.01em;
+}
+
+.cal-modal-stats { display: none; }
+.cal-modal-section-title { display: none; }
+.cal-modal-timeline { display: none; }
+.cal-modal-fab { display: none; }
+
+/* Mobile-only redesign */
+@media (max-width: 900px) {
+  .cal-modal {
+    align-items: stretch;
+    padding: 0;
+    background: var(--bg);
+  }
+  .cal-modal-box {
+    width: 100%;
+    max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 96px;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg);
+    position: relative;
+  }
+  .cal-modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: max(env(safe-area-inset-top), 14px) 16px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    margin: 0;
+  }
+  .cal-modal-back { display: inline-flex; }
+  .cal-modal-header-info { display: block; }
+  .cal-modal-header-fallback { display: none; }
+  .cal-modal-header .lightbox-close { display: none; }
+
+  .cal-modal-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 16px;
+  }
+  .day-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+  }
+  .day-stat::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--accent);
+  }
+  .day-stat.work::before { background: var(--primary); }
+  .day-stat.tasks::before { background: var(--accent); }
+  .day-stat.notes::before { background: #d4a93a; }
+  .day-stat small {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+  .day-stat strong {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .cal-modal-section-title {
+    display: block;
+    padding: 8px 16px 8px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 800;
+    color: var(--muted);
+  }
+  .cal-modal-section-title.cal-notes-title {
+    padding-top: 16px;
+  }
+
+  .cal-modal-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 16px 4px;
+    position: relative;
+  }
+  .timeline-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px 12px 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .timeline-item::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    width: 4px;
+    border-radius: 4px;
+    background: var(--accent);
+  }
+  .timeline-item.work::before  { background: var(--primary); }
+  .timeline-item.green::before { background: #4caf6f; }
+  .timeline-item.blue::before  { background: #4a8fd6; }
+  .timeline-item.amber::before { background: #d4a93a; }
+  .timeline-item.red::before   { background: #c45a5a; }
+  .timeline-item .ti-time {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .timeline-item strong {
+    font-size: 0.97rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    word-wrap: break-word;
+  }
+  .timeline-item .ti-meta {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* Hide the old info chips on mobile (timeline replaces them) */
+  .cal-modal-info { display: none; }
+
+  .cal-modal-notes {
+    padding: 0 16px;
+    margin: 0;
+  }
+  .cal-modal-notes:empty + .cal-note-form,
+  .cal-modal-notes { gap: 8px; }
+
+  .cal-note-form {
+    margin: 12px 16px 16px;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    gap: 10px;
+  }
+
+  /* Floating Action Button */
+  .cal-modal-fab {
+    display: flex;
+    position: fixed;
+    bottom: max(env(safe-area-inset-bottom), 18px);
+    right: 18px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 28px rgba(36, 95, 72, 0.45);
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .cal-modal-fab:active {
+    transform: scale(0.92);
+    box-shadow: 0 6px 18px rgba(36, 95, 72, 0.55);
+  }
+  .cal-modal-fab svg {
+    width: 26px;
+    height: 26px;
+  }
+}

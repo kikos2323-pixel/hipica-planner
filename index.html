@@ -11,10 +11,17 @@
     <div id="calendarDayModal" class="cal-modal" role="dialog" aria-modal="true">
       <div class="cal-modal-box">
         <div class="cal-modal-header">
-          <h2 id="calModalTitle"></h2>
-          <button class="lightbox-close" id="calModalClose" type="button" aria-label="Cerrar">✕</button>
+          <button class="cal-modal-back" id="calModalClose" type="button" aria-label="Volver">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="cal-modal-header-info" id="calModalHeaderInfo"></div>
+          <h2 id="calModalTitle" class="cal-modal-header-fallback"></h2>
         </div>
+        <div class="cal-modal-stats" id="calModalStats"></div>
+        <div class="cal-modal-section-title">Día completo</div>
+        <div class="cal-modal-timeline" id="calModalTimeline"></div>
         <div id="calModalInfo" class="cal-modal-info"></div>
+        <div class="cal-modal-section-title cal-notes-title">Notas y eventos</div>
         <div id="calModalNotes" class="cal-modal-notes"></div>
         <form id="calNoteForm" class="cal-note-form">
           <input type="hidden" id="calNoteDate">
@@ -37,6 +44,9 @@
             <button class="primary-button" id="calNoteSaveBtn" type="submit">Añadir</button>
           </div>
         </form>
+        <button class="cal-modal-fab" id="calModalFab" type="button" aria-label="Añadir nota o evento">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
       </div>
     </div>
     <div id="photoLightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
