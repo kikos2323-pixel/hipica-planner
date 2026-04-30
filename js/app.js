@@ -15,6 +15,7 @@ const state = {
   workEntries: [],
   tasks: [],
   horses: [],
+  calendarNotes: [],
   currentView: "dashboard",
   currentWorkSection: "fichaje",
   currentHorseSection: "buscar",
@@ -145,6 +146,7 @@ function saveData() {
     workEntries: state.workEntries,
     tasks: state.tasks,
     horses: state.horses,
+    calendarNotes: state.calendarNotes,
     clock: state.clock
   }));
 }
@@ -157,6 +159,7 @@ function loadData() {
     state.workEntries = Array.isArray(data.workEntries) ? data.workEntries : [];
     state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
     state.horses = Array.isArray(data.horses) ? data.horses : [];
+    state.calendarNotes = Array.isArray(data.calendarNotes) ? data.calendarNotes : [];
     if (data.clock && Array.isArray(data.clock.segments)) {
       state.clock = {
         date: data.clock.date || todayISO(),
@@ -820,6 +823,73 @@ function renderHorseList() {
   }).join("") || emptyState("No hay caballos con ese criterio.");
 }
 
+function openCalendarDayModal(iso) {
+  const modal = $("#calendarDayModal");
+  if (!modal) return;
+  $("#calNoteDate").value = iso;
+  $("#calModalTitle").textContent = formatDate(iso);
+  renderCalendarModalInfo(iso);
+  renderCalendarModalNotes(iso);
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => $("#calNoteText")?.focus(), 100);
+}
+
+function closeCalendarDayModal() {
+  $("#calendarDayModal")?.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function renderCalendarModalInfo(iso) {
+  const work = state.workEntries.filter((e) => e.date === iso);
+  const tasks = state.tasks.filter((t) => t.date === iso);
+  const schedule = getScheduleForDate(iso);
+  const info = [
+    `<div class="cal-info-chip schedule">🕐 ${escapeHtml(scheduleLabel(schedule))} — ${scheduleTotalHours(schedule)} h previstas</div>`,
+    ...work.map((e) => `<div class="cal-info-chip work">✅ ${escapeHtml(e.dayType)}: ${calculateWorkHours(e)} h trabajadas</div>`),
+    ...tasks.map((t) => `<div class="cal-info-chip task">📋 ${escapeHtml(t.name)} — ${labelStatus(t.status)}</div>`)
+  ].join("");
+  $("#calModalInfo").innerHTML = info || `<p class="muted">Sin jornada ni tareas este día.</p>`;
+}
+
+function renderCalendarModalNotes(iso) {
+  const notes = state.calendarNotes.filter((n) => n.date === iso).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const colors = { green: "🟢", blue: "🔵", amber: "🟡", red: "🔴" };
+  $("#calModalNotes").innerHTML = notes.map((note) => `
+    <div class="cal-note-item cal-note-${note.color}">
+      <span class="cal-note-dot">${colors[note.color] || "🟢"}</span>
+      <span class="cal-note-body">${escapeHtml(note.text)}</span>
+      <button class="cal-note-delete" data-delete-note="${note.id}" type="button" aria-label="Borrar nota">✕</button>
+    </div>
+  `).join("") || "";
+}
+
+function saveCalendarNote(event) {
+  event.preventDefault();
+  const text = $("#calNoteText").value.trim();
+  const date = $("#calNoteDate").value;
+  if (!text || !date) return;
+  state.calendarNotes.push({
+    id: uid(),
+    date,
+    text,
+    color: $("#calNoteColor").value,
+    createdAt: new Date().toISOString()
+  });
+  $("#calNoteText").value = "";
+  saveData();
+  renderCalendarModalNotes(date);
+  renderCalendar();
+}
+
+function deleteCalendarNote(id) {
+  state.calendarNotes = state.calendarNotes.filter((n) => n.id !== id);
+  const date = $("#calNoteDate").value;
+  saveData();
+  renderCalendarModalNotes(date);
+  renderCalendar();
+}
+
 function openLightbox(src) {
   const lb = $("#photoLightbox");
   const img = $("#lightboxImg");
@@ -1378,15 +1448,44 @@ function renderCalendar() {
     const tasks = state.tasks.filter((task) => task.date === iso);
     const schedule = getScheduleForDate(iso);
     const isToday = iso === todayISO();
-    const events = [
-      `<span class="calendar-event schedule">${scheduleLabel(schedule)}</span>`,
-      ...work.map((entry) => `<span class="calendar-event">${entry.dayType}: ${calculateWorkHours(entry)} h</span>`),
-      ...tasks.map((task) => `<span class="calendar-event task">${escapeHtml(task.name)}</span>`)
-    ].join("");
+    const notes = state.calendarNotes.filter((n) => n.date === iso);
+    const hasWork = work.length > 0;
+    const hasTasks = tasks.length > 0;
+    const hasNotes = notes.length > 0;
+
+    const scheduleTooltip = scheduleLabel(schedule) + ` (${scheduleTotalHours(schedule)} h previstas)`;
+    const workTooltip = hasWork
+      ? work.map((e) => `${e.dayType}: ${calculateWorkHours(e)} h`).join(" · ")
+      : "";
+
+    const scheduleIcon = `
+      <button class="cal-icon-btn" data-cal-schedule="${iso}" title="${escapeHtml(scheduleTooltip)}" type="button">
+        🕐
+        <span class="cal-tooltip">${escapeHtml(scheduleTooltip)}</span>
+      </button>`;
+
+    const workIcon = hasWork ? `
+      <button class="cal-icon-btn cal-icon-work" data-calendar-date="${iso}" title="${escapeHtml(workTooltip)}" type="button">
+        ✅
+        <span class="cal-tooltip">${escapeHtml(workTooltip)}</span>
+      </button>` : "";
+
+    const taskDots = hasTasks ? `<span class="cal-task-dot" title="${tasks.map((t) => escapeHtml(t.name)).join(", ")}">●</span>` : "";
+    const notesDots = hasNotes ? notes.slice(0, 3).map((n) => `<span class="cal-note-pip cal-note-pip-${n.color}"></span>`).join("") : "";
+
     cells.push(`
-      <div class="calendar-day ${isToday ? "today" : ""}" data-calendar-date="${iso}">
-        <span class="day-number">${day}</span>
-        ${events}
+      <div class="calendar-day ${isToday ? "today" : ""}" data-open-day="${iso}" style="cursor:pointer">
+        <div class="cal-day-top">
+          <span class="day-number">${day}</span>
+          <div class="cal-icons">
+            ${scheduleIcon}
+            ${workIcon}
+            ${taskDots}
+          </div>
+        </div>
+        ${notesDots ? `<div class="cal-note-pips">${notesDots}</div>` : ""}
+        ${tasks.map((task) => `<span class="calendar-event task">${escapeHtml(task.name)}</span>`).join("")}
+        ${notes.map((n) => `<span class="calendar-event cal-note-event cal-note-event-${n.color}">${escapeHtml(n.text)}</span>`).join("")}
       </div>
     `);
   }
@@ -1941,6 +2040,10 @@ function bindEvents() {
   $("#addSegmentBtn").addEventListener("click", addManualSegment);
   $("#loadScheduleBtn").addEventListener("click", loadScheduleIntoManualEditor);
   $("#saveManualSegmentsBtn").addEventListener("click", saveManualSegments);
+  $("#calNoteForm").addEventListener("submit", saveCalendarNote);
+  $("#calModalClose").addEventListener("click", closeCalendarDayModal);
+  $("#calendarDayModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeCalendarDayModal(); });
+
   $("#lightboxClose").addEventListener("click", closeLightbox);
   $("#photoLightbox").addEventListener("click", (e) => { if (e.target === e.currentTarget || e.target === $("#lightboxImg")) closeLightbox(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
@@ -2011,7 +2114,13 @@ function bindEvents() {
     if (openHorseButton) openHorseFromObservation(openHorseButton.dataset.openHorse);
     if (completeHorseNoteButton) completeHorseObservation(completeHorseNoteButton.dataset.completeHorseNote);
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
-    if (calendarDay) openWorkDate(calendarDay.dataset.calendarDate);
+    const calScheduleBtn = event.target.closest("[data-cal-schedule]");
+    const openDayBtn = event.target.closest("[data-open-day]");
+    const deleteNoteBtn = event.target.closest("[data-delete-note]");
+    if (calScheduleBtn) { event.stopPropagation(); }
+    if (deleteNoteBtn) { event.stopPropagation(); deleteCalendarNote(deleteNoteBtn.dataset.deleteNote); }
+    if (openDayBtn && !calScheduleBtn && !deleteNoteBtn) openCalendarDayModal(openDayBtn.dataset.openDay);
+    if (calendarDay && !calScheduleBtn && !openDayBtn) openWorkDate(calendarDay.dataset.calendarDate);
   });
 
   document.body.addEventListener("input", (event) => {

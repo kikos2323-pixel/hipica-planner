@@ -8,6 +8,29 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
+    <div id="calendarDayModal" class="cal-modal" role="dialog" aria-modal="true">
+      <div class="cal-modal-box">
+        <div class="cal-modal-header">
+          <h2 id="calModalTitle"></h2>
+          <button class="lightbox-close" id="calModalClose" type="button" aria-label="Cerrar">✕</button>
+        </div>
+        <div id="calModalInfo" class="cal-modal-info"></div>
+        <div id="calModalNotes" class="cal-modal-notes"></div>
+        <form id="calNoteForm" class="cal-note-form">
+          <input type="hidden" id="calNoteDate">
+          <div class="cal-note-input-row">
+            <select id="calNoteColor" title="Tipo de nota">
+              <option value="green">🟢 Nota</option>
+              <option value="blue">🔵 Evento</option>
+              <option value="amber">🟡 Recordatorio</option>
+              <option value="red">🔴 Urgente</option>
+            </select>
+            <input id="calNoteText" type="text" placeholder="Escribe una nota o evento…" autocomplete="off" required>
+            <button class="primary-button" type="submit">Añadir</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <div id="photoLightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
       <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">✕</button>
       <img id="lightboxImg" src="" alt="Foto del caballo">
