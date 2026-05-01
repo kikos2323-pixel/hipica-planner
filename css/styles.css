@@ -1540,6 +1540,60 @@ th {
   }
 }
 
+.obs-panel {
+  display: none;
+}
+
+.obs-panel.active {
+  display: block;
+}
+
+.obs-tabs {
+  margin-bottom: 12px;
+}
+
+.general-note-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.general-note-input-row textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.general-notes-list {
+  display: grid;
+  gap: 10px;
+}
+
+.general-note-card {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--glass-strong);
+}
+
+.general-note-card p {
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+}
+
+.general-note-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.small-button.danger {
+  color: var(--danger, #e53e3e);
+  border-color: var(--danger, #e53e3e);
+}
+
 .horse-observations-list {
   display: grid;
   gap: 10px;
@@ -1685,12 +1739,49 @@ th {
   font-weight: 900;
 }
 
+.photo-box-wrap {
+  position: relative;
+  width: 110px;
+  flex-shrink: 0;
+}
+
 .horse-photo-preview.photo-button {
   cursor: pointer;
   border: 2px dashed var(--line);
   transition: border-color 0.15s, background 0.15s;
   width: 110px;
   height: 110px;
+}
+
+.gallery-btn {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--glass-strong);
+  border: 1.5px solid var(--line);
+  box-shadow: var(--shadow);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.gallery-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  transform: scale(1.1);
+}
+
+.gallery-btn input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .horse-photo-preview.photo-button:hover {

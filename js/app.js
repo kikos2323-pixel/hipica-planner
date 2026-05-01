@@ -16,6 +16,8 @@ const state = {
   tasks: [],
   horses: [],
   calendarNotes: [],
+  generalNotes: [],
+  currentObsTab: "pendientes",
   currentView: "dashboard",
   currentWorkSection: "fichaje",
   currentHorseSection: "buscar",
@@ -147,6 +149,7 @@ function saveData() {
     tasks: state.tasks,
     horses: state.horses,
     calendarNotes: state.calendarNotes,
+    generalNotes: state.generalNotes,
     clock: state.clock
   }));
 }
@@ -160,6 +163,7 @@ function loadData() {
     state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
     state.horses = Array.isArray(data.horses) ? data.horses : [];
     state.calendarNotes = Array.isArray(data.calendarNotes) ? data.calendarNotes : [];
+    state.generalNotes = Array.isArray(data.generalNotes) ? data.generalNotes : [];
     if (data.clock && Array.isArray(data.clock.segments)) {
       state.clock = {
         date: data.clock.date || todayISO(),
@@ -1116,6 +1120,80 @@ function renderHorseObservations() {
       </div>
     </article>
   `).join("") || emptyState("No hay observaciones pendientes.");
+}
+
+function renderGeneralNotes() {
+  const list = $("#generalNotesList");
+  if (!list) return;
+  const notes = [...state.generalNotes].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  list.innerHTML = notes.map((note) => `
+    <article class="general-note-card">
+      <p>${escapeHtml(note.text)}</p>
+      <div class="general-note-meta">
+        <span>${formatDate(note.createdAt.slice(0, 10))}</span>
+        <div class="card-actions">
+          <button class="small-button" data-edit-general-note="${note.id}" type="button">Editar</button>
+          <button class="small-button danger" data-delete-general-note="${note.id}" type="button">Borrar</button>
+        </div>
+      </div>
+    </article>
+  `).join("") || emptyState("Sin anotaciones. Escribe tu primera nota arriba.");
+}
+
+function saveGeneralNote(event) {
+  event.preventDefault();
+  const text = $("#generalNoteText")?.value.trim();
+  if (!text) return;
+  const editId = $("#generalNoteEditId")?.value;
+  if (editId) {
+    const note = state.generalNotes.find((n) => n.id === editId);
+    if (note) note.text = text;
+  } else {
+    state.generalNotes.push({ id: uid(), text, createdAt: new Date().toISOString() });
+  }
+  saveData();
+  resetGeneralNoteForm();
+  renderGeneralNotes();
+}
+
+function editGeneralNote(id) {
+  const note = state.generalNotes.find((n) => n.id === id);
+  if (!note) return;
+  const textEl = $("#generalNoteText");
+  const editIdEl = $("#generalNoteEditId");
+  const cancelBtn = $("#generalNoteCancelBtn");
+  if (textEl) textEl.value = note.text;
+  if (editIdEl) editIdEl.value = id;
+  if (cancelBtn) cancelBtn.style.display = "";
+  textEl?.focus();
+}
+
+function deleteGeneralNote(id) {
+  if (!confirm("¿Borrar esta anotación?")) return;
+  state.generalNotes = state.generalNotes.filter((n) => n.id !== id);
+  saveData();
+  renderGeneralNotes();
+}
+
+function resetGeneralNoteForm() {
+  const textEl = $("#generalNoteText");
+  const editIdEl = $("#generalNoteEditId");
+  const cancelBtn = $("#generalNoteCancelBtn");
+  if (textEl) textEl.value = "";
+  if (editIdEl) editIdEl.value = "";
+  if (cancelBtn) cancelBtn.style.display = "none";
+}
+
+function switchObsTab(tab) {
+  state.currentObsTab = tab;
+  $$(".obs-tabs .section-tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.obsTab === tab);
+  });
+  $$(".obs-panel").forEach((panel) => {
+    panel.classList.toggle("active", panel.id === `obs-panel-${tab}`);
+  });
+  if (tab === "generales") renderGeneralNotes();
+  if (tab === "pendientes") renderHorseObservations();
 }
 
 function naturalHorseSort(a, b) {
@@ -2096,6 +2174,7 @@ function bindEvents() {
   $$(".section-tab").forEach((button) => {
     if (button.dataset.workSection) button.addEventListener("click", () => switchWorkSection(button.dataset.workSection));
     if (button.dataset.horseSection) button.addEventListener("click", () => switchHorseSection(button.dataset.horseSection));
+    if (button.dataset.obsTab) button.addEventListener("click", () => switchObsTab(button.dataset.obsTab));
   });
 
   $("#workForm").addEventListener("submit", saveWork);
@@ -2107,6 +2186,7 @@ function bindEvents() {
   $("#findHorseBtn").addEventListener("click", findHorseFromInput);
   $("#voiceHorseBtn").addEventListener("click", startHorseVoiceSearch);
   $("#horsePhotoInput").addEventListener("change", handleHorsePhoto);
+  $("#horseGalleryInput").addEventListener("change", handleHorsePhoto);
   $("#useStableLocationBtn").addEventListener("click", () => useCurrentLocationForHorse("stable"));
   $("#usePaddockLocationBtn").addEventListener("click", () => useCurrentLocationForHorse("paddock"));
   $("#horseName").addEventListener("input", updateHorseFormTitle);
@@ -2117,6 +2197,8 @@ function bindEvents() {
   $("#loadScheduleBtn").addEventListener("click", loadScheduleIntoManualEditor);
   $("#saveManualSegmentsBtn").addEventListener("click", saveManualSegments);
   $("#calNoteForm").addEventListener("submit", saveCalendarNote);
+  $("#generalNoteForm").addEventListener("submit", saveGeneralNote);
+  $("#generalNoteCancelBtn").addEventListener("click", resetGeneralNoteForm);
   $("#calModalClose").addEventListener("click", closeCalendarDayModal);
   $("#calendarDayModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeCalendarDayModal(); });
   $("#notifPermBtn").addEventListener("click", requestNotificationPermission);
@@ -2190,6 +2272,10 @@ function bindEvents() {
     if (deleteHorseButton) deleteHorse(deleteHorseButton.dataset.deleteHorse);
     if (openHorseButton) openHorseFromObservation(openHorseButton.dataset.openHorse);
     if (completeHorseNoteButton) completeHorseObservation(completeHorseNoteButton.dataset.completeHorseNote);
+    const editGeneralNoteBtn = event.target.closest("[data-edit-general-note]");
+    const deleteGeneralNoteBtn = event.target.closest("[data-delete-general-note]");
+    if (editGeneralNoteBtn) editGeneralNote(editGeneralNoteBtn.dataset.editGeneralNote);
+    if (deleteGeneralNoteBtn) deleteGeneralNote(deleteGeneralNoteBtn.dataset.deleteGeneralNote);
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
     const openDayBtn = event.target.closest("[data-open-day]");
     const editNoteBtn = event.target.closest("[data-edit-note]");
