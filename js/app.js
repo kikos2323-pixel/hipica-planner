@@ -1,3 +1,6 @@
+import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, setDoc, getDoc }
+  from "./firebase.js";
+
 const STORAGE_KEY = "fincaPlanner.v1";
 const THEME_KEY = "fincaPlanner.theme";
 const STANDARD_DAY_HOURS = 7;
@@ -145,7 +148,7 @@ function isSameMonth(dateString, date = new Date()) {
 }
 
 function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+  const payload = {
     workEntries: state.workEntries,
     tasks: state.tasks,
     horses: state.horses,
@@ -153,7 +156,23 @@ function saveData() {
     generalNotes: state.generalNotes,
     trash: state.trash,
     clock: state.clock
-  }));
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  syncToFirestore(payload);
+}
+
+let _syncTimeout = null;
+function syncToFirestore(payload) {
+  const user = auth.currentUser;
+  if (!user) return;
+  clearTimeout(_syncTimeout);
+  _syncTimeout = setTimeout(async () => {
+    try {
+      await setDoc(doc(db, "users", user.uid, "data", "main"), payload);
+    } catch (e) {
+      console.warn("Error al sincronizar con Firebase:", e);
+    }
+  }, 1500);
 }
 
 function loadData() {
@@ -1316,10 +1335,20 @@ function showTrashToast() {
     document.body.appendChild(toast);
   }
   const count = state.trash.length;
-  toast.innerHTML = `🗑️ Movido a la papelera · <button class="toast-link" data-switch-obs-tab="papelera">Ver papelera</button>`;
+  toast.innerHTML = `🗑️ Movido a la papelera · <button class="toast-link" data-go-to-trash>Ver papelera</button>`;
   toast.classList.add("visible");
   clearTimeout(_trashToastTimeout);
   _trashToastTimeout = setTimeout(() => toast.classList.remove("visible"), 4000);
+}
+
+function switchHistorialTab(tab) {
+  $$("[data-historial-tab]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.historialTab === tab);
+  });
+  $$(".historial-panel").forEach((panel) => {
+    panel.classList.toggle("active", panel.id === `historial-panel-${tab}`);
+  });
+  if (tab === "papelera") renderTrash();
 }
 
 function switchObsTab(tab) {
@@ -2057,6 +2086,73 @@ function exportData() {
   URL.revokeObjectURL(url);
 }
 
+let _photosZipBlob = null;
+
+async function exportPhotosZip() {
+  const horses = state.horses.filter((h) => h.photo);
+  if (!horses.length) {
+    alert("No hay fotos guardadas en ninguna ficha.");
+    return;
+  }
+
+  const btn = $("#exportPhotosBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "Generando ZIP…"; }
+
+  try {
+    const zip = new JSZip();
+    const folder = zip.folder("fotos-caballos");
+    horses.forEach((horse, i) => {
+      const label = [
+        String(i + 1).padStart(2, "0"),
+        horse.number ? `caballo-${horse.number}` : null,
+        horse.name ? horse.name.replace(/\s+/g, "-").toLowerCase() : null
+      ].filter(Boolean).join("_");
+      const base64 = horse.photo.replace(/^data:image\/\w+;base64,/, "");
+      const ext = horse.photo.match(/^data:image\/(\w+);/)?.[1] || "jpg";
+      folder.file(`${label}.${ext}`, base64, { base64: true });
+    });
+
+    _photosZipBlob = await zip.generateAsync({ type: "blob" });
+
+    const summary = `${horses.length} foto${horses.length > 1 ? "s" : ""} de ${horses.length} caballo${horses.length > 1 ? "s" : ""}`;
+    $("#photoExportSummary").textContent = `ZIP listo — ${summary}. ¿Qué quieres hacer?`;
+    $("#photoExportShareBtn").style.display = navigator.share && navigator.canShare ? "" : "none";
+    $("#photoExportModal").classList.add("open");
+  } catch (err) {
+    alert("Error al generar el ZIP: " + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "📷 Exportar fotos"; }
+  }
+}
+
+function closePhotoExportModal() {
+  $("#photoExportModal").classList.remove("open");
+}
+
+async function sharePhotosZip() {
+  if (!_photosZipBlob) return;
+  const file = new File([_photosZipBlob], `fotos-caballos-${todayISO()}.zip`, { type: "application/zip" });
+  try {
+    await navigator.share({ files: [file], title: "Fotos caballos — Finca Planner" });
+    closePhotoExportModal();
+  } catch (err) {
+    if (err.name !== "AbortError") alert("No se pudo compartir: " + err.message);
+  }
+}
+
+function downloadPhotosZip() {
+  if (!_photosZipBlob) return;
+  const url = URL.createObjectURL(_photosZipBlob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `fotos-caballos-${todayISO()}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  closePhotoExportModal();
+}
+
 function readBackupData(parsed) {
   if (!parsed || typeof parsed !== "object") return null;
   if (parsed.app === "Finca Planner" && parsed.version === 1 && parsed.data) return parsed.data;
@@ -2317,6 +2413,7 @@ function bindEvents() {
     if (button.dataset.workSection) button.addEventListener("click", () => switchWorkSection(button.dataset.workSection));
     if (button.dataset.horseSection) button.addEventListener("click", () => switchHorseSection(button.dataset.horseSection));
     if (button.dataset.obsTab) button.addEventListener("click", () => switchObsTab(button.dataset.obsTab));
+    if (button.dataset.historialTab) button.addEventListener("click", () => switchHistorialTab(button.dataset.historialTab));
   });
 
   $("#workForm").addEventListener("submit", saveWork);
@@ -2358,6 +2455,11 @@ function bindEvents() {
 
   $("#exportDataBtn").addEventListener("click", exportData);
   $("#importDataInput").addEventListener("change", importData);
+  $("#exportPhotosBtn").addEventListener("click", exportPhotosZip);
+  $("#photoExportModalClose").addEventListener("click", closePhotoExportModal);
+  $("#photoExportModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closePhotoExportModal(); });
+  $("#photoExportShareBtn").addEventListener("click", sharePhotosZip);
+  $("#photoExportDownloadBtn").addEventListener("click", downloadPhotosZip);
   $("#showAllWorkEntriesBtn").addEventListener("click", showAllWorkEntries);
   $("#backBtn").addEventListener("click", goBack);
   $("#workDate").addEventListener("change", () => {
@@ -2422,14 +2524,11 @@ function bindEvents() {
     const restoreTrashBtn = event.target.closest("[data-restore-trash]");
     const purgeTrashBtn = event.target.closest("[data-purge-trash]");
     const emptyTrashBtn = event.target.closest("[data-empty-trash]");
-    const switchObsTabBtn = event.target.closest("[data-switch-obs-tab]");
+    const goToTrashBtn = event.target.closest("[data-go-to-trash]");
     if (restoreTrashBtn) restoreFromTrash(restoreTrashBtn.dataset.restoreTrash);
     if (purgeTrashBtn) purgeFromTrash(purgeTrashBtn.dataset.purgeTrash);
     if (emptyTrashBtn) emptyTrash();
-    if (switchObsTabBtn) {
-      switchHorseSection("observaciones");
-      switchObsTab(switchObsTabBtn.dataset.switchObsTab);
-    }
+    if (goToTrashBtn) { switchView("historial"); switchHistorialTab("papelera"); }
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
     const openDayBtn = event.target.closest("[data-open-day]");
     const editNoteBtn = event.target.closest("[data-edit-note]");
@@ -2463,6 +2562,226 @@ function init() {
   clockInterval = setInterval(renderClock, 1000);
   setInterval(checkAlarms, 30000);
   updateNotifPermBtn();
+}
+
+// ── Firebase auth & sync ─────────────────────────────────────
+
+async function loadFromFirestore(user) {
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid, "data", "main"));
+    if (snap.exists()) {
+      const data = snap.data();
+      state.workEntries   = Array.isArray(data.workEntries)   ? data.workEntries   : [];
+      state.tasks         = Array.isArray(data.tasks)         ? data.tasks         : [];
+      state.horses        = Array.isArray(data.horses)        ? data.horses        : [];
+      state.calendarNotes = Array.isArray(data.calendarNotes) ? data.calendarNotes : [];
+      state.generalNotes  = Array.isArray(data.generalNotes)  ? data.generalNotes  : [];
+      state.trash         = Array.isArray(data.trash)         ? data.trash         : [];
+      if (data.clock && Array.isArray(data.clock.segments)) state.clock = data.clock;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  } catch (e) {
+    console.warn("No se pudo cargar desde Firestore:", e);
+  }
+}
+
+function showLoginScreen() {
+  const ls = $("#loginScreen");
+  if (ls) ls.style.display = "flex";
+}
+
+function hideLoginScreen() {
+  const ls = $("#loginScreen");
+  if (ls) ls.style.display = "none";
+}
+
+function updateUserChip(user) {
+  const avatar    = $("#userAvatar");
+  const authBtn   = $("#authBtn");
+  const syncBtn   = $("#syncBtn");
+  const iconEnter = authBtn?.querySelector(".auth-icon-enter");
+  const iconExit  = authBtn?.querySelector(".auth-icon-exit");
+
+  if (user) {
+    // Avatar
+    if (avatar) {
+      avatar.src = user.photoURL || "";
+      avatar.style.display = user.photoURL ? "" : "none";
+      avatar.title = user.displayName || user.email;
+    }
+    // Botón rojo = cerrar sesión
+    if (authBtn) authBtn.classList.add("auth-logged-in");
+    if (iconEnter) iconEnter.style.display = "none";
+    if (iconExit)  iconExit.style.display  = "";
+    if (syncBtn)   syncBtn.style.display   = "";
+  } else {
+    if (avatar)    avatar.style.display    = "none";
+    if (authBtn)   authBtn.classList.remove("auth-logged-in");
+    if (iconEnter) iconEnter.style.display = "";
+    if (iconExit)  iconExit.style.display  = "none";
+    if (syncBtn)   syncBtn.style.display   = "none";
+  }
+}
+
+async function loginWithGoogle() {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    if (e.code !== "auth/popup-closed-by-user") alert("Error al iniciar sesión: " + e.message);
+  }
+}
+
+async function logout() {
+  if (!confirm("¿Cerrar sesión?")) return;
+  await signOut(auth);
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    hideLoginScreen();
+    updateUserChip(user);
+    await migrateOrLoadData(user);
+    render();
+  } else {
+    showLoginScreen();
+    updateUserChip(null);
+  }
+});
+
+async function migrateOrLoadData(user) {
+  const userDoc = doc(db, "users", user.uid, "data", "main");
+
+  try {
+    const snap = await getDoc(userDoc);
+    const hasCloudData = snap.exists();
+    const localRaw = localStorage.getItem(STORAGE_KEY);
+    const hasLocalData = localRaw && localRaw.length > 10;
+
+    if (!hasCloudData && hasLocalData) {
+      // Primera vez con esta cuenta: subir datos locales a Firestore
+      showSyncBanner("Subiendo tus datos a la nube…");
+      const local = JSON.parse(localRaw);
+      await setDoc(userDoc, local);
+      applyDataFromObject(local);
+      localStorage.removeItem(STORAGE_KEY);
+      hideSyncBanner("✅ Datos migrados a tu cuenta correctamente");
+    } else if (hasCloudData) {
+      // Ya hay datos en la nube: cargarlos y descartar el local
+      const data = snap.data();
+      applyDataFromObject(data);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    // Si no hay datos en ningún lado: app vacía, sin hacer nada
+  } catch (e) {
+    console.warn("Error en migración/carga:", e);
+    // Fallback: cargar desde local si existe
+    loadData();
+  }
+}
+
+function applyDataFromObject(data) {
+  state.workEntries   = Array.isArray(data.workEntries)   ? data.workEntries   : [];
+  state.tasks         = Array.isArray(data.tasks)         ? data.tasks         : [];
+  state.horses        = Array.isArray(data.horses)        ? data.horses        : [];
+  state.calendarNotes = Array.isArray(data.calendarNotes) ? data.calendarNotes : [];
+  state.generalNotes  = Array.isArray(data.generalNotes)  ? data.generalNotes  : [];
+  state.trash         = Array.isArray(data.trash)         ? data.trash         : [];
+  if (data.clock && Array.isArray(data.clock.segments)) state.clock = data.clock;
+}
+
+function showSyncBanner(msg) {
+  let banner = $("#syncBanner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "syncBanner";
+    banner.className = "sync-banner";
+    document.body.appendChild(banner);
+  }
+  banner.textContent = msg;
+  banner.classList.add("visible");
+}
+
+function hideSyncBanner(successMsg) {
+  const banner = $("#syncBanner");
+  if (!banner) return;
+  if (successMsg) {
+    banner.textContent = successMsg;
+    setTimeout(() => banner.classList.remove("visible"), 3000);
+  } else {
+    banner.classList.remove("visible");
+  }
+}
+
+// ── Botón auth unificado ──────────────────────────────────────
+document.getElementById("googleLoginBtn")?.addEventListener("click", loginWithGoogle);
+document.getElementById("authBtn")?.addEventListener("click", () => {
+  auth.currentUser ? logout() : loginWithGoogle();
+});
+
+// ── Botón sincronizar ─────────────────────────────────────────
+document.getElementById("syncBtn")?.addEventListener("click", manualSync);
+
+async function manualSync() {
+  const btn = $("#syncBtn");
+  const icon = btn?.querySelector(".sync-icon");
+  const check = btn?.querySelector(".sync-check");
+  const user = auth.currentUser;
+  if (!user) return;
+
+  icon?.classList.add("spinning");
+  if (check) check.style.display = "none";
+  if (icon) icon.style.display = "";
+
+  try {
+    const payload = {
+      workEntries: state.workEntries,
+      tasks: state.tasks,
+      horses: state.horses,
+      calendarNotes: state.calendarNotes,
+      generalNotes: state.generalNotes,
+      trash: state.trash,
+      clock: state.clock
+    };
+    await setDoc(doc(db, "users", user.uid, "data", "main"), payload);
+    icon?.classList.remove("spinning");
+    if (icon) icon.style.display = "none";
+    if (check) check.style.display = "";
+    setTimeout(() => {
+      if (icon) icon.style.display = "";
+      if (check) check.style.display = "none";
+    }, 2500);
+  } catch (e) {
+    icon?.classList.remove("spinning");
+    alert("Error al sincronizar: " + e.message);
+  }
+}
+
+// ── PWA install ───────────────────────────────────────────────
+let _installPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  _installPrompt = e;
+  const btn = $("#installBtn");
+  if (btn) btn.style.display = "";
+});
+
+window.addEventListener("appinstalled", () => {
+  const btn = $("#installBtn");
+  if (btn) btn.style.display = "none";
+  _installPrompt = null;
+});
+
+document.getElementById("installBtn")?.addEventListener("click", async () => {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  const { outcome } = await _installPrompt.userChoice;
+  if (outcome === "accepted") _installPrompt = null;
+});
+
+// ── Service Worker ────────────────────────────────────────────
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch((e) => console.warn("SW:", e));
 }
 
 init();

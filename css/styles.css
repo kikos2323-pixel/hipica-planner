@@ -306,6 +306,173 @@ label,
   padding: 0 28px 28px;
 }
 
+/* ── Login screen ───────────────────────────────────────── */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg, #f4f6f8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 40px 32px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+}
+
+.login-logo svg {
+  width: 56px;
+  height: 56px;
+  color: var(--accent);
+}
+
+.login-card h1 { font-size: 1.6rem; margin: 0; }
+.login-card p  { color: var(--muted); font-size: 0.9rem; margin: 0; }
+
+.google-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border: 1px solid var(--line);
+  border-radius: 50px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  margin-top: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.google-login-btn:hover {
+  background: var(--glass-strong);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.google-login-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+.login-note { font-size: 0.75rem !important; color: var(--muted) !important; }
+
+/* ── User chip ──────────────────────────────────────────── */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: 50px;
+  background: var(--glass-strong);
+  font-size: 0.8rem;
+}
+
+.user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-weight: 600;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.75rem;
+  padding: 0;
+  line-height: 1;
+}
+
+.user-logout:hover { color: var(--danger, #e53e3e); }
+
+.topbar-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.topbar-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.topbar-icon-btn {
+  width: 38px;
+  height: 38px;
+}
+
+.topbar-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.topbar-icon-btn:hover { background: var(--glass); }
+
+/* Auth button — verde sin sesión, rojo con sesión */
+.auth-btn { color: #16a34a; border-color: #16a34a; }
+.auth-btn:hover { background: #dcfce7; }
+.auth-btn.auth-logged-in { color: #dc2626; border-color: #dc2626; }
+.auth-btn.auth-logged-in:hover { background: #fee2e2; }
+
+/* Avatar circular en topbar */
+.topbar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--line);
+  flex-shrink: 0;
+}
+
+.sync-btn .sync-check { color: #16a34a; }
+.sync-btn .sync-icon { transition: transform 0.3s; }
+
+@keyframes spin360 {
+  to { transform: rotate(360deg); }
+}
+
+.sync-btn .sync-icon.spinning {
+  animation: spin360 0.8s linear infinite;
+}
+
+.sync-btn .sync-check { color: #22c55e; }
+
+.user-chip {
+  gap: 4px;
+  padding: 4px;
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -1056,6 +1223,12 @@ th {
 
 .cal-note-delete:hover { background: var(--glass-strong); color: var(--danger); }
 
+.photo-export-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .cal-note-form { margin-top: 4px; display: flex; flex-direction: column; gap: 8px; }
 
 .cal-note-input-row {
@@ -1540,11 +1713,13 @@ th {
   }
 }
 
-.obs-panel {
+.obs-panel,
+.historial-panel {
   display: none;
 }
 
-.obs-panel.active {
+.obs-panel.active,
+.historial-panel.active {
   display: block;
 }
 
@@ -1699,6 +1874,28 @@ th {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+/* Sync banner */
+.sync-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: var(--accent, #2563eb);
+  color: #fff;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.sync-banner.visible {
+  transform: translateY(0);
 }
 
 /* Toast */
