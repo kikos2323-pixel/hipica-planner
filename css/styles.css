@@ -1563,6 +1563,36 @@ th {
   resize: vertical;
 }
 
+.general-note-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.general-note-meta-row select {
+  flex: 1;
+  min-width: 150px;
+}
+
+.general-note-alarm-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.general-note-alarm-label input[type="time"] {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input-bg, var(--surface));
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
 .general-notes-list {
   display: grid;
   gap: 10px;
@@ -1570,9 +1600,34 @@ th {
 
 .general-note-card {
   padding: 14px;
-  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
   border-radius: 16px;
   background: var(--glass-strong);
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.general-note-card.type-green  { border-left-color: #22c55e; }
+.general-note-card.type-amber  { border-left-color: #f59e0b; }
+.general-note-card.type-red    { border-left-color: #ef4444; }
+.general-note-card.type-blue   { border-left-color: #3b82f6; }
+
+.general-note-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.general-note-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--glass);
+  border: 1px solid var(--line);
 }
 
 .general-note-card p {
@@ -1580,13 +1635,105 @@ th {
   white-space: pre-wrap;
 }
 
-.general-note-meta {
+.general-note-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+.note-alarm-tag.fired {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.trash-list {
+  display: grid;
+  gap: 10px;
+}
+
+.trash-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--glass-strong);
+  opacity: 0.85;
+}
+
+.trash-card-info {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.trash-type {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.trash-text {
+  margin: 0;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.trash-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.trash-card .card-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Toast */
+.trash-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 200;
+  white-space: nowrap;
+}
+
+.trash-toast.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
 }
 
 .small-button.danger {

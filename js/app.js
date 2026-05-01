@@ -17,6 +17,7 @@ const state = {
   horses: [],
   calendarNotes: [],
   generalNotes: [],
+  trash: [],
   currentObsTab: "pendientes",
   currentView: "dashboard",
   currentWorkSection: "fichaje",
@@ -150,6 +151,7 @@ function saveData() {
     horses: state.horses,
     calendarNotes: state.calendarNotes,
     generalNotes: state.generalNotes,
+    trash: state.trash,
     clock: state.clock
   }));
 }
@@ -164,6 +166,7 @@ function loadData() {
     state.horses = Array.isArray(data.horses) ? data.horses : [];
     state.calendarNotes = Array.isArray(data.calendarNotes) ? data.calendarNotes : [];
     state.generalNotes = Array.isArray(data.generalNotes) ? data.generalNotes : [];
+    state.trash = Array.isArray(data.trash) ? data.trash : [];
     if (data.clock && Array.isArray(data.clock.segments)) {
       state.clock = {
         date: data.clock.date || todayISO(),
@@ -969,12 +972,19 @@ function checkAlarms() {
     if (!note.alarmTime || note.alarmFired !== false) return;
     if (note.date === todayIso && note.alarmTime === nowTime) {
       note.alarmFired = true;
-      new Notification("⏰ Finca Planner", {
-        body: note.text,
-        icon: "",
-        tag: note.id
-      });
+      new Notification("⏰ Finca Planner", { body: note.text, tag: note.id });
       saveData();
+    }
+  });
+
+  state.generalNotes.forEach((note) => {
+    if (!note.alarmTime || note.alarmFired !== false) return;
+    if (note.alarmTime === nowTime) {
+      note.alarmFired = true;
+      const meta = GENERAL_NOTE_TYPE_META[note.type] || GENERAL_NOTE_TYPE_META.normal;
+      new Notification(`${meta.emoji} Finca Planner — ${meta.label}`, { body: note.text, tag: note.id });
+      saveData();
+      renderGeneralNotes();
     }
   });
 }
@@ -1122,34 +1132,63 @@ function renderHorseObservations() {
   `).join("") || emptyState("No hay observaciones pendientes.");
 }
 
+const GENERAL_NOTE_TYPE_META = {
+  normal:       { emoji: "🟢", label: "Normal",       color: "green"  },
+  recordatorio: { emoji: "🟡", label: "Recordatorio", color: "amber"  },
+  urgente:      { emoji: "🔴", label: "Urgente",      color: "red"    },
+  info:         { emoji: "🔵", label: "Informativa",  color: "blue"   },
+};
+
 function renderGeneralNotes() {
   const list = $("#generalNotesList");
   if (!list) return;
-  const notes = [...state.generalNotes].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  list.innerHTML = notes.map((note) => `
-    <article class="general-note-card">
+  const typeOrder = { urgente: 0, recordatorio: 1, normal: 2, info: 3 };
+  const notes = [...state.generalNotes].sort((a, b) => {
+    const tA = typeOrder[a.type] ?? 2;
+    const tB = typeOrder[b.type] ?? 2;
+    if (tA !== tB) return tA - tB;
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+  list.innerHTML = notes.map((note) => {
+    const meta = GENERAL_NOTE_TYPE_META[note.type] || GENERAL_NOTE_TYPE_META.normal;
+    const alarmTag = note.alarmTime && !note.alarmFired
+      ? `<span class="note-alarm-tag">🔔 ${note.alarmTime}</span>`
+      : note.alarmFired ? `<span class="note-alarm-tag fired">✓ ${note.alarmTime}</span>` : "";
+    return `
+    <article class="general-note-card type-${meta.color}">
+      <div class="general-note-header">
+        <span class="general-note-badge">${meta.emoji} ${meta.label}</span>
+        ${alarmTag}
+      </div>
       <p>${escapeHtml(note.text)}</p>
-      <div class="general-note-meta">
+      <div class="general-note-footer">
         <span>${formatDate(note.createdAt.slice(0, 10))}</span>
         <div class="card-actions">
           <button class="small-button" data-edit-general-note="${note.id}" type="button">Editar</button>
           <button class="small-button danger" data-delete-general-note="${note.id}" type="button">Borrar</button>
         </div>
       </div>
-    </article>
-  `).join("") || emptyState("Sin anotaciones. Escribe tu primera nota arriba.");
+    </article>`;
+  }).join("") || emptyState("Sin anotaciones. Escribe tu primera nota arriba.");
 }
 
 function saveGeneralNote(event) {
   event.preventDefault();
   const text = $("#generalNoteText")?.value.trim();
   if (!text) return;
+  const type = $("#generalNoteType")?.value || "normal";
+  const alarmTime = $("#generalNoteAlarm")?.value || "";
   const editId = $("#generalNoteEditId")?.value;
   if (editId) {
     const note = state.generalNotes.find((n) => n.id === editId);
-    if (note) note.text = text;
+    if (note) {
+      note.text = text;
+      note.type = type;
+      note.alarmTime = alarmTime;
+      if (alarmTime !== note.alarmTime) note.alarmFired = false;
+    }
   } else {
-    state.generalNotes.push({ id: uid(), text, createdAt: new Date().toISOString() });
+    state.generalNotes.push({ id: uid(), text, type, alarmTime, alarmFired: false, createdAt: new Date().toISOString() });
   }
   saveData();
   resetGeneralNoteForm();
@@ -1161,27 +1200,126 @@ function editGeneralNote(id) {
   if (!note) return;
   const textEl = $("#generalNoteText");
   const editIdEl = $("#generalNoteEditId");
+  const typeEl = $("#generalNoteType");
+  const alarmEl = $("#generalNoteAlarm");
   const cancelBtn = $("#generalNoteCancelBtn");
   if (textEl) textEl.value = note.text;
   if (editIdEl) editIdEl.value = id;
+  if (typeEl) typeEl.value = note.type || "normal";
+  if (alarmEl) alarmEl.value = note.alarmTime || "";
   if (cancelBtn) cancelBtn.style.display = "";
   textEl?.focus();
+  textEl?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function deleteGeneralNote(id) {
-  if (!confirm("¿Borrar esta anotación?")) return;
+  const note = state.generalNotes.find((n) => n.id === id);
+  if (!note) return;
+  moveToTrash("generalNote", note);
   state.generalNotes = state.generalNotes.filter((n) => n.id !== id);
   saveData();
   renderGeneralNotes();
+  showTrashToast();
 }
 
 function resetGeneralNoteForm() {
   const textEl = $("#generalNoteText");
   const editIdEl = $("#generalNoteEditId");
+  const typeEl = $("#generalNoteType");
+  const alarmEl = $("#generalNoteAlarm");
   const cancelBtn = $("#generalNoteCancelBtn");
   if (textEl) textEl.value = "";
   if (editIdEl) editIdEl.value = "";
+  if (typeEl) typeEl.value = "normal";
+  if (alarmEl) alarmEl.value = "";
   if (cancelBtn) cancelBtn.style.display = "none";
+}
+
+function moveToTrash(type, data) {
+  state.trash.push({ id: uid(), type, deletedAt: new Date().toISOString(), data });
+}
+
+function renderTrash() {
+  const list = $("#trashList");
+  if (!list) return;
+  const items = [...state.trash].sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+  if (!items.length) { list.innerHTML = emptyState("La papelera está vacía."); return; }
+  list.innerHTML = items.map((item) => {
+    let title = "", subtitle = "";
+    if (item.type === "generalNote") {
+      const meta = GENERAL_NOTE_TYPE_META[item.data.type] || GENERAL_NOTE_TYPE_META.normal;
+      title = `${meta.emoji} ${meta.label}`;
+      subtitle = item.data.text;
+    } else if (item.type === "horseObservation") {
+      title = `🐴 Obs. de ${item.data.horseName || `caballo ${item.data.horseNumber}` || "caballo"}`;
+      subtitle = item.data.text;
+    }
+    const when = new Date(item.deletedAt);
+    const whenStr = when.toLocaleDateString("es-ES", { day: "numeric", month: "short" }) + " " + when.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+    return `
+    <article class="trash-card">
+      <div class="trash-card-info">
+        <span class="trash-type">${title}</span>
+        <p class="trash-text">${escapeHtml(subtitle)}</p>
+        <span class="trash-date">Eliminado el ${whenStr}</span>
+      </div>
+      <div class="card-actions">
+        <button class="small-button" data-restore-trash="${item.id}" type="button">↩ Restaurar</button>
+        <button class="small-button danger" data-purge-trash="${item.id}" type="button">Borrar definitivo</button>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+function restoreFromTrash(id) {
+  const item = state.trash.find((t) => t.id === id);
+  if (!item) return;
+  if (item.type === "generalNote") {
+    item.data.alarmFired = false;
+    state.generalNotes.push(item.data);
+  } else if (item.type === "horseObservation") {
+    const horse = state.horses.find((h) => h.id === item.data.horseId);
+    if (horse) {
+      horse.notes = item.data.text;
+      horse.updatedAt = new Date().toISOString();
+    }
+  }
+  state.trash = state.trash.filter((t) => t.id !== id);
+  saveData();
+  renderTrash();
+  if (item.type === "generalNote" && state.currentObsTab === "generales") renderGeneralNotes();
+  if (item.type === "horseObservation" && state.currentObsTab === "pendientes") renderHorseObservations();
+}
+
+function purgeFromTrash(id) {
+  if (!confirm("¿Eliminar definitivamente? Esta acción no se puede deshacer.")) return;
+  state.trash = state.trash.filter((t) => t.id !== id);
+  saveData();
+  renderTrash();
+}
+
+function emptyTrash() {
+  if (!state.trash.length) return;
+  if (!confirm(`¿Vaciar la papelera? Se eliminarán ${state.trash.length} elemento(s) de forma permanente.`)) return;
+  state.trash = [];
+  saveData();
+  renderTrash();
+}
+
+let _trashToastTimeout = null;
+function showTrashToast() {
+  let toast = $("#trashToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "trashToast";
+    toast.className = "trash-toast";
+    document.body.appendChild(toast);
+  }
+  const count = state.trash.length;
+  toast.innerHTML = `🗑️ Movido a la papelera · <button class="toast-link" data-switch-obs-tab="papelera">Ver papelera</button>`;
+  toast.classList.add("visible");
+  clearTimeout(_trashToastTimeout);
+  _trashToastTimeout = setTimeout(() => toast.classList.remove("visible"), 4000);
 }
 
 function switchObsTab(tab) {
@@ -1194,6 +1332,7 @@ function switchObsTab(tab) {
   });
   if (tab === "generales") renderGeneralNotes();
   if (tab === "pendientes") renderHorseObservations();
+  if (tab === "papelera") renderTrash();
 }
 
 function naturalHorseSort(a, b) {
@@ -1374,10 +1513,13 @@ function openHorseFromObservation(id) {
 function completeHorseObservation(id) {
   const horse = state.horses.find((item) => item.id === id);
   if (!horse) return;
-  if (!confirm("Marcar esta observacion como hecha? Se borrara de la ficha del caballo.")) return;
+  if (!confirm("Marcar esta observacion como hecha? Se guardará en la papelera por si necesitas recuperarla.")) return;
+  moveToTrash("horseObservation", { id: uid(), horseId: horse.id, horseName: horse.name, horseNumber: horse.number, text: horse.notes });
   horse.notes = "";
   horse.updatedAt = new Date().toISOString();
+  saveData();
   render();
+  showTrashToast();
 }
 
 function updateHorseFormTitle() {
@@ -2202,6 +2344,7 @@ function bindEvents() {
   $("#calModalClose").addEventListener("click", closeCalendarDayModal);
   $("#calendarDayModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeCalendarDayModal(); });
   $("#notifPermBtn").addEventListener("click", requestNotificationPermission);
+  $("#generalNoteNotifBtn").addEventListener("click", requestNotificationPermission);
 
   $("#lightboxClose").addEventListener("click", closeLightbox);
   $("#photoLightbox").addEventListener("click", (e) => { if (e.target === e.currentTarget || e.target === $("#lightboxImg")) closeLightbox(); });
@@ -2276,6 +2419,17 @@ function bindEvents() {
     const deleteGeneralNoteBtn = event.target.closest("[data-delete-general-note]");
     if (editGeneralNoteBtn) editGeneralNote(editGeneralNoteBtn.dataset.editGeneralNote);
     if (deleteGeneralNoteBtn) deleteGeneralNote(deleteGeneralNoteBtn.dataset.deleteGeneralNote);
+    const restoreTrashBtn = event.target.closest("[data-restore-trash]");
+    const purgeTrashBtn = event.target.closest("[data-purge-trash]");
+    const emptyTrashBtn = event.target.closest("[data-empty-trash]");
+    const switchObsTabBtn = event.target.closest("[data-switch-obs-tab]");
+    if (restoreTrashBtn) restoreFromTrash(restoreTrashBtn.dataset.restoreTrash);
+    if (purgeTrashBtn) purgeFromTrash(purgeTrashBtn.dataset.purgeTrash);
+    if (emptyTrashBtn) emptyTrash();
+    if (switchObsTabBtn) {
+      switchHorseSection("observaciones");
+      switchObsTab(switchObsTabBtn.dataset.switchObsTab);
+    }
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
     const openDayBtn = event.target.closest("[data-open-day]");
     const editNoteBtn = event.target.closest("[data-edit-note]");
