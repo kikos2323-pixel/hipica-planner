@@ -828,88 +828,11 @@ function openCalendarDayModal(iso) {
   if (!modal) return;
   $("#calNoteDate").value = iso;
   $("#calModalTitle").textContent = formatDate(iso);
-  renderCalendarModalHeader(iso);
-  renderCalendarModalStats(iso);
-  renderCalendarModalTimeline(iso);
   renderCalendarModalInfo(iso);
   renderCalendarModalNotes(iso);
   modal.classList.add("open");
   document.body.style.overflow = "hidden";
-  // No autofocus on mobile so the keyboard doesn't pop up immediately
-  if (window.matchMedia("(min-width: 901px)").matches) {
-    setTimeout(() => $("#calNoteText")?.focus(), 100);
-  }
-}
-
-function renderCalendarModalHeader(iso) {
-  const headerEl = $("#calModalHeaderInfo");
-  if (!headerEl) return;
-  const date = new Date(`${iso}T12:00:00`);
-  const dayName = new Intl.DateTimeFormat("es-ES", { weekday: "long" }).format(date);
-  const monthYear = new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric" }).format(date);
-  headerEl.innerHTML = `<small>${escapeHtml(monthYear)}</small><h2>${escapeHtml(dayName)} ${date.getDate()}</h2>`;
-}
-
-function renderCalendarModalStats(iso) {
-  const statsEl = $("#calModalStats");
-  if (!statsEl) return;
-  const work = state.workEntries.filter((e) => e.date === iso);
-  const tasks = state.tasks.filter((t) => t.date === iso);
-  const notes = state.calendarNotes.filter((n) => n.date === iso);
-  const workHours = work.reduce((s, e) => s + calculateWorkHours(e), 0);
-  statsEl.innerHTML = `
-    <div class="day-stat work"><small>Jornada</small><strong>${roundHours(workHours)} h</strong></div>
-    <div class="day-stat tasks"><small>Tareas</small><strong>${tasks.length}</strong></div>
-    <div class="day-stat notes"><small>Notas</small><strong>${notes.length}</strong></div>
-  `;
-}
-
-function renderCalendarModalTimeline(iso) {
-  const timelineEl = $("#calModalTimeline");
-  if (!timelineEl) return;
-  const work = state.workEntries.filter((e) => e.date === iso);
-  const tasks = state.tasks.filter((t) => t.date === iso);
-  const notes = state.calendarNotes.filter((n) => n.date === iso);
-  const items = [];
-  work.forEach((e) => {
-    items.push({
-      sortKey: e.startTime || "00:00",
-      cls: "work",
-      time: `${e.startTime || "—"} – ${e.endTime || "en curso"}`,
-      title: `Jornada ${e.dayType}`,
-      meta: `${calculateWorkHours(e)} h registradas`
-    });
-  });
-  tasks.forEach((t) => {
-    items.push({
-      sortKey: t.time || "99:99",
-      cls: t.status === "terminada" ? "green" : "amber",
-      time: `${t.time || "Sin hora"}${t.duration ? " · " + t.duration + " h" : ""}`,
-      title: t.name,
-      meta: `${labelStatus(t.status)}${t.priority === "alta" ? ' · <span style="color:#aa3f3f;font-weight:800">● Alta</span>' : ""}`
-    });
-  });
-  notes.forEach((n) => {
-    items.push({
-      sortKey: n.alarmTime || "99:99",
-      cls: n.color,
-      time: n.alarmTime ? `${n.alarmTime} 🔔` : "Sin hora",
-      title: n.text,
-      meta: ""
-    });
-  });
-  items.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-  if (!items.length) {
-    timelineEl.innerHTML = `<p class="muted" style="font-size:0.85rem;text-align:center;padding:14px">Sin jornada, tareas ni notas este día.</p>`;
-    return;
-  }
-  timelineEl.innerHTML = items.map((it) => `
-    <div class="timeline-item ${it.cls}">
-      <div class="ti-time">${escapeHtml(it.time)}</div>
-      <strong>${escapeHtml(it.title)}</strong>
-      ${it.meta ? `<div class="ti-meta">${it.meta}</div>` : ""}
-    </div>
-  `).join("");
+  setTimeout(() => $("#calNoteText")?.focus(), 100);
 }
 
 function closeCalendarDayModal() {
@@ -2195,13 +2118,6 @@ function bindEvents() {
   $("#saveManualSegmentsBtn").addEventListener("click", saveManualSegments);
   $("#calNoteForm").addEventListener("submit", saveCalendarNote);
   $("#calModalClose").addEventListener("click", closeCalendarDayModal);
-  $("#calModalFab")?.addEventListener("click", () => {
-    const form = $("#calNoteForm");
-    const input = $("#calNoteText");
-    if (!form || !input) return;
-    form.scrollIntoView({ behavior: "smooth", block: "end" });
-    setTimeout(() => input.focus(), 350);
-  });
   $("#calendarDayModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeCalendarDayModal(); });
   $("#notifPermBtn").addEventListener("click", requestNotificationPermission);
 
