@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: light;
   --bg: #eef2ea;
   --bg-pattern:
@@ -151,7 +151,7 @@ label,
   color: var(--muted);
 }
 
-/* ── Nav ──────────────────────────────────────────────── */
+/* â”€â”€ Nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .nav {
   display: flex;
   flex-direction: column;
@@ -206,7 +206,7 @@ label,
   transform: translateX(0);
 }
 
-/* Colores por sección */
+/* Colores por secciÃ³n */
 .nav-link[data-color="green"]  { --nav-c: #2d8f5e; --nav-bg: rgba(45,143,94,0.12); }
 .nav-link[data-color="blue"]   { --nav-c: #2f6fa8; --nav-bg: rgba(47,111,168,0.12); }
 .nav-link[data-color="amber"]  { --nav-c: #c07b1a; --nav-bg: rgba(192,123,26,0.12); }
@@ -263,7 +263,7 @@ label,
   text-overflow: ellipsis;
 }
 
-/* ── icon-slot (pequeño, dentro del contenido) ───────── */
+/* â”€â”€ icon-slot (pequeÃ±o, dentro del contenido) â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .icon-slot {
   display: inline-grid;
   width: 22px;
@@ -306,7 +306,7 @@ label,
   padding: 0 28px 28px;
 }
 
-/* ── Login screen ───────────────────────────────────────── */
+/* â”€â”€ Login screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .login-screen {
   position: fixed;
   inset: 0;
@@ -368,7 +368,7 @@ label,
 .google-login-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
 .login-note { font-size: 0.75rem !important; color: var(--muted) !important; }
 
-/* ── User chip ──────────────────────────────────────────── */
+/* â”€â”€ User chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .user-chip {
   display: flex;
   align-items: center;
@@ -439,20 +439,23 @@ label,
 
 .topbar-icon-btn:hover { background: var(--glass); }
 
-/* Auth button — verde sin sesión, rojo con sesión */
-.auth-btn { color: #16a34a; border-color: #16a34a; }
-.auth-btn:hover { background: #dcfce7; }
-.auth-btn.auth-logged-in { color: #dc2626; border-color: #dc2626; }
-.auth-btn.auth-logged-in:hover { background: #fee2e2; }
+.topbar-icon-btn {
+  border-radius: 14px;
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
 
-/* Avatar circular en topbar */
-.topbar-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--line);
-  flex-shrink: 0;
+.topbar-icon-btn:hover {
+  transform: translateY(-1px);
+}
+
+.auth-btn { color: #16a34a; border-color: rgba(34, 197, 94, 0.45); }
+.auth-btn:hover { background: rgba(34, 197, 94, 0.12); }
+.auth-btn.auth-logged-in { color: #dc2626; border-color: rgba(239, 68, 68, 0.42); }
+.auth-btn.auth-logged-in:hover { background: rgba(239, 68, 68, 0.12); }
+
+.topbar-avatar,
+.sync-btn {
+  display: none !important;
 }
 
 .sync-btn .sync-check { color: #16a34a; }
@@ -935,7 +938,7 @@ textarea {
   filter: brightness(0.96);
 }
 
-/* ── Botón guardar caballo: spinner → tic ─────────────── */
+/* â”€â”€ BotÃ³n guardar caballo: spinner â†’ tic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn-save-spinner,
 .btn-save-check {
   display: none;
@@ -1123,7 +1126,7 @@ th {
   background: var(--glass-strong);
 }
 
-/* ── Modal día calendario ────────────────────────────────── */
+/* â”€â”€ Modal dÃ­a calendario â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .cal-modal {
   display: none;
   position: fixed;
@@ -1345,7 +1348,7 @@ th {
   }
 }
 
-/* ── Lightbox foto ───────────────────────────────────────── */
+/* â”€â”€ Lightbox foto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .photo-lightbox {
   display: none;
   position: fixed;
@@ -1402,14 +1405,14 @@ th {
   to   { transform: scale(1);    opacity: 1; }
 }
 
-/* ── Horse browser back button (solo móvil) ──────────────── */
+/* â”€â”€ Horse browser back button (solo mÃ³vil) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .horse-browser-back {
   display: none;
   margin-bottom: 12px;
   width: fit-content;
 }
 
-/* ── Horse browser (listado dos paneles) ─────────────────── */
+/* â”€â”€ Horse browser (listado dos paneles) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .horse-browser {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -1597,14 +1600,14 @@ th {
   margin-bottom: 4px;
 }
 
-/* ── Horse browser responsive ─────────────────────────── */
+/* â”€â”€ Horse browser responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 900px) {
   .horse-browser {
     grid-template-columns: 1fr;
     position: relative;
   }
 
-  /* Por defecto en móvil: lista visible, detalle oculto */
+  /* Por defecto en mÃ³vil: lista visible, detalle oculto */
   .horse-browser-detail {
     display: none;
   }
@@ -1644,7 +1647,7 @@ th {
   }
 }
 
-/* ── Alimentación ──────────────────────────────────────── */
+/* â”€â”€ AlimentaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .horse-feed-section,
 .horse-detail-feed {
   border: 1px solid var(--line);
@@ -2705,4 +2708,24 @@ details[open] .schedule-chevron {
     grid-column: 1 / -1;
     justify-content: flex-start;
   }
+}
+
+
+/* Header controls cleanup */
+.topbar-actions {
+  flex-wrap: nowrap;
+}
+
+.back-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  color: var(--text);
+  box-shadow: none;
+  font-size: 1rem;
+}
+
+.back-button svg {
+  width: 18px;
+  height: 18px;
 }
