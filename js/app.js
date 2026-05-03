@@ -1,4 +1,4 @@
-﻿import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
+import { auth, db, provider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
   from "./firebase.js";
 
 const STORAGE_KEY = "fincaPlanner.v1";
@@ -880,7 +880,7 @@ function saveManualSegments() {
     .filter((segment) => segment.start && segment.end);
 
   if (!validSegments.length) {
-    alert("AÃ±ade al menos un tramo completo con hora de inicio y hora de fin.");
+    alert("A�ade al menos un tramo completo con hora de inicio y hora de fin.");
     return;
   }
 
@@ -1215,7 +1215,7 @@ function renderHorseList() {
         <div class="horse-list-row-thumb">${thumb}</div>
         <div class="horse-list-row-info">
           <strong>${escapeHtml(horse.name || horseLabel(horse))}</strong>
-          <small>${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Sin numero")} · ${escapeHtml(horse.stable || "Sin cuadra")}</small>
+          <small>${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Sin numero")} ? ${escapeHtml(horse.stable || "Sin cuadra")}</small>
           ${horse.shared ? `<span class="horse-shared-badge">Compartida por ${escapeHtml(horse.ownerName || horse.ownerEmail || "otro usuario")}</span>` : ""}
         </div>
       </div>
@@ -1245,27 +1245,27 @@ function renderCalendarModalInfo(iso) {
   const tasks = state.tasks.filter((t) => t.date === iso);
   const schedule = getScheduleForDate(iso);
   const info = [
-    `<div class="cal-info-chip schedule">ðŸ• ${escapeHtml(scheduleLabel(schedule))} â€” ${scheduleTotalHours(schedule)} h previstas</div>`,
-    ...work.map((e) => `<div class="cal-info-chip work">âœ… ${escapeHtml(e.dayType)}: ${calculateWorkHours(e)} h trabajadas</div>`),
-    ...tasks.map((t) => `<div class="cal-info-chip task">ðŸ“‹ ${escapeHtml(t.name)} â€” ${labelStatus(t.status)}</div>`)
+    `<div class="cal-info-chip schedule">?? ${escapeHtml(scheduleLabel(schedule))} � ${scheduleTotalHours(schedule)} h previstas</div>`,
+    ...work.map((e) => `<div class="cal-info-chip work">? ${escapeHtml(e.dayType)}: ${calculateWorkHours(e)} h trabajadas</div>`),
+    ...tasks.map((t) => `<div class="cal-info-chip task">?? ${escapeHtml(t.name)} � ${labelStatus(t.status)}</div>`)
   ].join("");
-  $("#calModalInfo").innerHTML = info || `<p class="muted">Sin jornada ni tareas este dÃ­a.</p>`;
+  $("#calModalInfo").innerHTML = info || `<p class="muted">Sin jornada ni tareas este d�a.</p>`;
 }
 
 function renderCalendarModalNotes(iso) {
   const notes = state.calendarNotes.filter((n) => n.date === iso).sort((a, b) => (a.alarmTime || "99:99").localeCompare(b.alarmTime || "99:99") || a.createdAt.localeCompare(b.createdAt));
-  const colors = { green: "ðŸŸ¢", blue: "ðŸ”µ", amber: "ðŸŸ¡", red: "ðŸ”´" };
+  const colors = { green: "??", blue: "??", amber: "??", red: "??" };
   $("#calModalNotes").innerHTML = notes.map((note) => `
     <div class="cal-note-item cal-note-${note.color}">
-      <span class="cal-note-dot">${colors[note.color] || "ðŸŸ¢"}</span>
+      <span class="cal-note-dot">${colors[note.color] || "??"}</span>
       <div class="cal-note-body">
         <span>${escapeHtml(note.text)}</span>
         ${noteCountdown(note)}
       </div>
-      <button class="cal-note-edit" data-edit-note="${note.id}" type="button" aria-label="Editar nota">âœï¸</button>
-      <button class="cal-note-delete" data-delete-note="${note.id}" type="button" aria-label="Borrar nota">âœ•</button>
+      <button class="cal-note-edit" data-edit-note="${note.id}" type="button" aria-label="Editar nota">??</button>
+      <button class="cal-note-delete" data-delete-note="${note.id}" type="button" aria-label="Borrar nota">?</button>
     </div>
-  `).join("") || `<p class="muted" style="font-size:0.85rem">Sin notas para este dÃ­a. AÃ±ade una abajo.</p>`;
+  `).join("") || `<p class="muted" style="font-size:0.85rem">Sin notas para este d�a. A�ade una abajo.</p>`;
 }
 
 function saveCalendarNote(event) {
@@ -1285,7 +1285,7 @@ function saveCalendarNote(event) {
       note.alarmFired = alarmTime ? false : null;
     }
     $("#calNoteEditId").value = "";
-    $("#calNoteSaveBtn").textContent = "AÃ±adir";
+    $("#calNoteSaveBtn").textContent = "A�adir";
   } else {
     state.calendarNotes.push({
       id: uid(),
@@ -1332,9 +1332,9 @@ function requestNotificationPermission() {
   Notification.requestPermission().then((perm) => {
     updateNotifPermBtn();
     if (perm === "granted") {
-      new Notification("Finca Planner", { body: "Las notificaciones estÃ¡n activadas âœ…", icon: "" });
+      new Notification("Finca Planner", { body: "Las notificaciones est�n activadas ?", icon: "" });
     } else {
-      alert("Permiso denegado. ActÃ­valo en la configuraciÃ³n del navegador.");
+      alert("Permiso denegado. Act�valo en la configuraci�n del navegador.");
     }
   });
 }
@@ -1344,13 +1344,13 @@ function updateNotifPermBtn() {
   if (!btn) return;
   if (!("Notification" in window)) { btn.style.display = "none"; return; }
   if (Notification.permission === "granted") {
-    btn.textContent = "Notificaciones activadas âœ…";
+    btn.textContent = "Notificaciones activadas ?";
     btn.disabled = true;
   } else if (Notification.permission === "denied") {
-    btn.textContent = "Notificaciones bloqueadas â›”";
+    btn.textContent = "Notificaciones bloqueadas ?";
     btn.disabled = true;
   } else {
-    btn.textContent = "Activar notificaciones ðŸ””";
+    btn.textContent = "Activar notificaciones ??";
     btn.disabled = false;
   }
 }
@@ -1365,7 +1365,7 @@ function checkAlarms() {
     if (!note.alarmTime || note.alarmFired !== false) return;
     if (note.date === todayIso && note.alarmTime === nowTime) {
       note.alarmFired = true;
-      new Notification("â° Finca Planner", { body: note.text, tag: note.id });
+      new Notification("? Finca Planner", { body: note.text, tag: note.id });
       saveData();
     }
   });
@@ -1375,7 +1375,7 @@ function checkAlarms() {
     if (note.alarmTime === nowTime) {
       note.alarmFired = true;
       const meta = GENERAL_NOTE_TYPE_META[note.type] || GENERAL_NOTE_TYPE_META.normal;
-      new Notification(`${meta.emoji} Finca Planner â€” ${meta.label}`, { body: note.text, tag: note.id });
+      new Notification(`${meta.emoji} Finca Planner � ${meta.label}`, { body: note.text, tag: note.id });
       saveData();
       renderGeneralNotes();
     }
@@ -1391,7 +1391,7 @@ function noteCountdown(note) {
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   const label = h > 0 ? `${h}h ${m}m` : `${m}m`;
-  return `<span class="note-alarm-tag">ðŸ”” ${note.alarmTime} â€” en ${label}</span>`;
+  return `<span class="note-alarm-tag">?? ${note.alarmTime} � en ${label}</span>`;
 }
 
 function openLightbox(src) {
@@ -1425,10 +1425,10 @@ function showHorseDetail(id) {
 
   const stableLink = horseHasLocation(horse, "stable")
     ? `<a class="map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener">Ver cuadra en Maps</a>`
-    : `<span class="muted">Cuadra sin ubicaciÃ³n</span>`;
+    : `<span class="muted">Cuadra sin ubicaci�n</span>`;
   const paddockLink = horse.paddock && horseHasLocation(horse, "paddock")
     ? `<a class="map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener">Ver paddock en Maps</a>`
-    : horse.paddock ? `<span class="muted">Paddock sin ubicaciÃ³n</span>` : "";
+    : horse.paddock ? `<span class="muted">Paddock sin ubicaci�n</span>` : "";
 
   const photo = horse.photo
     ? `<img src="${horse.photo}" alt="" class="lightbox-trigger" data-lightbox="${horse.photo}" title="Ver foto completa" style="cursor:zoom-in">`
@@ -1453,19 +1453,19 @@ function showHorseDetail(id) {
     </div>
 
     <div class="horse-detail-feed">
-      <h4 class="feed-title">AlimentaciÃ³n</h4>
+      <h4 class="feed-title">Alimentaci�n</h4>
       <div class="feed-grid">
         <div class="feed-slot">
-          <span class="feed-icon">ðŸŒ…</span>
-          <div><label>MaÃ±ana</label><p>${escapeHtml(horse.feedMorning || "â€”")}</p></div>
+          <span class="feed-icon">??</span>
+          <div><label>Ma�ana</label><p>${escapeHtml(horse.feedMorning || "�")}</p></div>
         </div>
         <div class="feed-slot">
-          <span class="feed-icon">â˜€ï¸</span>
-          <div><label>MediodÃ­a</label><p>${escapeHtml(horse.feedNoon || "â€”")}</p></div>
+          <span class="feed-icon">??</span>
+          <div><label>Mediod�a</label><p>${escapeHtml(horse.feedNoon || "�")}</p></div>
         </div>
         <div class="feed-slot">
-          <span class="feed-icon">ðŸŒ™</span>
-          <div><label>Tarde</label><p>${escapeHtml(horse.feedEvening || "â€”")}</p></div>
+          <span class="feed-icon">??</span>
+          <div><label>Tarde</label><p>${escapeHtml(horse.feedEvening || "�")}</p></div>
         </div>
       </div>
     </div>
@@ -1474,8 +1474,8 @@ function showHorseDetail(id) {
       <div class="horse-detail-field">
         <label>Cuadra</label>
         <p>
-          ${escapeHtml(horse.stable || "â€”")}
-          ${horseHasLocation(horse, "stable") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener" title="Ver en Maps">ðŸ—ºï¸</a>` : ""}
+          ${escapeHtml(horse.stable || "�")}
+          ${horseHasLocation(horse, "stable") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener" title="Ver en Maps">???</a>` : ""}
         </p>
       </div>
       ${horse.paddock ? `
@@ -1483,7 +1483,7 @@ function showHorseDetail(id) {
         <label>Paddock</label>
         <p>
           ${escapeHtml(horse.paddock)}
-          ${horseHasLocation(horse, "paddock") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener" title="Ver en Maps">ðŸ—ºï¸</a>` : ""}
+          ${horseHasLocation(horse, "paddock") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener" title="Ver en Maps">???</a>` : ""}
         </p>
       </div>` : ""}
     </div>
@@ -1528,10 +1528,10 @@ function renderHorseObservations() {
 }
 
 const GENERAL_NOTE_TYPE_META = {
-  normal:       { emoji: "ðŸŸ¢", label: "Normal",       color: "green"  },
-  recordatorio: { emoji: "ðŸŸ¡", label: "Recordatorio", color: "amber"  },
-  urgente:      { emoji: "ðŸ”´", label: "Urgente",      color: "red"    },
-  info:         { emoji: "ðŸ”µ", label: "Informativa",  color: "blue"   },
+  normal:       { emoji: "??", label: "Normal",       color: "green"  },
+  recordatorio: { emoji: "??", label: "Recordatorio", color: "amber"  },
+  urgente:      { emoji: "??", label: "Urgente",      color: "red"    },
+  info:         { emoji: "??", label: "Informativa",  color: "blue"   },
 };
 
 function renderGeneralNotes() {
@@ -1547,8 +1547,8 @@ function renderGeneralNotes() {
   list.innerHTML = notes.map((note) => {
     const meta = GENERAL_NOTE_TYPE_META[note.type] || GENERAL_NOTE_TYPE_META.normal;
     const alarmTag = note.alarmTime && !note.alarmFired
-      ? `<span class="note-alarm-tag">ðŸ”” ${note.alarmTime}</span>`
-      : note.alarmFired ? `<span class="note-alarm-tag fired">âœ“ ${note.alarmTime}</span>` : "";
+      ? `<span class="note-alarm-tag">?? ${note.alarmTime}</span>`
+      : note.alarmFired ? `<span class="note-alarm-tag fired">? ${note.alarmTime}</span>` : "";
     return `
     <article class="general-note-card type-${meta.color}">
       <div class="general-note-header">
@@ -1638,7 +1638,7 @@ function renderTrash() {
   const list = $("#trashList");
   if (!list) return;
   const items = [...state.trash].sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
-  if (!items.length) { list.innerHTML = emptyState("La papelera estÃ¡ vacÃ­a."); return; }
+  if (!items.length) { list.innerHTML = emptyState("La papelera est� vac�a."); return; }
   list.innerHTML = items.map((item) => {
     let title = "", subtitle = "";
     if (item.type === "generalNote") {
@@ -1646,7 +1646,7 @@ function renderTrash() {
       title = `${meta.emoji} ${meta.label}`;
       subtitle = item.data.text;
     } else if (item.type === "horseObservation") {
-      title = `ðŸ´ Obs. de ${item.data.horseName || `caballo ${item.data.horseNumber}` || "caballo"}`;
+      title = `?? Obs. de ${item.data.horseName || `caballo ${item.data.horseNumber}` || "caballo"}`;
       subtitle = item.data.text;
     }
     const when = new Date(item.deletedAt);
@@ -1659,7 +1659,7 @@ function renderTrash() {
         <span class="trash-date">Eliminado el ${whenStr}</span>
       </div>
       <div class="card-actions">
-        <button class="small-button" data-restore-trash="${item.id}" type="button">â†© Restaurar</button>
+        <button class="small-button" data-restore-trash="${item.id}" type="button">? Restaurar</button>
         <button class="small-button danger" data-purge-trash="${item.id}" type="button">Borrar definitivo</button>
       </div>
     </article>`;
@@ -1687,7 +1687,7 @@ function restoreFromTrash(id) {
 }
 
 function purgeFromTrash(id) {
-  if (!confirm("Â¿Eliminar definitivamente? Esta acciÃ³n no se puede deshacer.")) return;
+  if (!confirm("�Eliminar definitivamente? Esta acci�n no se puede deshacer.")) return;
   state.trash = state.trash.filter((t) => t.id !== id);
   saveData();
   renderTrash();
@@ -1695,7 +1695,7 @@ function purgeFromTrash(id) {
 
 function emptyTrash() {
   if (!state.trash.length) return;
-  if (!confirm(`Â¿Vaciar la papelera? Se eliminarÃ¡n ${state.trash.length} elemento(s) de forma permanente.`)) return;
+  if (!confirm(`�Vaciar la papelera? Se eliminar�n ${state.trash.length} elemento(s) de forma permanente.`)) return;
   state.trash = [];
   saveData();
   renderTrash();
@@ -1711,7 +1711,7 @@ function showTrashToast() {
     document.body.appendChild(toast);
   }
   const count = state.trash.length;
-  toast.innerHTML = `ðŸ—‘ï¸ Movido a la papelera Â· <button class="toast-link" data-go-to-trash>Ver papelera</button>`;
+  toast.innerHTML = `??? Movido a la papelera � <button class="toast-link" data-go-to-trash>Ver papelera</button>`;
   toast.classList.add("visible");
   clearTimeout(_trashToastTimeout);
   _trashToastTimeout = setTimeout(() => toast.classList.remove("visible"), 4000);
@@ -1827,7 +1827,7 @@ function saveHorse(event) {
   const number = $("#horseNumber").value.trim();
   const name = $("#horseName").value.trim();
   if (!number && !name) {
-    alert("Introduce al menos el cÃ³digo o el nombre del caballo.");
+    alert("Introduce al menos el c�digo o el nombre del caballo.");
     return;
   }
 
@@ -1927,7 +1927,7 @@ function openHorseFromObservation(id) {
 function completeHorseObservation(id) {
   const horse = state.horses.find((item) => item.id === id);
   if (!horse) return;
-  if (!confirm("Marcar esta observacion como hecha? Se guardarÃ¡ en la papelera por si necesitas recuperarla.")) return;
+  if (!confirm("Marcar esta observacion como hecha? Se guardar� en la papelera por si necesitas recuperarla.")) return;
   moveToTrash("horseObservation", { id: uid(), horseId: horse.id, horseName: horse.name, horseNumber: horse.number, text: horse.notes });
   horse.notes = "";
   horse.updatedAt = new Date().toISOString();
@@ -1952,24 +1952,24 @@ function shareHorse(id) {
   if (!horse) return;
 
   const lines = [
-    `ðŸ´ ${horseLabel(horse)}`,
-    horse.stable  ? `ðŸ“ Cuadra: ${horse.stable}`  : null,
-    horse.paddock ? `ðŸŒ¿ Paddock: ${horse.paddock}` : null,
-    horseHasLocation(horse, "stable")  ? `ðŸ—ºï¸ UbicaciÃ³n cuadra: ${horse.lat}, ${horse.lng}` : null,
+    `?? ${horseLabel(horse)}`,
+    horse.stable  ? `?? Cuadra: ${horse.stable}`  : null,
+    horse.paddock ? `?? Paddock: ${horse.paddock}` : null,
+    horseHasLocation(horse, "stable")  ? `??? Ubicaci�n cuadra: ${horse.lat}, ${horse.lng}` : null,
     horseHasLocation(horse, "stable")  ? googleMapsUrl(horse, "stable")  : null,
-    horseHasLocation(horse, "paddock") ? `ðŸ—ºï¸ UbicaciÃ³n paddock: ${horse.paddockLat}, ${horse.paddockLng}` : null,
+    horseHasLocation(horse, "paddock") ? `??? Ubicaci�n paddock: ${horse.paddockLat}, ${horse.paddockLng}` : null,
     horseHasLocation(horse, "paddock") ? googleMapsUrl(horse, "paddock") : null,
-    horse.notes ? `ðŸ“ Notas: ${horse.notes}` : null,
-    (horse.feedMorning || horse.feedNoon || horse.feedEvening) ? `\nðŸ½ï¸ AlimentaciÃ³n:` : null,
-    horse.feedMorning ? `  ðŸŒ… MaÃ±ana: ${horse.feedMorning}` : null,
-    horse.feedNoon    ? `  â˜€ï¸ MediodÃ­a: ${horse.feedNoon}`   : null,
-    horse.feedEvening ? `  ðŸŒ™ Tarde: ${horse.feedEvening}`   : null,
+    horse.notes ? `?? Notas: ${horse.notes}` : null,
+    (horse.feedMorning || horse.feedNoon || horse.feedEvening) ? `\n??? Alimentaci�n:` : null,
+    horse.feedMorning ? `  ?? Ma�ana: ${horse.feedMorning}` : null,
+    horse.feedNoon    ? `  ?? Mediod�a: ${horse.feedNoon}`   : null,
+    horse.feedEvening ? `  ?? Tarde: ${horse.feedEvening}`   : null,
   ].filter(Boolean).join("\n");
 
   if (navigator.share) {
     navigator.share({ title: horseLabel(horse), text: lines }).catch(() => {});
   } else {
-    navigator.clipboard.writeText(lines).then(() => alert("InformaciÃ³n copiada al portapapeles.")).catch(() => alert("No se pudo compartir ni copiar."));
+    navigator.clipboard.writeText(lines).then(() => alert("Informaci�n copiada al portapapeles.")).catch(() => alert("No se pudo compartir ni copiar."));
   }
 }
 
@@ -2067,7 +2067,7 @@ function renderHorsePhotoPreview(photoData) {
   const input = preview.querySelector("#horsePhotoInput");
   preview.innerHTML = photoData
     ? `<img src="${photoData}" alt="" style="width:100%;height:100%;object-fit:cover;">`
-    : `<span class="photo-placeholder">ðŸ“·<br><small>AÃ±adir foto</small></span>`;
+    : `<span class="photo-placeholder">??<br><small>A�adir foto</small></span>`;
   if (input) preview.appendChild(input);
 }
 
@@ -2190,7 +2190,7 @@ function renderCalendar() {
     const hasNotes = notes.length > 0;
 
     const notesDots = hasNotes ? notes.slice(0, 3).map((n) => `<span class="cal-note-pip cal-note-pip-${n.color}"></span>`).join("") : "";
-    const workDot = hasWork ? `<span class="cal-work-dot" title="Jornada registrada">âœ…</span>` : "";
+    const workDot = hasWork ? `<span class="cal-work-dot" title="Jornada registrada">?</span>` : "";
 
     cells.push(`
       <div class="calendar-day ${isToday ? "today" : ""} ${hasWork ? "has-work" : ""}" data-open-day="${iso}">
@@ -2490,7 +2490,7 @@ async function exportPhotosZip() {
   }
 
   const btn = $("#exportPhotosBtn");
-  if (btn) { btn.disabled = true; btn.textContent = "Generando ZIPâ€¦"; }
+  if (btn) { btn.disabled = true; btn.textContent = "Generando ZIP�"; }
 
   try {
     const zip = new JSZip();
@@ -2509,13 +2509,13 @@ async function exportPhotosZip() {
     _photosZipBlob = await zip.generateAsync({ type: "blob" });
 
     const summary = `${horses.length} foto${horses.length > 1 ? "s" : ""} de ${horses.length} caballo${horses.length > 1 ? "s" : ""}`;
-    $("#photoExportSummary").textContent = `ZIP listo â€” ${summary}. Â¿QuÃ© quieres hacer?`;
+    $("#photoExportSummary").textContent = `ZIP listo � ${summary}. �Qu� quieres hacer?`;
     $("#photoExportShareBtn").style.display = navigator.share && navigator.canShare ? "" : "none";
     $("#photoExportModal").classList.add("open");
   } catch (err) {
     alert("Error al generar el ZIP: " + err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "ðŸ“· Exportar fotos"; }
+    if (btn) { btn.disabled = false; btn.textContent = "?? Exportar fotos"; }
   }
 }
 
@@ -2527,7 +2527,7 @@ async function sharePhotosZip() {
   if (!_photosZipBlob) return;
   const file = new File([_photosZipBlob], `fotos-caballos-${todayISO()}.zip`, { type: "application/zip" });
   try {
-    await navigator.share({ files: [file], title: "Fotos caballos â€” Finca Planner" });
+    await navigator.share({ files: [file], title: "Fotos caballos � Finca Planner" });
     closePhotoExportModal();
   } catch (err) {
     if (err.name !== "AbortError") alert("No se pudo compartir: " + err.message);
@@ -3081,7 +3081,7 @@ function init() {
   updateNotifPermBtn();
 }
 
-// â”€â”€ Firebase auth & sync â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Firebase auth & sync -------------------------------------
 
 async function loadFromFirestore(user) {
   try {
@@ -3192,9 +3192,29 @@ async function loginWithGoogle() {
   try {
     await signInWithPopup(auth, provider);
   } catch (e) {
-    if (e.code !== "auth/popup-closed-by-user") alert("Error al iniciar sesion: " + e.message);
+    if (e.code === "auth/popup-closed-by-user") return;
+    if (e.code === "auth/unauthorized-domain") {
+      alert("Tu dominio de GitHub Pages no esta autorizado en Firebase Authentication. Anade tu dominio github.io en Authorized domains.");
+      return;
+    }
+    if ([
+      "auth/popup-blocked",
+      "auth/cancelled-popup-request",
+      "auth/operation-not-supported-in-this-environment",
+      "auth/internal-error"
+    ].includes(e.code)) {
+      try {
+        await signInWithRedirect(auth, provider);
+        return;
+      } catch (redirectError) {
+        alert("No se pudo iniciar sesion con Google: " + (redirectError.message || redirectError.code || "error desconocido"));
+        return;
+      }
+    }
+    alert("Error al iniciar sesion: " + (e.message || e.code || "error desconocido"));
   }
 }
+
 
 async function logout() {
   if (!confirm("Cerrar sesion?")) return;
@@ -3228,6 +3248,15 @@ onAuthStateChanged(auth, async (user) => {
     updateUserChip(null);
     updateAdminAccess();
   }
+});
+
+getRedirectResult(auth).catch((error) => {
+  if (!error) return;
+  if (error.code === "auth/unauthorized-domain") {
+    alert("Tu dominio de GitHub Pages no esta autorizado en Firebase Authentication. Anade tu dominio github.io en Authorized domains.");
+    return;
+  }
+  console.warn("Error tras volver de Google:", error);
 });
 
 async function migrateOrLoadData(user) {
@@ -3291,7 +3320,7 @@ async function migrateOrLoadData(user) {
       }
     }
   } catch (e) {
-    console.warn("Error en migraciÃ³n/carga:", e);
+    console.warn("Error en migraci�n/carga:", e);
     loadData();
   }
 }
@@ -3339,10 +3368,10 @@ function closeAdminModal() {
   $("#adminModal")?.classList.remove("open");
 }
 
-// â”€â”€ BotÃ³n auth unificado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Bot�n auth unificado --------------------------------------
 document.getElementById("googleLoginBtn")?.addEventListener("click", loginWithGoogle);
 
-// â”€â”€ BotÃ³n sincronizar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Bot�n sincronizar -----------------------------------------
 document.getElementById("syncBtn")?.addEventListener("click", manualSync);
 
 async function manualSync() {
@@ -3383,7 +3412,7 @@ async function manualSync() {
   }
 }
 
-// â”€â”€ PWA install â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- PWA install -----------------------------------------------
 let _installPrompt = null;
 
 window.addEventListener("beforeinstallprompt", (e) => {
@@ -3406,12 +3435,15 @@ document.getElementById("installBtn")?.addEventListener("click", async () => {
   if (outcome === "accepted") _installPrompt = null;
 });
 
-// â”€â”€ Service Worker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Service Worker --------------------------------------------
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch((e) => console.warn("SW:", e));
 }
 
 init();
+
+
+
 
 
 
