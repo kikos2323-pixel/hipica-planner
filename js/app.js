@@ -15,11 +15,16 @@ function dataUrlToBlob(dataUrl) {
   return new Blob([arr], { type: mime });
 }
 
+function cloudinaryUrl(horseId) {
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/hipica_horse_${horseId}`;
+}
+
 async function uploadHorsePhotoCloudinary(horseId, dataUrl) {
   const blob = dataUrlToBlob(dataUrl);
   const formData = new FormData();
   formData.append("file", blob, `${horseId}.jpg`);
   formData.append("upload_preset", CLOUDINARY_PRESET);
+  formData.append("public_id", `hipica_horse_${horseId}`);
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
     method: "POST",
     body: formData
@@ -31,6 +36,31 @@ async function uploadHorsePhotoCloudinary(horseId, dataUrl) {
     throw new Error(msg);
   }
   return json.secure_url;
+}
+
+async function recoverCloudinaryPhotos(user) {
+  const horsesWithoutPhoto = state.horses.filter((h) => !h.photo);
+  if (horsesWithoutPhoto.length === 0) return;
+  let recovered = 0;
+  for (const horse of horsesWithoutPhoto) {
+    const url = cloudinaryUrl(horse.id);
+    try {
+      const res = await fetch(url, { method: "HEAD" });
+      if (res.ok) {
+        const idx = state.horses.findIndex((h) => h.id === horse.id);
+        if (idx !== -1) state.horses[idx] = { ...state.horses[idx], photo: url };
+        recovered++;
+      }
+    } catch (_) {}
+  }
+  if (recovered > 0) {
+    try {
+      await setDoc(doc(db, "users", user.uid, "data", "main"), buildCloudPayload());
+    } catch (e) {
+      console.warn("Error guardando fotos recuperadas:", e);
+    }
+    render();
+  }
 }
 
 const STORAGE_KEY = "fincaPlanner.v1";
@@ -3349,6 +3379,7 @@ onAuthStateChanged(auth, async (user) => {
     updateUserChip(user);
     await migrateOrLoadData(user);
     await migrateHorsePhotosToStorage(user);
+    await recoverCloudinaryPhotos(user);
     await loadSharedHorses();
     await syncUserProfile();
     await loadAdminProfiles();
