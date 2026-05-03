@@ -2729,3 +2729,141 @@ details[open] .schedule-chevron {
   width: 18px;
   height: 18px;
 }
+
+.admin-btn {
+  color: var(--text);
+}
+
+.share-horse-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--glass-strong);
+}
+
+.share-horse-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-modal-box {
+  max-width: 920px;
+}
+
+.admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-metric {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--glass-strong);
+}
+
+.admin-metric span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-bottom: 6px;
+}
+
+.admin-metric strong {
+  font-size: 1.35rem;
+}
+
+.admin-owner-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.admin-owner-row p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.admin-user-list {
+  display: grid;
+  gap: 12px;
+  max-height: 55vh;
+  overflow: auto;
+}
+
+.admin-user-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--glass-strong);
+}
+
+.admin-user-card h3 {
+  margin-bottom: 6px;
+}
+
+.admin-user-card p {
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+.admin-user-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-user-stats span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  font-size: 0.82rem;
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.12);
+  align-self: start;
+}
+
+.horse-shared-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.12);
+}
+
+@media (max-width: 720px) {
+  .admin-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-owner-row,
+  .admin-user-card {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+}

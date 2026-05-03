@@ -193,6 +193,12 @@
                 <path d="M12 2v13m0 0-4-4m4 4 4-4"/><rect x="3" y="17" width="18" height="4" rx="1"/>
               </svg>
             </button>
+            <button class="topbar-icon-btn admin-btn" id="adminBtn" title="Panel de administracion" aria-label="Panel de administracion" style="display:none" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L4.21 7.2a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
             <button class="topbar-icon-btn sync-btn" id="syncBtn" title="Sincronizar" aria-label="Sincronizar" type="button" style="display:none">
               <svg class="sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
@@ -531,6 +537,10 @@
             <label>Paddock / zona exterior
               <input id="paddockName" type="text" placeholder="Paddock 3, prado sur...">
             </label>
+            <label class="share-horse-toggle">
+              <input id="horseShared" type="checkbox">
+              <span>Compartir esta ficha con otros usuarios</span>
+            </label>
             <label class="coordinate-field">Latitud
               <input id="stableLat" type="number" step="0.000001" placeholder="40.123456">
             </label>
@@ -735,6 +745,37 @@
             </section>
           </section>
         </section>
+
+        <div id="adminModal" class="cal-modal" role="dialog" aria-modal="true">
+          <div class="cal-modal-box admin-modal-box">
+            <div class="cal-modal-header">
+              <h2>Panel de administracion</h2>
+              <button class="lightbox-close" id="adminModalClose" type="button" aria-label="Cerrar">x</button>
+            </div>
+            <div class="admin-summary-grid">
+              <article class="admin-metric">
+                <span>Usuarios</span>
+                <strong id="adminUserCount">0</strong>
+              </article>
+              <article class="admin-metric">
+                <span>Horas totales</span>
+                <strong id="adminTotalHours">0 h</strong>
+              </article>
+              <article class="admin-metric">
+                <span>Caballos compartidos</span>
+                <strong id="adminSharedHorseCount">0</strong>
+              </article>
+            </div>
+            <div class="admin-owner-row">
+              <div>
+                <strong>Administrador principal</strong>
+                <p id="adminOwnerLabel">Sin configurar</p>
+              </div>
+              <button class="ghost-button" id="claimAdminBtn" type="button">Marcarme como principal</button>
+            </div>
+            <div class="admin-user-list" id="adminUserList"></div>
+          </div>
+        </div>
       </main>
     </div>
 

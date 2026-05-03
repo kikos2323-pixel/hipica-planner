@@ -1,9 +1,12 @@
-﻿import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, setDoc, getDoc }
+﻿import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
   from "./firebase.js";
 
 const STORAGE_KEY = "fincaPlanner.v1";
 const THEME_KEY = "fincaPlanner.theme";
 const STANDARD_DAY_HOURS = 7;
+const APP_SETTINGS_DOC = ["appSettings", "main"];
+const USER_PROFILES_COLLECTION = "userProfiles";
+const SHARED_HORSES_COLLECTION = "sharedHorses";
 const WEEKLY_SCHEDULE = [
   { day: 1, label: "Lunes", shifts: [{ start: "07:00", end: "13:30" }, { start: "19:00", end: "21:00" }] },
   { day: 2, label: "Martes", shifts: [{ start: "08:00", end: "13:00" }] },
@@ -18,9 +21,16 @@ const state = {
   workEntries: [],
   tasks: [],
   horses: [],
+  sharedHorses: [],
   calendarNotes: [],
   generalNotes: [],
   trash: [],
+  adminProfiles: [],
+  appSettings: {
+    primaryAdminUid: "",
+    primaryAdminEmail: ""
+  },
+  isAdmin: false,
   currentObsTab: "pendientes",
   currentView: "dashboard",
   currentWorkSection: "fichaje",
@@ -44,12 +54,39 @@ let clockInterval = null;
 let navigationStack = [];
 let isRestoringNavigation = false;
 let activeRecognition = null;
+let currentSessionStartedAt = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+}
+
+function currentUser() {
+  return auth.currentUser || null;
+}
+
+function isPrimaryAdmin(user = currentUser()) {
+  if (!user) return false;
+  if (state.appSettings.primaryAdminUid && user.uid === state.appSettings.primaryAdminUid) return true;
+  if (state.appSettings.primaryAdminEmail && user.email === state.appSettings.primaryAdminEmail) return true;
+  return false;
+}
+
+function sharedHorseDocId(ownerUid, horseId) {
+  return `${ownerUid}__${horseId}`;
+}
+
+function totalWorkedHours(entries = []) {
+  return roundHours(entries.reduce((sum, entry) => sum + calculateWorkHours(entry), 0));
+}
+
+function minutesSince(isoString) {
+  if (!isoString) return 0;
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return 0;
+  return Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
 }
 
 function todayISO() {
@@ -159,11 +196,13 @@ function saveData() {
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   syncToFirestore(payload);
+  queueRemoteMetadataSync();
 }
 
 let _syncTimeout = null;
+let _remoteMetadataTimeout = null;
 function syncToFirestore(payload) {
-  const user = auth.currentUser;
+  const user = currentUser();
   if (!user) return;
   clearTimeout(_syncTimeout);
   _syncTimeout = setTimeout(async () => {
@@ -175,6 +214,139 @@ function syncToFirestore(payload) {
   }, 1500);
 }
 
+function queueRemoteMetadataSync() {
+  const user = currentUser();
+  if (!user) return;
+  clearTimeout(_remoteMetadataTimeout);
+  _remoteMetadataTimeout = setTimeout(async () => {
+    await syncSharedHorses();
+    await syncUserProfile();
+    if (state.isAdmin) await loadAdminProfiles();
+  }, 1800);
+}
+
+async function loadAppSettings() {
+  try {
+    const snap = await getDoc(doc(db, ...APP_SETTINGS_DOC));
+    if (!snap.exists()) {
+      state.appSettings = { primaryAdminUid: "", primaryAdminEmail: "" };
+      return;
+    }
+    const data = snap.data() || {};
+    state.appSettings = {
+      primaryAdminUid: String(data.primaryAdminUid || ""),
+      primaryAdminEmail: String(data.primaryAdminEmail || "")
+    };
+  } catch (error) {
+    console.warn("No se pudo cargar la configuracion general:", error);
+  }
+}
+
+async function claimPrimaryAdmin(user = currentUser()) {
+  if (!user) return;
+  const settings = {
+    primaryAdminUid: user.uid,
+    primaryAdminEmail: user.email || ""
+  };
+  await setDoc(doc(db, ...APP_SETTINGS_DOC), settings);
+  state.appSettings = settings;
+  state.isAdmin = true;
+  updateAdminAccess();
+}
+
+async function syncUserProfile() {
+  const user = currentUser();
+  if (!user) return;
+  try {
+    await setDoc(doc(db, USER_PROFILES_COLLECTION, user.uid), {
+      uid: user.uid,
+      email: user.email || "",
+      displayName: user.displayName || "",
+      photoURL: user.photoURL || "",
+      horseCount: state.horses.length,
+      sharedHorseCount: state.horses.filter((horse) => horse.shared).length,
+      workEntryCount: state.workEntries.length,
+      taskCount: state.tasks.length,
+      totalWorkedHours: totalWorkedHours(state.workEntries),
+      sessionStartedAt: currentSessionStartedAt || new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString(),
+      lastSyncAt: new Date().toISOString()
+    }, { merge: true });
+  } catch (error) {
+    console.warn("No se pudo actualizar el perfil del usuario:", error);
+  }
+}
+
+async function loadAdminProfiles() {
+  if (!state.isAdmin) {
+    state.adminProfiles = [];
+    return;
+  }
+  try {
+    const snapshot = await getDocs(collection(db, USER_PROFILES_COLLECTION));
+    state.adminProfiles = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .sort((a, b) => String(a.displayName || a.email || "").localeCompare(String(b.displayName || b.email || ""), "es"));
+  } catch (error) {
+    console.warn("No se pudieron cargar los perfiles de usuario:", error);
+  }
+}
+
+async function syncSharedHorses() {
+  const user = currentUser();
+  if (!user) return;
+  const ownSharedIds = new Set();
+  try {
+    for (const horse of state.horses) {
+      const sharedId = sharedHorseDocId(user.uid, horse.id);
+      if (horse.shared) {
+        ownSharedIds.add(sharedId);
+        await setDoc(doc(db, SHARED_HORSES_COLLECTION, sharedId), {
+          ...normalizeHorse(horse),
+          id: sharedId,
+          originalHorseId: horse.id,
+          ownerUid: user.uid,
+          ownerEmail: user.email || "",
+          ownerName: user.displayName || user.email || "Usuario",
+          shared: true,
+          sharedUpdatedAt: new Date().toISOString()
+        });
+      }
+    }
+
+    const existing = await getDocs(collection(db, SHARED_HORSES_COLLECTION));
+    const deletions = existing.docs
+      .filter((docSnap) => (docSnap.data()?.ownerUid || "") === user.uid && !ownSharedIds.has(docSnap.id))
+      .map((docSnap) => deleteDoc(doc(db, SHARED_HORSES_COLLECTION, docSnap.id)));
+    await Promise.all(deletions);
+  } catch (error) {
+    console.warn("No se pudieron sincronizar las fichas compartidas:", error);
+  }
+}
+
+async function loadSharedHorses() {
+  try {
+    const snapshot = await getDocs(collection(db, SHARED_HORSES_COLLECTION));
+    const user = currentUser();
+    state.sharedHorses = snapshot.docs
+      .map((docSnap) => normalizeHorse({ ...docSnap.data(), id: docSnap.id, shared: true }))
+      .filter((horse) => horse.ownerUid && horse.ownerUid !== user?.uid);
+  } catch (error) {
+    state.sharedHorses = [];
+    console.warn("No se pudieron cargar las fichas compartidas:", error);
+  }
+}
+
+function visibleHorses() {
+  return [...state.horses, ...state.sharedHorses];
+}
+
+function updateAdminAccess() {
+  state.isAdmin = isPrimaryAdmin();
+  const adminBtn = $("#adminBtn");
+  if (adminBtn) adminBtn.style.display = state.isAdmin ? "" : "none";
+}
+
 function loadData() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return;
@@ -182,7 +354,7 @@ function loadData() {
     const data = JSON.parse(raw);
     state.workEntries = Array.isArray(data.workEntries) ? data.workEntries : [];
     state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
-    state.horses = Array.isArray(data.horses) ? data.horses : [];
+    state.horses = Array.isArray(data.horses) ? data.horses.map(normalizeHorse) : [];
     state.calendarNotes = Array.isArray(data.calendarNotes) ? data.calendarNotes : [];
     state.generalNotes = Array.isArray(data.generalNotes) ? data.generalNotes : [];
     state.trash = Array.isArray(data.trash) ? data.trash : [];
@@ -259,6 +431,7 @@ function render() {
   renderWorkTable();
   renderTasks();
   renderHorses();
+  renderAdminPanel();
   renderWeeklySchedule();
   renderCalendar();
   renderHistory();
@@ -836,11 +1009,48 @@ function renderHorses() {
   renderHorseObservations();
 }
 
+function renderAdminPanel() {
+  const claimBtn = $("#claimAdminBtn");
+  $("#adminOwnerLabel").textContent = state.appSettings.primaryAdminEmail || "Sin configurar";
+  $("#adminUserCount").textContent = state.adminProfiles.length;
+  $("#adminTotalHours").textContent = `${roundHours(state.adminProfiles.reduce((sum, profile) => sum + (Number(profile.totalWorkedHours) || 0), 0))} h`;
+  $("#adminSharedHorseCount").textContent = state.adminProfiles.reduce((sum, profile) => sum + (Number(profile.sharedHorseCount) || 0), 0);
+
+  const list = $("#adminUserList");
+  if (!list) return;
+
+  if (!state.isAdmin) {
+    if (claimBtn) claimBtn.style.display = state.appSettings.primaryAdminUid ? "none" : "";
+    list.innerHTML = emptyState("Este panel solo esta disponible para el usuario administrador.");
+    return;
+  }
+
+  list.innerHTML = state.adminProfiles.map((profile) => `
+    <article class="admin-user-card">
+      <div>
+        <h3>${escapeHtml(profile.displayName || profile.email || "Usuario sin nombre")}</h3>
+        <p>${escapeHtml(profile.email || "Sin correo")}</p>
+        <div class="admin-user-stats">
+          <span>${Number(profile.horseCount) || 0} fichas</span>
+          <span>${Number(profile.sharedHorseCount) || 0} compartidas</span>
+          <span>${roundHours(Number(profile.totalWorkedHours) || 0)} h trabajadas</span>
+          <span>${Number(profile.taskCount) || 0} tareas</span>
+          <span>Sesion: ${minutesSince(profile.sessionStartedAt)} min</span>
+          <span>Ultima sincronizacion: ${profile.lastSyncAt ? formatDate(String(profile.lastSyncAt).slice(0, 10)) : "Sin datos"}</span>
+        </div>
+      </div>
+      ${profile.uid === state.appSettings.primaryAdminUid ? `<span class="admin-badge">Principal</span>` : ""}
+    </article>
+  `).join("") || emptyState("Todavia no hay otros usuarios conectados.");
+
+  if (claimBtn) claimBtn.style.display = state.isAdmin ? "none" : "";
+}
+
 function renderHorseList() {
   const list = $("#horseList");
   if (!list) return;
   const query = normalizeSearch($("#horseListSearch")?.value || "");
-  const horses = [...state.horses]
+  const horses = [...visibleHorses()]
     .sort((a, b) => naturalHorseSort(a, b))
     .filter((horse) => {
       if (!query) return true;
@@ -857,7 +1067,8 @@ function renderHorseList() {
         <div class="horse-list-row-thumb">${thumb}</div>
         <div class="horse-list-row-info">
           <strong>${escapeHtml(horse.name || horseLabel(horse))}</strong>
-          <small>${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Sin nÃºmero")} Â· ${escapeHtml(horse.stable || "Sin cuadra")}</small>
+          <small>${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Sin numero")} · ${escapeHtml(horse.stable || "Sin cuadra")}</small>
+          ${horse.shared ? `<span class="horse-shared-badge">Compartida por ${escapeHtml(horse.ownerName || horse.ownerEmail || "otro usuario")}</span>` : ""}
         </div>
       </div>
     `;
@@ -1052,7 +1263,7 @@ function closeLightbox() {
 }
 
 function showHorseDetail(id) {
-  const horse = state.horses.find((h) => h.id === id);
+  const horse = visibleHorses().find((h) => h.id === id);
   state.selectedHorseId = id;
   renderHorseList();
 
@@ -1074,6 +1285,7 @@ function showHorseDetail(id) {
   const photo = horse.photo
     ? `<img src="${horse.photo}" alt="" class="lightbox-trigger" data-lightbox="${horse.photo}" title="Ver foto completa" style="cursor:zoom-in">`
     : `<span>${escapeHtml(horse.number || "?")}</span>`;
+  const canEdit = !horse.shared || horse.ownerUid === currentUser()?.uid;
 
   card.innerHTML = `
     <div class="horse-detail-header">
@@ -1082,12 +1294,13 @@ function showHorseDetail(id) {
         <div class="horse-title-block">
           <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
           <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
+          ${horse.shared ? `<span class="horse-shared-badge">Compartida por ${escapeHtml(horse.ownerName || horse.ownerEmail || "otro usuario")}</span>` : ""}
         </div>
       </div>
       <div class="horse-detail-actions">
+        ${canEdit ? `<button class="small-button" data-share-horse="${horse.id}" type="button">Compartir</button>
         <button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
-        <button class="small-button" data-share-horse="${horse.id}" type="button">Compartir</button>
-        <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>
+        <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>` : ""}
       </div>
     </div>
 
@@ -1387,6 +1600,7 @@ function naturalHorseSort(a, b) {
 }
 
 function horseCardHtml(horse) {
+  const canEdit = !horse.shared || horse.ownerUid === currentUser()?.uid;
   return `
     <article class="horse-card">
       <div class="horse-photo-thumb">${horse.photo ? `<img src="${horse.photo}" alt="">` : `<span>${escapeHtml(horse.number || "?")}</span>`}</div>
@@ -1394,6 +1608,7 @@ function horseCardHtml(horse) {
         <div class="horse-title-block">
           <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
           <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
+          ${horse.shared ? `<span class="horse-shared-badge">Compartida por ${escapeHtml(horse.ownerName || horse.ownerEmail || "otro usuario")}</span>` : ""}
         </div>
         <div class="meta">
           <span>${escapeHtml(horse.stable || "Sin cuadra")}</span>
@@ -1405,8 +1620,8 @@ function horseCardHtml(horse) {
       </div>
       <div class="card-actions">
         <button class="small-button" data-find-horse="${horse.id}" type="button">Ver</button>
-        <button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
-        <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>
+        ${canEdit ? `<button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
+        <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>` : ""}
       </div>
     </article>
   `;
@@ -1459,6 +1674,7 @@ function syncHiddenCoordinatesToManualInputs() {
 function saveHorse(event) {
   event.preventDefault();
   syncManualCoordinateInputsToHidden();
+  const user = currentUser();
 
   const number = $("#horseNumber").value.trim();
   const name = $("#horseName").value.trim();
@@ -1483,6 +1699,10 @@ function saveHorse(event) {
     feedMorning: $("#horseFeedMorning").value.trim(),
     feedNoon: $("#horseFeedNoon").value.trim(),
     feedEvening: $("#horseFeedEvening").value.trim(),
+    shared: $("#horseShared").checked,
+    ownerUid: user?.uid || "",
+    ownerEmail: user?.email || "",
+    ownerName: user?.displayName || user?.email || "",
     updatedAt: new Date().toISOString()
   };
 
@@ -1512,6 +1732,7 @@ function resetHorseForm() {
   $("#horseForm").reset();
   $("#horseId").value = "";
   $("#horsePhotoData").value = "";
+  $("#horseShared").checked = false;
   $("#locationHelp").textContent = "Pulsa estando junto a la cuadra del caballo.";
   syncHiddenCoordinatesToManualInputs();
   updateHorseFormTitle();
@@ -1545,6 +1766,7 @@ function fillHorseForm(horse) {
   $("#horseFeedMorning").value = horse.feedMorning || "";
   $("#horseFeedNoon").value = horse.feedNoon || "";
   $("#horseFeedEvening").value = horse.feedEvening || "";
+  $("#horseShared").checked = Boolean(horse.shared);
 }
 
 function openHorseFromObservation(id) {
@@ -1605,7 +1827,11 @@ function shareHorse(id) {
 
 function deleteHorse(id) {
   if (!confirm("Quieres borrar este caballo del registro?")) return;
+  const horse = state.horses.find((item) => item.id === id);
   state.horses = state.horses.filter((item) => item.id !== id);
+  if (horse?.ownerUid) {
+    deleteDoc(doc(db, SHARED_HORSES_COLLECTION, sharedHorseDocId(horse.ownerUid, horse.id))).catch(() => {});
+  }
   if (state.selectedHorseId === id) {
     state.selectedHorseId = null;
     const empty = $("#horseBrowserEmpty");
@@ -1620,7 +1846,7 @@ function findHorseByQuery(query) {
   const clean = normalizeSearch(query);
   if (!clean) return null;
   const numberMatch = clean.match(/\b(\d+)\b/);
-  return state.horses.find((horse) => {
+  return visibleHorses().find((horse) => {
     const haystack = normalizeSearch(`${horse.number} ${horse.name} ${horse.stable} caballo ${horse.number}`);
     if (numberMatch && String(horse.number) === numberMatch[1]) return true;
     return haystack.includes(clean);
@@ -1646,6 +1872,7 @@ function showHorseResult(horse) {
       <div class="horse-title-block">
         <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
         <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
+        ${horse.shared ? `<span class="horse-shared-badge">Compartida por ${escapeHtml(horse.ownerName || horse.ownerEmail || "otro usuario")}</span>` : ""}
       </div>
       ${horse.photo ? `<div class="horse-photo-preview"><img src="${horse.photo}" alt=""></div>` : ""}
       <div class="meta">
@@ -2239,6 +2466,10 @@ function normalizeHorse(horse) {
     feedMorning: String(source.feedMorning || ""),
     feedNoon: String(source.feedNoon || ""),
     feedEvening: String(source.feedEvening || ""),
+    shared: Boolean(source.shared),
+    ownerUid: String(source.ownerUid || ""),
+    ownerEmail: String(source.ownerEmail || ""),
+    ownerName: String(source.ownerName || ""),
     updatedAt: String(source.updatedAt || new Date().toISOString())
   };
 }
@@ -2477,6 +2708,14 @@ function bindEvents() {
   $("#photoExportDownloadBtn").addEventListener("click", downloadPhotosZip);
   $("#showAllWorkEntriesBtn").addEventListener("click", showAllWorkEntries);
   $("#backBtn").addEventListener("click", goBack);
+  $("#adminBtn").addEventListener("click", openAdminModal);
+  $("#adminModalClose").addEventListener("click", closeAdminModal);
+  $("#adminModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAdminModal(); });
+  $("#claimAdminBtn").addEventListener("click", async () => {
+    await claimPrimaryAdmin();
+    await loadAdminProfiles();
+    renderAdminPanel();
+  });
   $("#workDate").addEventListener("change", () => {
     $("#expectedHours").value = scheduleExpectedHours($("#workDate").value) || STANDARD_DAY_HOURS;
   });
@@ -2527,7 +2766,7 @@ function bindEvents() {
       showHorseDetail(openHorseListButton.dataset.openHorseList);
     }
     if (browseHorseRow) showHorseDetail(browseHorseRow.dataset.browseHorse);
-    if (findHorseButton) showHorseResult(state.horses.find((horse) => horse.id === findHorseButton.dataset.findHorse));
+    if (findHorseButton) showHorseResult(visibleHorses().find((horse) => horse.id === findHorseButton.dataset.findHorse));
     if (editHorseButton) editHorse(editHorseButton.dataset.editHorse);
     if (deleteHorseButton) deleteHorse(deleteHorseButton.dataset.deleteHorse);
     if (openHorseButton) openHorseFromObservation(openHorseButton.dataset.openHorse);
@@ -2658,13 +2897,29 @@ async function logout() {
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
+    currentSessionStartedAt = currentSessionStartedAt || new Date().toISOString();
     hideLoginScreen();
+    await loadAppSettings();
+    if (!state.appSettings.primaryAdminUid) {
+      await claimPrimaryAdmin(user);
+    }
+    state.isAdmin = isPrimaryAdmin(user);
     updateUserChip(user);
     await migrateOrLoadData(user);
+    await loadSharedHorses();
+    await syncUserProfile();
+    await loadAdminProfiles();
+    updateAdminAccess();
     render();
   } else {
+    currentSessionStartedAt = null;
     showLoginScreen();
+    state.isAdmin = false;
+    state.sharedHorses = [];
+    state.adminProfiles = [];
+    closeAdminModal();
     updateUserChip(null);
+    updateAdminAccess();
   }
 });
 
@@ -2702,7 +2957,7 @@ async function migrateOrLoadData(user) {
 function applyDataFromObject(data) {
   state.workEntries   = Array.isArray(data.workEntries)   ? data.workEntries   : [];
   state.tasks         = Array.isArray(data.tasks)         ? data.tasks         : [];
-  state.horses        = Array.isArray(data.horses)        ? data.horses        : [];
+  state.horses        = Array.isArray(data.horses)        ? data.horses.map(normalizeHorse) : [];
   state.calendarNotes = Array.isArray(data.calendarNotes) ? data.calendarNotes : [];
   state.generalNotes  = Array.isArray(data.generalNotes)  ? data.generalNotes  : [];
   state.trash         = Array.isArray(data.trash)         ? data.trash         : [];
@@ -2732,6 +2987,16 @@ function hideSyncBanner(successMsg) {
   }
 }
 
+function openAdminModal() {
+  if (!state.isAdmin) return;
+  renderAdminPanel();
+  $("#adminModal")?.classList.add("open");
+}
+
+function closeAdminModal() {
+  $("#adminModal")?.classList.remove("open");
+}
+
 // â”€â”€ BotÃ³n auth unificado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.getElementById("googleLoginBtn")?.addEventListener("click", loginWithGoogle);
 document.getElementById("authBtn")?.addEventListener("click", () => {
@@ -2745,7 +3010,7 @@ async function manualSync() {
   const btn = $("#syncBtn");
   const icon = btn?.querySelector(".sync-icon");
   const check = btn?.querySelector(".sync-check");
-  const user = auth.currentUser;
+  const user = currentUser();
   if (!user) return;
 
   icon?.classList.add("spinning");
@@ -2763,6 +3028,9 @@ async function manualSync() {
       clock: state.clock
     };
     await setDoc(doc(db, "users", user.uid, "data", "main"), payload);
+    await syncSharedHorses();
+    await syncUserProfile();
+    if (state.isAdmin) await loadAdminProfiles();
     icon?.classList.remove("spinning");
     if (icon) icon.style.display = "none";
     if (check) check.style.display = "";
@@ -2805,4 +3073,6 @@ if ("serviceWorker" in navigator) {
 }
 
 init();
+
+
 
