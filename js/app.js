@@ -3439,26 +3439,67 @@ async function manualSync() {
 
 // -- PWA install -----------------------------------------------
 let _installPrompt = null;
+const INSTALL_DISMISSED_KEY = "fincaPlanner.installDismissed";
+
+function updateInstallBtn() {
+  const btn = $("#installBtn");
+  if (!btn) return;
+  if (_installPrompt) {
+    btn.style.opacity = "1";
+    btn.title = "Instalar app";
+    btn.disabled = false;
+  } else {
+    btn.style.opacity = "0.4";
+    btn.title = "Ya instalada o no disponible en este navegador";
+    btn.disabled = true;
+  }
+}
+
+function showInstallBanner() {
+  const banner = $("#installBanner");
+  if (banner) banner.style.display = "";
+}
+
+function hideInstallBanner() {
+  const banner = $("#installBanner");
+  if (banner) banner.style.display = "none";
+}
+
+async function triggerInstall() {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  const { outcome } = await _installPrompt.userChoice;
+  if (outcome === "accepted") {
+    _installPrompt = null;
+    hideInstallBanner();
+    updateInstallBtn();
+  }
+}
 
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   _installPrompt = e;
-  const btn = $("#installBtn");
-  if (btn) btn.style.display = "";
+  updateInstallBtn();
+  if (!localStorage.getItem(INSTALL_DISMISSED_KEY)) {
+    setTimeout(showInstallBanner, 3000);
+  }
 });
 
 window.addEventListener("appinstalled", () => {
-  const btn = $("#installBtn");
-  if (btn) btn.style.display = "none";
   _installPrompt = null;
+  hideInstallBanner();
+  updateInstallBtn();
+  localStorage.setItem(INSTALL_DISMISSED_KEY, "installed");
 });
 
-document.getElementById("installBtn")?.addEventListener("click", async () => {
-  if (!_installPrompt) return;
-  _installPrompt.prompt();
-  const { outcome } = await _installPrompt.userChoice;
-  if (outcome === "accepted") _installPrompt = null;
+document.getElementById("installBtn")?.addEventListener("click", triggerInstall);
+document.getElementById("installBannerBtn")?.addEventListener("click", triggerInstall);
+document.getElementById("installBannerDismiss")?.addEventListener("click", () => {
+  hideInstallBanner();
+  localStorage.setItem(INSTALL_DISMISSED_KEY, "dismissed");
 });
+
+updateInstallBtn();
 
 // -- Service Worker --------------------------------------------
 if ("serviceWorker" in navigator) {

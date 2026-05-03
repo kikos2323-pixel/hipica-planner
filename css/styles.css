@@ -2240,6 +2240,77 @@ th {
   gap: 6px;
 }
 
+/* Install banner */
+.install-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  background: var(--surface, #fff);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 480px;
+  width: calc(100% - 32px);
+  animation: popIn 0.3s ease;
+}
+
+.install-banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.install-banner-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.install-banner-text strong {
+  font-size: 0.9rem;
+}
+
+.install-banner-text span {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.install-banner-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.install-banner-actions .primary-button,
+.install-banner-actions .ghost-button {
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .install-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    bottom: 10px;
+  }
+  .install-banner-actions {
+    flex-direction: row;
+    width: 100%;
+  }
+}
+
 /* Sync banner */
 .sync-banner {
   position: fixed;
