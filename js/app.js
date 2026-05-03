@@ -3466,7 +3466,15 @@ async function migrateHorsePhotosToStorage(user) {
     }
   }
 
-  if (uploaded > 0) saveData();
+  if (uploaded > 0) {
+    saveData();
+    // Forzar escritura inmediata en Firestore sin esperar el debounce
+    try {
+      await setDoc(doc(db, "users", user.uid, "data", "main"), buildCloudPayload());
+    } catch (e) {
+      console.warn("Error guardando URLs de fotos en Firestore:", e);
+    }
+  }
   hidePhotoMigrationPanel(failed === 0, errorLog);
 }
 
