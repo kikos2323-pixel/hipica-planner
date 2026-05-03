@@ -188,6 +188,14 @@
                 <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
               </svg>
             </button>
+            <button class="topbar-icon-btn" id="appearanceBtn" type="button" aria-label="Apariencia" title="Apariencia">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3a9 9 0 1 0 9 9c0-1.1-.9-2-2-2h-2.3a1.7 1.7 0 0 1-1.2-2.9l.9-.9A2 2 0 0 0 15 3h-3z"/>
+                <circle cx="7.5" cy="12.5" r="1"/>
+                <circle cx="10.5" cy="8.5" r="1"/>
+                <circle cx="14.5" cy="8.5" r="1"/>
+              </svg>
+            </button>
             <button class="topbar-icon-btn" id="installBtn" title="Instalar app" aria-label="Instalar app" style="display:none" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 2v13m0 0-4-4m4 4 4-4"/><rect x="3" y="17" width="18" height="4" rx="1"/>
@@ -790,6 +798,44 @@
               <button class="ghost-button" id="claimAdminBtn" type="button">Marcarme como principal</button>
             </div>
             <div class="admin-user-list" id="adminUserList"></div>
+          </div>
+        </div>
+
+        <div id="appearanceModal" class="cal-modal" role="dialog" aria-modal="true">
+          <div class="cal-modal-box appearance-modal-box">
+            <div class="cal-modal-header">
+              <h2>Apariencia</h2>
+              <button class="lightbox-close" id="appearanceModalClose" type="button" aria-label="Cerrar">x</button>
+            </div>
+            <div class="appearance-grid">
+              <section>
+                <h3>Estilos base</h3>
+                <div class="appearance-presets" id="appearancePresets">
+                  <button class="appearance-preset" data-preset="hipica" type="button">Hipica</button>
+                  <button class="appearance-preset" data-preset="bosque" type="button">Bosque</button>
+                  <button class="appearance-preset" data-preset="arena" type="button">Arena</button>
+                  <button class="appearance-preset" data-preset="noche" type="button">Noche</button>
+                </div>
+              </section>
+              <section class="appearance-controls">
+                <h3>Ajustes finos</h3>
+                <label>Color principal
+                  <input id="themePrimaryInput" type="color" value="#245f48">
+                </label>
+                <label>Color acento
+                  <input id="themeAccentInput" type="color" value="#a66f3f">
+                </label>
+                <label>Transparencia del cristal
+                  <input id="themeGlassInput" type="range" min="0.45" max="0.95" step="0.01" value="0.82">
+                </label>
+                <label>Intensidad del fondo
+                  <input id="themeBgStrengthInput" type="range" min="0" max="100" step="1" value="100">
+                </label>
+                <div class="appearance-actions">
+                  <button class="ghost-button" id="themeResetBtn" type="button">Restablecer</button>
+                </div>
+              </section>
+            </div>
           </div>
         </div>
       </main>

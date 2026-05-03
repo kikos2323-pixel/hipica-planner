@@ -7,6 +7,40 @@ const STANDARD_DAY_HOURS = 7;
 const APP_SETTINGS_DOC = ["appSettings", "main"];
 const USER_PROFILES_COLLECTION = "userProfiles";
 const SHARED_HORSES_COLLECTION = "sharedHorses";
+const DEFAULT_THEME = {
+  mode: "light",
+  preset: "hipica",
+  primary: "#245f48",
+  accent: "#a66f3f",
+  glass: 0.82,
+  bgStrength: 100
+};
+const THEME_PRESETS = {
+  hipica: {
+    primary: "#245f48",
+    accent: "#a66f3f",
+    glass: 0.82,
+    bgStrength: 100
+  },
+  bosque: {
+    primary: "#2f6f57",
+    accent: "#8f6a3d",
+    glass: 0.78,
+    bgStrength: 85
+  },
+  arena: {
+    primary: "#6d5b3b",
+    accent: "#c5853f",
+    glass: 0.8,
+    bgStrength: 92
+  },
+  noche: {
+    primary: "#6ba88a",
+    accent: "#d3a56d",
+    glass: 0.74,
+    bgStrength: 70
+  }
+};
 const WEEKLY_SCHEDULE = [
   { day: 1, label: "Lunes", shifts: [{ start: "07:00", end: "13:30" }, { start: "19:00", end: "21:00" }] },
   { day: 2, label: "Martes", shifts: [{ start: "08:00", end: "13:00" }] },
@@ -45,7 +79,7 @@ const state = {
     segments: []
   },
   theme: {
-    mode: "light"
+    ...DEFAULT_THEME
   }
 };
 
@@ -363,12 +397,15 @@ function loadData() {
 
 function loadTheme() {
   const raw = localStorage.getItem(THEME_KEY);
-  if (!raw) return;
+  if (!raw) {
+    state.theme = { ...DEFAULT_THEME };
+    return;
+  }
   try {
     const theme = JSON.parse(raw);
-    state.theme.mode = theme.mode || "light";
+    state.theme = normalizeTheme(theme);
   } catch {
-    state.theme.mode = "light";
+    state.theme = { ...DEFAULT_THEME };
   }
 }
 
@@ -376,11 +413,102 @@ function saveTheme() {
   localStorage.setItem(THEME_KEY, JSON.stringify(state.theme));
 }
 
+function normalizeTheme(theme) {
+  const source = theme && typeof theme === "object" ? theme : {};
+  const preset = THEME_PRESETS[source.preset] ? source.preset : DEFAULT_THEME.preset;
+  return {
+    mode: source.mode === "dark" ? "dark" : "light",
+    preset,
+    primary: normalizeHexColor(source.primary, THEME_PRESETS[preset].primary),
+    accent: normalizeHexColor(source.accent, THEME_PRESETS[preset].accent),
+    glass: clampNumber(source.glass, 0.45, 0.95, THEME_PRESETS[preset].glass),
+    bgStrength: clampNumber(source.bgStrength, 0, 100, THEME_PRESETS[preset].bgStrength)
+  };
+}
+
+function normalizeHexColor(value, fallback) {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  return /^#[0-9a-fA-F]{6}$/.test(trimmed) ? trimmed : fallback;
+}
+
+function clampNumber(value, min, max, fallback) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.min(max, Math.max(min, numeric));
+}
+
+function hexToRgb(hex) {
+  const clean = normalizeHexColor(hex, "#000000").slice(1);
+  return {
+    r: Number.parseInt(clean.slice(0, 2), 16),
+    g: Number.parseInt(clean.slice(2, 4), 16),
+    b: Number.parseInt(clean.slice(4, 6), 16)
+  };
+}
+
+function rgbToHex({ r, g, b }) {
+  return `#${[r, g, b].map((value) => Math.round(value).toString(16).padStart(2, "0")).join("")}`;
+}
+
+function mixHex(colorA, colorB, ratio = 0.5) {
+  const a = hexToRgb(colorA);
+  const b = hexToRgb(colorB);
+  const weight = Math.min(1, Math.max(0, ratio));
+  return rgbToHex({
+    r: a.r + (b.r - a.r) * weight,
+    g: a.g + (b.g - a.g) * weight,
+    b: a.b + (b.b - a.b) * weight
+  });
+}
+
+function rgbaFromHex(hex, alpha) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function buildThemeBackground(theme) {
+  const primaryGlow = theme.mode === "dark" ? rgbaFromHex(theme.primary, 0.16 + (theme.bgStrength / 100) * 0.12) : rgbaFromHex(theme.primary, 0.12 + (theme.bgStrength / 100) * 0.1);
+  const accentGlow = theme.mode === "dark" ? rgbaFromHex(theme.accent, 0.12 + (theme.bgStrength / 100) * 0.1) : rgbaFromHex(theme.accent, 0.14 + (theme.bgStrength / 100) * 0.08);
+  const baseA = theme.mode === "dark" ? mixHex("#0e1411", theme.primary, 0.12) : mixHex("#f8faf4", theme.primary, 0.08);
+  const baseB = theme.mode === "dark" ? mixHex("#17241e", theme.primary, 0.18) : mixHex("#e7eee7", theme.primary, 0.11);
+  const baseC = theme.mode === "dark" ? mixHex("#241b15", theme.accent, 0.14) : mixHex("#f5eee3", theme.accent, 0.14);
+  return `
+    radial-gradient(circle at 12% 8%, ${primaryGlow}, transparent 28rem),
+    radial-gradient(circle at 86% 12%, ${accentGlow}, transparent 30rem),
+    linear-gradient(135deg, ${baseA} 0%, ${baseB} 48%, ${baseC} 100%)
+  `.trim();
+}
+
+function syncAppearanceControls() {
+  const primaryInput = $("#themePrimaryInput");
+  const accentInput = $("#themeAccentInput");
+  const glassInput = $("#themeGlassInput");
+  const bgStrengthInput = $("#themeBgStrengthInput");
+  if (primaryInput) primaryInput.value = state.theme.primary;
+  if (accentInput) accentInput.value = state.theme.accent;
+  if (glassInput) glassInput.value = String(state.theme.glass);
+  if (bgStrengthInput) bgStrengthInput.value = String(state.theme.bgStrength);
+  $$("[data-preset]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.preset === state.theme.preset);
+  });
+}
+
 function applyTheme() {
   document.body.dataset.mode = state.theme.mode;
   const modeButton = $("#modeToggleBtn");
   const modeIcon = $("#modeIcon");
   const isDark = state.theme.mode === "dark";
+  const rootStyle = document.body.style;
+  const glass = state.theme.glass;
+  const strongGlass = Math.min(0.96, glass + 0.08);
+  const softGlass = Math.max(0.08, glass - (isDark ? 0.58 : 0.28));
+  const lineColor = isDark ? rgbaFromHex("#f3efe3", 0.14) : rgbaFromHex("#273a30", 0.14);
+  const mutedColor = isDark ? mixHex("#adb9af", state.theme.primary, 0.18) : mixHex("#647269", state.theme.primary, 0.12);
+  const sandColor = mixHex("#d7c4a5", state.theme.accent, 0.24);
+  const primaryDark = isDark ? mixHex("#ffffff", state.theme.primary, 0.32) : mixHex("#0f211a", state.theme.primary, 0.4);
+  const chartC = mixHex("#607f87", state.theme.primary, 0.35);
+  const chartD = mixHex("#8d7959", state.theme.accent, 0.32);
 
   if (modeButton) {
     const label = isDark ? "Activar modo claro" : "Activar modo oscuro";
@@ -394,8 +522,47 @@ function applyTheme() {
       : '<path d="M21 12.79A9 9 0 1 1 11.21 3c0 .34.02.68.05 1.02A7 7 0 0 0 19.98 12c.34.03.68.05 1.02.05Z" fill="currentColor" stroke="none"/>';
   }
 
+  rootStyle.setProperty("--primary", state.theme.primary);
+  rootStyle.setProperty("--primary-dark", primaryDark);
+  rootStyle.setProperty("--accent", state.theme.accent);
+  rootStyle.setProperty("--accent-soft", rgbaFromHex(state.theme.accent, isDark ? 0.2 : 0.16));
+  rootStyle.setProperty("--glass", isDark ? rgbaFromHex("#18211c", glass) : rgbaFromHex("#ffffff", Math.max(0.45, glass - 0.14)));
+  rootStyle.setProperty("--glass-strong", isDark ? rgbaFromHex("#1f2a24", strongGlass) : rgbaFromHex("#ffffff", strongGlass));
+  rootStyle.setProperty("--glass-soft", isDark ? rgbaFromHex("#ffffff", softGlass) : rgbaFromHex("#ffffff", Math.max(0.18, softGlass)));
+  rootStyle.setProperty("--line", lineColor);
+  rootStyle.setProperty("--muted", mutedColor);
+  rootStyle.setProperty("--sand", sandColor);
+  rootStyle.setProperty("--chart-a", state.theme.primary);
+  rootStyle.setProperty("--chart-b", state.theme.accent);
+  rootStyle.setProperty("--chart-c", chartC);
+  rootStyle.setProperty("--chart-d", chartD);
+  rootStyle.setProperty("--bg-pattern", buildThemeBackground(state.theme));
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", state.theme.primary);
+  syncAppearanceControls();
   saveTheme();
   renderStats();
+}
+
+function openAppearanceModal() {
+  $("#appearanceModal")?.classList.add("open");
+  syncAppearanceControls();
+}
+
+function closeAppearanceModal() {
+  $("#appearanceModal")?.classList.remove("open");
+}
+
+function applyThemePreset(presetName) {
+  const preset = THEME_PRESETS[presetName];
+  if (!preset) return;
+  state.theme = normalizeTheme({ ...state.theme, preset: presetName, ...preset });
+  applyTheme();
+}
+
+function resetThemeCustomization() {
+  const preset = state.theme.preset || DEFAULT_THEME.preset;
+  state.theme = normalizeTheme({ ...DEFAULT_THEME, preset, ...THEME_PRESETS[preset], mode: state.theme.mode });
+  applyTheme();
 }
 
 function setDefaultDates() {
@@ -2792,6 +2959,36 @@ function bindEvents() {
   $("#modeToggleBtn").addEventListener("click", () => {
     state.theme.mode = state.theme.mode === "dark" ? "light" : "dark";
     applyTheme();
+  });
+  $("#appearanceBtn")?.addEventListener("click", openAppearanceModal);
+  $("#appearanceModalClose")?.addEventListener("click", closeAppearanceModal);
+  $("#appearanceModal")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) closeAppearanceModal();
+  });
+  $("#themePrimaryInput")?.addEventListener("input", (event) => {
+    state.theme.primary = normalizeHexColor(event.target.value, state.theme.primary);
+    applyTheme();
+  });
+  $("#themeAccentInput")?.addEventListener("input", (event) => {
+    state.theme.accent = normalizeHexColor(event.target.value, state.theme.accent);
+    applyTheme();
+  });
+  $("#themeGlassInput")?.addEventListener("input", (event) => {
+    state.theme.glass = clampNumber(event.target.value, 0.45, 0.95, state.theme.glass);
+    applyTheme();
+  });
+  $("#themeBgStrengthInput")?.addEventListener("input", (event) => {
+    state.theme.bgStrength = clampNumber(event.target.value, 0, 100, state.theme.bgStrength);
+    applyTheme();
+  });
+  $("#themeResetBtn")?.addEventListener("click", resetThemeCustomization);
+  $$("[data-preset]").forEach((button) => {
+    button.addEventListener("click", () => applyThemePreset(button.dataset.preset));
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeAppearanceModal();
+    }
   });
 
   $("#prevMonthBtn").addEventListener("click", () => {
