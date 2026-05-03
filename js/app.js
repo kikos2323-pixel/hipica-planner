@@ -3380,11 +3380,16 @@ function showPhotoMigrationPanel(total) {
           <strong class="pmp-title">Sincronizando fotos</strong>
           <span class="pmp-subtitle" id="pmpSubtitle">Preparando…</span>
         </div>
+        <button class="pmp-close no-ripple" id="pmpClose" title="Cerrar" style="display:none">✕</button>
       </div>
       <div class="pmp-bar-track"><div class="pmp-bar-fill" id="pmpBarFill"></div></div>
       <div class="pmp-steps" id="pmpSteps"></div>
+      <div id="pmpErrorLog" class="pmp-error-log" style="display:none"></div>
     `;
     document.body.appendChild(panel);
+    panel.querySelector("#pmpClose").addEventListener("click", () => {
+      panel.classList.remove("visible");
+    });
   }
   panel.classList.add("visible");
   updatePhotoMigrationPanel(0, total, "Detectando fotos en este dispositivo…");
@@ -3407,15 +3412,27 @@ function updatePhotoMigrationPanel(done, total, subtitle, horseName, status) {
   }
 }
 
-function hidePhotoMigrationPanel(success) {
+function hidePhotoMigrationPanel(success, errorLog) {
   const panel = $("#photoMigrationPanel");
   if (!panel) return;
   const sub = $("#pmpSubtitle");
   const fill = $("#pmpBarFill");
+  const closeBtn = $("#pmpClose");
+  const logEl = $("#pmpErrorLog");
   if (fill) fill.style.width = "100%";
-  if (sub) sub.textContent = success ? "¡Fotos sincronizadas correctamente!" : "Proceso finalizado con algunos errores";
   panel.classList.add(success ? "pmp-done" : "pmp-error");
-  setTimeout(() => panel.classList.remove("visible"), 4000);
+  if (success) {
+    if (sub) sub.textContent = "¡Fotos sincronizadas correctamente!";
+    setTimeout(() => panel.classList.remove("visible"), 4000);
+  } else {
+    if (sub) sub.textContent = "Finalizado con errores — pulsa ✕ para cerrar";
+    if (closeBtn) closeBtn.style.display = "flex";
+    if (logEl && errorLog && errorLog.length > 0) {
+      logEl.style.display = "block";
+      logEl.innerHTML = "<strong>Detalle de errores:</strong><br>" +
+        errorLog.map((e) => `• ${escapeHtml(e)}`).join("<br>");
+    }
+  }
 }
 
 async function migrateHorsePhotosToStorage(user) {
@@ -3428,6 +3445,7 @@ async function migrateHorsePhotosToStorage(user) {
   showPhotoMigrationPanel(total);
   let uploaded = 0;
   let failed = 0;
+  const errorLog = [];
 
   for (let i = 0; i < horsesWithBase64.length; i++) {
     const horse = horsesWithBase64[i];
@@ -3438,16 +3456,18 @@ async function migrateHorsePhotosToStorage(user) {
       const idx = state.horses.findIndex((h) => h.id === horse.id);
       if (idx !== -1) state.horses[idx] = { ...state.horses[idx], photo: url };
       uploaded++;
-      updatePhotoMigrationPanel(i + 1, total, `Subiendo ${i + 1} de ${total}: ${label}…`, label, "ok");
+      updatePhotoMigrationPanel(i + 1, total, `Subiendo ${i + 1} de ${total}…`, label, "ok");
     } catch (err) {
       console.warn("Error migrando foto del caballo", horse.id, err);
       failed++;
-      updatePhotoMigrationPanel(i + 1, total, `Subiendo ${i + 1} de ${total}…`, `${label}: ${err.message}`, "error");
+      const errMsg = `${label}: ${err.message}`;
+      errorLog.push(errMsg);
+      updatePhotoMigrationPanel(i + 1, total, `Subiendo ${i + 1} de ${total}…`, errMsg, "error");
     }
   }
 
   if (uploaded > 0) saveData();
-  hidePhotoMigrationPanel(failed === 0);
+  hidePhotoMigrationPanel(failed === 0, errorLog);
 }
 
 async function migrateOrLoadData(user) {

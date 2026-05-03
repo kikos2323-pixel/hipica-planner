@@ -3692,6 +3692,41 @@ table tbody tr:hover {
   background: linear-gradient(90deg, var(--danger), #f87171);
 }
 
+.pmp-close {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--glass-soft);
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pmp-error-log {
+  font-size: 0.74rem;
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.07);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  line-height: 1.6;
+  max-height: 120px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.pmp-error-log strong {
+  color: var(--text);
+  display: block;
+  margin-bottom: 4px;
+}
+
 @media (max-width: 480px) {
   .photo-migration-panel {
     right: 12px;
