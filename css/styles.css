@@ -945,18 +945,22 @@ h2 {
 
 .games-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) 320px;
+  grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
 }
 
 .games-side {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
 .game-panel-main {
   overflow: hidden;
+  min-height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
 }
 
 .game-panel-heading {
@@ -1009,7 +1013,8 @@ h2 {
   overflow: hidden;
   border: 1px solid var(--line);
   background: linear-gradient(180deg, #bdeeff, #f9eec5 78%);
-  aspect-ratio: 16 / 9;
+  flex: 1;
+  min-height: min(72vh, 860px);
 }
 
 #flappyCanvas {
@@ -3995,6 +4000,18 @@ table tbody tr:hover {
   .game-scoreboard {
     justify-content: flex-start;
   }
+
+  .games-side {
+    grid-template-columns: 1fr;
+  }
+
+  .game-panel-main {
+    min-height: calc(100vh - 150px);
+  }
+
+  .flappy-wrap {
+    min-height: 58vh;
+  }
 }
 
 .pmp-close {
@@ -4059,6 +4076,48 @@ table tbody tr:hover {
   .game-score-pill {
     flex: 1 1 calc(50% - 8px);
     min-width: 0;
+    padding: 10px 12px;
+  }
+
+  .game-panel-main {
+    min-height: calc(100svh - 120px);
+    padding: 14px;
+  }
+
+  .flappy-wrap {
+    min-height: calc(100svh - 390px);
+    border-radius: 20px;
+  }
+
+  .game-panel-heading {
+    gap: 10px;
+  }
+
+  .game-panel-title {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .games-side {
+    gap: 12px;
+  }
+
+  .games-side .panel {
+    margin-bottom: 0;
+    padding: 14px;
+  }
+
+  .game-score-pill strong,
+  .game-progress-card strong {
+    font-size: 1.25rem;
+  }
+
+  .game-score-pill span,
+  .game-progress-card span {
+    font-size: 0.7rem;
+  }
+
+  .game-panel-heading .eyebrow {
+    margin-bottom: 4px;
   }
 }
 

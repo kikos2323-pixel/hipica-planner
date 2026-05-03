@@ -1381,8 +1381,8 @@ function renderGames() {
 function updateFlappyHorseDeviceProfile() {
   const compact = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
   flappyGame.isCompactMode = compact;
-  flappyGame.baseSpeed = compact ? 2.95 : flappyGame.desktopBaseSpeed;
-  flappyGame.spawnEvery = compact ? 118 : flappyGame.desktopSpawnEvery;
+  flappyGame.baseSpeed = compact ? 3.65 : flappyGame.desktopBaseSpeed;
+  flappyGame.spawnEvery = compact ? 104 : flappyGame.desktopSpawnEvery;
 }
 
 function persistGames() {
