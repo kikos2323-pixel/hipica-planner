@@ -39,6 +39,30 @@ const THEME_PRESETS = {
     accent: "#d3a56d",
     glass: 0.74,
     bgStrength: 70
+  },
+  oceano: {
+    primary: "#1a6b8a",
+    accent: "#2ea8c4",
+    glass: 0.80,
+    bgStrength: 90
+  },
+  atardecer: {
+    primary: "#c2491a",
+    accent: "#e88a2c",
+    glass: 0.82,
+    bgStrength: 95
+  },
+  lavanda: {
+    primary: "#6b4fa8",
+    accent: "#a87fc2",
+    glass: 0.80,
+    bgStrength: 88
+  },
+  carbono: {
+    primary: "#4a4a4a",
+    accent: "#888888",
+    glass: 0.72,
+    bgStrength: 60
   }
 };
 const WEEKLY_SCHEDULE = [
@@ -3522,6 +3546,21 @@ updateInstallBtn();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch((e) => console.warn("SW:", e));
 }
+
+// -- Ripple effect on buttons ----------------------------------
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn || btn.classList.contains("no-ripple")) return;
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 2;
+  const x = e.clientX - rect.left - size / 2;
+  const y = e.clientY - rect.top - size / 2;
+  const ripple = document.createElement("span");
+  ripple.className = "ripple-wave";
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+  btn.appendChild(ripple);
+  ripple.addEventListener("animationend", () => ripple.remove());
+});
 
 init();
 
