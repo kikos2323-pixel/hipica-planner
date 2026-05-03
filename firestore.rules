@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function appSettingsExists() {
+      return exists(/databases/$(database)/documents/appSettings/main);
+    }
+
+    function isPrimaryAdmin() {
+      return signedIn()
+        && appSettingsExists()
+        && get(/databases/$(database)/documents/appSettings/main).data.primaryAdminUid == request.auth.uid;
+    }
+
+    match /users/{userId}/data/{docId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /userProfiles/{userId} {
+      allow read: if isOwner(userId) || isPrimaryAdmin();
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    match /sharedHorses/{horseId} {
+      allow read: if signedIn();
+      allow create, update, delete: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /appSettings/{docId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && !appSettingsExists();
+      allow update: if isPrimaryAdmin();
+      allow delete: if false;
+    }
+  }
+}

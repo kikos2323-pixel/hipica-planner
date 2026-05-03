@@ -1,4 +1,4 @@
-const CACHE = "finca-planner-v3";
+const CACHE = "finca-planner-v4";
 const BASE = "/hipica-planner";
 const ASSETS = [
   BASE + "/",
@@ -42,7 +42,10 @@ const ASSETS = [
   BASE + "/icons/ui/download.svg",
   BASE + "/icons/ui/upload.svg",
   BASE + "/icons/ui/camera.svg",
-  BASE + "/icons/ui/bell.svg"
+  BASE + "/icons/ui/bell.svg",
+  BASE + "/icons/ui/search.svg",
+  BASE + "/icons/ui/mic.svg",
+  BASE + "/icons/ui/moon.svg"
 ];
 
 self.addEventListener("install", (e) => {
