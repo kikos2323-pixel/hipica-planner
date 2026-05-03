@@ -66,7 +66,7 @@
       <div class="cal-modal-box">
         <div class="cal-modal-header">
           <h2 id="calModalTitle"></h2>
-          <button class="lightbox-close" id="calModalClose" type="button" aria-label="Cerrar">âœ•</button>
+          <button class="lightbox-close" id="calModalClose" type="button" aria-label="Cerrar">✕</button>
         </div>
         <div id="calModalInfo" class="cal-modal-info"></div>
         <div id="calModalNotes" class="cal-modal-notes"></div>
@@ -75,12 +75,12 @@
           <input type="hidden" id="calNoteEditId">
           <div class="cal-note-input-row">
             <select id="calNoteColor" title="Tipo de nota">
-              <option value="green">ðŸŸ¢ Nota</option>
+              <option value="green">🟢 Nota</option>
               <option value="blue">ðŸ”µ Evento</option>
-              <option value="amber">ðŸŸ¡ Recordatorio</option>
+              <option value="amber">🟡 Recordatorio</option>
               <option value="red">ðŸ”´ Urgente</option>
             </select>
-            <input id="calNoteText" type="text" placeholder="Escribe una nota o eventoâ€¦" autocomplete="off" required>
+            <input id="calNoteText" type="text" placeholder="Escribe una nota o evento…" autocomplete="off" required>
           </div>
           <div class="cal-note-alarm-row">
             <label class="cal-alarm-label">
@@ -88,7 +88,7 @@
               <input id="calNoteAlarm" type="time" title="Hora de aviso">
             </label>
             <button class="ghost-button" id="notifPermBtn" type="button">Activar notificaciones</button>
-            <button class="primary-button" id="calNoteSaveBtn" type="submit">AÃ±adir</button>
+            <button class="primary-button" id="calNoteSaveBtn" type="submit">Añadir</button>
           </div>
         </form>
       </div>
@@ -97,18 +97,18 @@
       <div class="cal-modal-box">
         <div class="cal-modal-header">
           <h2>ðŸ“· Fotos exportadas</h2>
-          <button class="lightbox-close" id="photoExportModalClose" type="button" aria-label="Cerrar">âœ•</button>
+          <button class="lightbox-close" id="photoExportModalClose" type="button" aria-label="Cerrar">✕</button>
         </div>
         <p id="photoExportSummary" style="margin:0 0 16px;color:var(--muted);font-size:0.9rem"></p>
         <div class="photo-export-actions">
-          <button class="primary-button" id="photoExportShareBtn" type="button">â†— Compartir (WhatsApp, Driveâ€¦)</button>
-          <button class="ghost-button" id="photoExportDownloadBtn" type="button">â¬‡ Guardar en el telÃ©fono</button>
+          <button class="primary-button" id="photoExportShareBtn" type="button">↗ Compartir (WhatsApp, Drive…)</button>
+          <button class="ghost-button" id="photoExportDownloadBtn" type="button">⬇ Guardar en el teléfono</button>
         </div>
       </div>
     </div>
 
     <div id="photoLightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
-      <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">âœ•</button>
+      <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">✕</button>
       <img id="lightboxImg" src="" alt="Foto del caballo">
     </div>
     <div class="app-shell">
@@ -176,7 +176,7 @@
                 <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
               </svg>
             </span>
-            <span class="nav-label">GrÃ¡ficos</span>
+            <span class="nav-label">Gráficos</span>
           </button>
           <button class="nav-link" data-view="historial" data-color="slate">
             <span class="nav-icon">
@@ -364,7 +364,7 @@
             </div>
             <div id="manualSegments" class="manual-segments"></div>
             <div class="form-actions">
-              <button class="ghost-button" id="addSegmentBtn" type="button"><span class="button-icon icon-slot" data-icon="plus" aria-hidden="true"></span><span>AÃ±adir tramo</span></button>
+              <button class="ghost-button" id="addSegmentBtn" type="button"><span class="button-icon icon-slot" data-icon="plus" aria-hidden="true"></span><span>Añadir tramo</span></button>
               <button class="primary-button" id="saveManualSegmentsBtn" type="button"><span class="button-icon icon-slot" data-icon="save" aria-hidden="true"></span><span>Guardar correccion</span></button>
             </div>
           </section>
@@ -505,7 +505,7 @@
             <summary class="schedule-summary">
               <span class="icon-slot" data-icon="schedule"></span>
               Horario semanal
-              <span class="schedule-chevron">â–¾</span>
+              <span class="schedule-chevron">▾</span>
             </summary>
             <div id="weeklySchedule" class="schedule-grid"></div>
           </details>
@@ -557,8 +557,8 @@
                   <span class="photo-placeholder">ðŸ“·<br><small>Hacer foto</small></span>
                   <input id="horsePhotoInput" type="file" accept="image/*" capture="environment">
                 </label>
-                <label class="gallery-btn" title="Elegir de galerÃ­a">
-                  ðŸ–¼ï¸
+                <label class="gallery-btn" title="Elegir de galería">
+                  🖼️
                   <input id="horseGalleryInput" type="file" accept="image/*">
                 </label>
               </div>
@@ -621,22 +621,22 @@
               <textarea id="horseNotes" rows="3" placeholder="Detalles para encontrar la cuadra, referencias, acceso..."></textarea>
             </label>
             <div class="full horse-feed-section">
-              <h3 class="feed-title">AlimentaciÃ³n</h3>
+              <h3 class="feed-title">Alimentación</h3>
               <div class="feed-grid">
                 <div class="feed-slot">
-                  <span class="feed-icon">ðŸŒ…</span>
-                  <label>MaÃ±ana
+                  <span class="feed-icon">🌅</span>
+                  <label>Mañana
                     <input id="horseFeedMorning" type="text" placeholder="Ej. 3 kg pienso + heno">
                   </label>
                 </div>
                 <div class="feed-slot">
-                  <span class="feed-icon">â˜€ï¸</span>
-                  <label>MediodÃ­a
-                    <input id="horseFeedNoon" type="text" placeholder="Ej. heno a libre disposiciÃ³n">
+                  <span class="feed-icon">☀️</span>
+                  <label>Mediodía
+                    <input id="horseFeedNoon" type="text" placeholder="Ej. heno a libre disposición">
                   </label>
                 </div>
                 <div class="feed-slot">
-                  <span class="feed-icon">ðŸŒ™</span>
+                  <span class="feed-icon">🌙</span>
                   <label><span class="inline-label-icon"><span class="icon-slot" data-icon="moon"></span>Tarde</span>
                     <input id="horseFeedEvening" type="text" placeholder="Ej. 3 kg pienso + zanahoria">
                   </label>
@@ -661,12 +661,12 @@
                   <h2><span class="icon-slot" data-icon="stable"></span>Caballos</h2>
                 </div>
                 <div class="horse-browser-search">
-                  <input type="search" id="horseListSearch" placeholder="Buscar por nombre o cÃ³digoâ€¦" autocomplete="off">
+                  <input type="search" id="horseListSearch" placeholder="Buscar por nombre o código…" autocomplete="off">
                 </div>
                 <div id="horseList" class="horse-list-compact"></div>
               </aside>
               <div class="horse-browser-detail panel" id="horseBrowserDetail">
-                <button class="horse-browser-back ghost-button" id="horseBrowserBack" type="button">â† Volver a la lista</button>
+                <button class="horse-browser-back ghost-button" id="horseBrowserBack" type="button">← Volver a la lista</button>
                 <div class="horse-browser-empty" id="horseBrowserEmpty">
                   <span class="icon-slot" data-icon="stable"></span>
                   <p>Selecciona un caballo de la lista para ver su ficha</p>
@@ -699,12 +699,12 @@
                 <form id="generalNoteForm" class="general-note-form">
                   <input type="hidden" id="generalNoteEditId">
                   <div class="general-note-input-row">
-                    <textarea id="generalNoteText" rows="3" placeholder="Escribe una anotaciÃ³n libreâ€¦" required></textarea>
+                    <textarea id="generalNoteText" rows="3" placeholder="Escribe una anotación libre…" required></textarea>
                   </div>
                   <div class="general-note-meta-row">
-                    <select id="generalNoteType" title="Tipo de observaciÃ³n">
-                      <option value="normal">ðŸŸ¢ Normal</option>
-                      <option value="recordatorio">ðŸŸ¡ Recordatorio</option>
+                    <select id="generalNoteType" title="Tipo de observación">
+                      <option value="normal">🟢 Normal</option>
+                      <option value="recordatorio">🟡 Recordatorio</option>
                       <option value="urgente">ðŸ”´ Urgente</option>
                       <option value="info">ðŸ”µ Informativa</option>
                     </select>
@@ -757,7 +757,7 @@
         <section class="view" id="historial">
           <div class="section-tabs" aria-label="Apartados de historial">
             <button class="section-tab active" data-historial-tab="historial" type="button">Historial</button>
-            <button class="section-tab" data-historial-tab="papelera" type="button">ðŸ—‘ï¸ Papelera</button>
+            <button class="section-tab" data-historial-tab="papelera" type="button">🗑️ Papelera</button>
           </div>
 
           <section class="historial-panel active" id="historial-panel-historial">
@@ -780,7 +780,7 @@
           <section class="historial-panel" id="historial-panel-papelera">
             <section class="panel">
               <div class="panel-heading split">
-                <h2>ðŸ—‘ï¸ Papelera</h2>
+                <h2>🗑️ Papelera</h2>
                 <button class="ghost-button" data-empty-trash type="button"><span class="button-icon icon-slot" data-icon="trash" aria-hidden="true"></span><span>Vaciar papelera</span></button>
               </div>
               <div id="trashList" class="trash-list"></div>

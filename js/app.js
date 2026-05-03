@@ -41,26 +41,19 @@ async function uploadHorsePhotoCloudinary(horseId, dataUrl) {
 async function recoverCloudinaryPhotos(user) {
   const horsesWithoutPhoto = state.horses.filter((h) => !h.photo);
   if (horsesWithoutPhoto.length === 0) return;
-  let recovered = 0;
+
+  // Assign deterministic Cloudinary URLs and let the img tag handle 404s silently
   for (const horse of horsesWithoutPhoto) {
-    const url = cloudinaryUrl(horse.id);
-    try {
-      const res = await fetch(url, { method: "HEAD" });
-      if (res.ok) {
-        const idx = state.horses.findIndex((h) => h.id === horse.id);
-        if (idx !== -1) state.horses[idx] = { ...state.horses[idx], photo: url };
-        recovered++;
-      }
-    } catch (_) {}
+    const idx = state.horses.findIndex((h) => h.id === horse.id);
+    if (idx !== -1) state.horses[idx] = { ...state.horses[idx], photo: cloudinaryUrl(horse.id) };
   }
-  if (recovered > 0) {
-    try {
-      await setDoc(doc(db, "users", user.uid, "data", "main"), buildCloudPayload());
-    } catch (e) {
-      console.warn("Error guardando fotos recuperadas:", e);
-    }
-    render();
+
+  try {
+    await setDoc(doc(db, "users", user.uid, "data", "main"), buildCloudPayload());
+  } catch (e) {
+    console.warn("Error guardando fotos recuperadas:", e);
   }
+  render();
 }
 
 const STORAGE_KEY = "fincaPlanner.v1";
