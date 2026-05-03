@@ -3487,14 +3487,20 @@ async function triggerInstall() {
   }
 }
 
-window.addEventListener("beforeinstallprompt", (e) => {
+function handleInstallPrompt(e) {
   e.preventDefault();
   _installPrompt = e;
   updateInstallBtn();
   if (!localStorage.getItem(INSTALL_DISMISSED_KEY)) {
     setTimeout(showInstallBanner, 3000);
   }
-});
+}
+
+// Recoger el evento si ya fue capturado por el script inline del <head>
+if (window._installPromptEvent) {
+  handleInstallPrompt(window._installPromptEvent);
+}
+window.addEventListener("beforeinstallprompt", handleInstallPrompt);
 
 window.addEventListener("appinstalled", () => {
   _installPrompt = null;

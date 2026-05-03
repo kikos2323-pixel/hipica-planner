@@ -13,6 +13,14 @@
     <meta name="theme-color" content="#245f48">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script>
+      // Capturar beforeinstallprompt lo antes posible, antes de que cargue el módulo
+      window._installPromptEvent = null;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        window._installPromptEvent = e;
+      });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   </head>
