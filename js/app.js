@@ -263,14 +263,34 @@ function syncToFirestore(payload) {
   }, 1500);
 }
 
+async function syncOptionalRemoteData() {
+  try {
+    await syncSharedHorses();
+  } catch (error) {
+    console.warn("No se pudieron sincronizar las fichas compartidas:", error);
+  }
+
+  try {
+    await syncUserProfile();
+  } catch (error) {
+    console.warn("No se pudo sincronizar el perfil del usuario:", error);
+  }
+
+  if (state.isAdmin) {
+    try {
+      await loadAdminProfiles();
+    } catch (error) {
+      console.warn("No se pudo refrescar el panel de administracion:", error);
+    }
+  }
+}
+
 function queueRemoteMetadataSync() {
   const user = currentUser();
   if (!user) return;
   clearTimeout(_remoteMetadataTimeout);
   _remoteMetadataTimeout = setTimeout(async () => {
-    await syncSharedHorses();
-    await syncUserProfile();
-    if (state.isAdmin) await loadAdminProfiles();
+    await syncOptionalRemoteData();
   }, 1800);
 }
 
@@ -3390,9 +3410,7 @@ async function manualSync() {
       clock: state.clock
     };
     await setDoc(doc(db, "users", user.uid, "data", "main"), payload);
-    await syncSharedHorses();
-    await syncUserProfile();
-    if (state.isAdmin) await loadAdminProfiles();
+    await syncOptionalRemoteData();
     icon?.classList.remove("spinning");
     if (icon) icon.style.display = "none";
     if (check) check.style.display = "";
@@ -3435,6 +3453,7 @@ if ("serviceWorker" in navigator) {
 }
 
 init();
+
 
 
 
