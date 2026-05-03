@@ -1,19 +1,31 @@
 {
-  "name": "Finca Planner",
-  "short_name": "Finca Planner",
+  "name": "Hípica App",
+  "short_name": "Hípica",
   "description": "Gestión de jornadas, tareas y caballos",
   "start_url": "/hipica-planner/",
   "scope": "/hipica-planner/",
   "display": "standalone",
-  "background_color": "#f4f6f8",
-  "theme_color": "#2563eb",
+  "background_color": "#f5eee3",
+  "theme_color": "#245f48",
   "orientation": "any",
   "icons": [
     {
-      "src": "icons/icon.svg",
+      "src": "icons/icon-app.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-app.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-app.jpg",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "maskable"
     }
   ]
 }
