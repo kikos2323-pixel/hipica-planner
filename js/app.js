@@ -1599,17 +1599,17 @@ function showHorseDetail(id) {
     <div class="horse-detail-feed">
       <h4 class="feed-title">${buttonIcon("feed")}Alimentación</h4>
       <div class="feed-grid">
-        <div class="feed-slot">
-          <span class="feed-icon icon-slot" data-icon="sun"></span>
-          <div><label><span class="inline-label-icon"><span class="icon-slot" data-icon="sun"></span>Mañana</span></label><p>${escapeHtml(horse.feedMorning || "—")}</p></div>
-        </div>
-        <div class="feed-slot">
+        <div class="feed-slot feed-slot-morning">
           <span class="feed-icon icon-slot" data-icon="today"></span>
-          <div><label><span class="inline-label-icon"><span class="icon-slot" data-icon="today"></span>Mediodía</span></label><p>${escapeHtml(horse.feedNoon || "—")}</p></div>
+          <div><label>Mañana</label><p>${escapeHtml(horse.feedMorning || "—")}</p></div>
         </div>
-        <div class="feed-slot">
+        <div class="feed-slot feed-slot-noon">
+          <span class="feed-icon icon-slot" data-icon="today"></span>
+          <div><label>Mediodía</label><p>${escapeHtml(horse.feedNoon || "—")}</p></div>
+        </div>
+        <div class="feed-slot feed-slot-evening">
           <span class="feed-icon icon-slot" data-icon="moon"></span>
-          <div><label><span class="inline-label-icon"><span class="icon-slot" data-icon="moon"></span>Tarde</span></label><p>${escapeHtml(horse.feedEvening || "—")}</p></div>
+          <div><label>Tarde</label><p>${escapeHtml(horse.feedEvening || "—")}</p></div>
         </div>
       </div>
     </div>
@@ -3831,7 +3831,34 @@ updateInstallBtn();
 
 // -- Service Worker --------------------------------------------
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js").catch((e) => console.warn("SW:", e));
+  let refreshingFromServiceWorker = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshingFromServiceWorker) return;
+    refreshingFromServiceWorker = true;
+    window.location.reload();
+  });
+
+  navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" })
+    .then((registration) => {
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+
+      registration.update().catch(() => {});
+      setInterval(() => registration.update().catch(() => {}), 60000);
+    })
+    .catch((e) => console.warn("SW:", e));
 }
 
 // -- Ripple effect on buttons ----------------------------------
