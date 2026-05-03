@@ -195,6 +195,7 @@ const flappyGame = {
   level: 1,
   speedPercent: 100,
   isCompactMode: false,
+  isPortraitMode: false,
   gravityBase: 0.27,
   gravity: 0.27,
   flap: -6.6,
@@ -1380,9 +1381,29 @@ function renderGames() {
 
 function updateFlappyHorseDeviceProfile() {
   const compact = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+  const portrait = compact && window.innerHeight > window.innerWidth;
   flappyGame.isCompactMode = compact;
-  flappyGame.baseSpeed = compact ? 3.65 : flappyGame.desktopBaseSpeed;
-  flappyGame.spawnEvery = compact ? 104 : flappyGame.desktopSpawnEvery;
+  flappyGame.isPortraitMode = portrait;
+  flappyGame.baseSpeed = portrait ? 5.35 : compact ? 3.95 : flappyGame.desktopBaseSpeed;
+  flappyGame.spawnEvery = portrait ? 88 : compact ? 104 : flappyGame.desktopSpawnEvery;
+  flappyGame.gravityBase = portrait ? 0.31 : 0.27;
+  flappyGame.flap = portrait ? -7.2 : -6.6;
+}
+
+function resizeFlappyCanvas() {
+  const wrap = $("#flappyWrap");
+  const canvas = flappyGame.canvas;
+  if (!wrap || !canvas) return;
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.max(320, Math.round(wrap.clientWidth * ratio));
+  const height = Math.max(420, Math.round(wrap.clientHeight * ratio));
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  flappyGame.groundHeight = flappyGame.isPortraitMode
+    ? Math.round(canvas.height * 0.12)
+    : Math.round(canvas.height * 0.15);
 }
 
 function persistGames() {
@@ -1402,6 +1423,7 @@ function initFlappyHorse() {
   if (!flappyGame.canvas || !flappyGame.ctx) return;
   flappyGame.initialized = true;
   updateFlappyHorseDeviceProfile();
+  resizeFlappyCanvas();
   flappyGame.horseTheme = flappyThemeById(state.games?.flappyHorse?.selectedColor);
 
   $("#flappyStartBtn")?.addEventListener("click", () => startFlappyHorse());
@@ -1416,7 +1438,14 @@ function initFlappyHorse() {
       flapFlappyHorse();
     }
   });
-  window.addEventListener("resize", updateFlappyHorseDeviceProfile);
+  window.addEventListener("resize", () => {
+    updateFlappyHorseDeviceProfile();
+    resizeFlappyCanvas();
+    if (!flappyGame.running) {
+      flappyGame.horse.x = flappyGame.canvas.width * (flappyGame.isPortraitMode ? 0.32 : 0.19);
+      flappyGame.horse.y = flappyGame.canvas.height * 0.44;
+    }
+  });
   $("#flappySwatches")?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-flappy-theme]");
     if (!button) return;
@@ -1465,6 +1494,7 @@ function renderFlappyHorseSwatches() {
 
 function resetFlappyHorse(start = false) {
   updateFlappyHorseDeviceProfile();
+  resizeFlappyCanvas();
   flappyGame.running = start;
   flappyGame.gameOver = false;
   flappyGame.countdown = 0;
@@ -1482,7 +1512,8 @@ function resetFlappyHorse(start = false) {
   flappyGame.frame = 0;
   flappyGame.fences = [];
   flappyGame.horseTheme = flappyThemeById(state.games?.flappyHorse?.selectedColor);
-  flappyGame.horse.y = 240;
+  flappyGame.horse.x = flappyGame.canvas.width * (flappyGame.isPortraitMode ? 0.32 : 0.19);
+  flappyGame.horse.y = flappyGame.canvas.height * 0.44;
   flappyGame.horse.velocity = 0;
   flappyGame.horse.bob = 0;
   showFlappyOverlay(!start, start ? "" : "Flappy Horse", start ? "" : "Pulsa jugar para empezar.");
@@ -1540,9 +1571,11 @@ function flapFlappyHorse() {
 
 function spawnFlappyFence() {
   if (!flappyGame.canvas) return;
-  const gap = flappyGame.currentGap;
-  const minTop = 62;
-  const maxTop = flappyGame.canvas.height - flappyGame.groundHeight - gap - 62;
+  const gap = flappyGame.isPortraitMode
+    ? Math.max(190, flappyGame.currentGap)
+    : flappyGame.currentGap;
+  const minTop = flappyGame.isPortraitMode ? 90 : 62;
+  const maxTop = flappyGame.canvas.height - flappyGame.groundHeight - gap - (flappyGame.isPortraitMode ? 110 : 62);
   const topHeight = minTop + Math.random() * Math.max(40, maxTop - minTop);
   flappyGame.fences.push({
     x: flappyGame.canvas.width + 40,
@@ -1582,7 +1615,9 @@ function updateFlappyHorse() {
   flappyGame.speed = flappyGame.baseSpeed * Math.pow(1.01, levelBoost);
   flappyGame.speedPercent = (flappyGame.baseSpeed / flappyGame.desktopBaseSpeed) * 100 * Math.pow(1.01, levelBoost);
   flappyGame.gravity = flappyGame.gravityBase * Math.pow(1.01, levelBoost);
-  flappyGame.currentGap = Math.max(132, 248 - levelBoost * 6);
+  flappyGame.currentGap = flappyGame.isPortraitMode
+    ? Math.max(170, 280 - levelBoost * 6)
+    : Math.max(132, 248 - levelBoost * 6);
 
   flappyGame.spawnTimer += 1;
   if (flappyGame.spawnTimer >= flappyGame.spawnEvery) {
@@ -1637,8 +1672,9 @@ function drawFlappyHorse() {
 
   const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
   sky.addColorStop(0, "#bdeeff");
-  sky.addColorStop(0.68, "#ecf9ff");
-  sky.addColorStop(0.68, "#f3ddb0");
+  const horizonStop = flappyGame.isPortraitMode ? 0.82 : 0.68;
+  sky.addColorStop(horizonStop, "#ecf9ff");
+  sky.addColorStop(horizonStop, "#f3ddb0");
   sky.addColorStop(1, "#d2b57b");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, canvas.width, canvas.height);

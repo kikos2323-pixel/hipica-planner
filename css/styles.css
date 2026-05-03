@@ -4085,7 +4085,7 @@ table tbody tr:hover {
   }
 
   .flappy-wrap {
-    min-height: calc(100svh - 390px);
+    min-height: calc(100svh - 300px);
     border-radius: 20px;
   }
 
