@@ -3185,6 +3185,10 @@ function updateUserChip(user) {
 }
 
 async function loginWithGoogle() {
+  if (window.location.protocol === "file:") {
+    alert("El inicio de sesion con Google no funciona bien desde file://. Abre la app desde tu URL de GitHub Pages o desde un servidor local.");
+    return;
+  }
   try {
     await signInWithPopup(auth, provider);
   } catch (e) {
