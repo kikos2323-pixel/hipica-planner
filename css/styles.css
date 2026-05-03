@@ -124,8 +124,15 @@ button {
   flex-shrink: 0;
   place-items: center;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  overflow: hidden;
   box-shadow: 0 4px 14px rgba(36,95,72,0.35);
+}
+
+.brand-logo-img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  display: block;
 }
 
 .brand-mark svg {
@@ -333,6 +340,9 @@ label,
 .icon-slot[data-icon="upload"] { --slot-icon: url("../icons/ui/upload.svg"); }
 .icon-slot[data-icon="camera"] { --slot-icon: url("../icons/ui/camera.svg"); }
 .icon-slot[data-icon="bell"] { --slot-icon: url("../icons/ui/bell.svg"); }
+.icon-slot[data-icon="search"] { --slot-icon: url("../icons/ui/search.svg"); }
+.icon-slot[data-icon="mic"] { --slot-icon: url("../icons/ui/mic.svg"); }
+.icon-slot[data-icon="moon"] { --slot-icon: url("../icons/ui/moon.svg"); }
 
 .brand-mark.icon-slot::before {
   display: none;
@@ -345,6 +355,39 @@ label,
   width: 36px;
   height: 36px;
   border-radius: 12px;
+}
+
+.field-label,
+.inline-label-icon,
+.feed-title,
+.section-tab .tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-label .icon-slot,
+.inline-label-icon .icon-slot,
+.feed-title .icon-slot,
+.section-tab .icon-slot {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+}
+
+.feed-icon.icon-slot {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+  border-radius: 10px;
+}
+
+.feed-slot label,
+.horse-detail-field label,
+.horse-detail-notes label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .content {
