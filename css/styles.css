@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   color-scheme: light;
   --bg: #eef2ea;
   --bg-pattern:
@@ -151,7 +151,7 @@ label,
   color: var(--muted);
 }
 
-/* â”€â”€ Nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Nav ──────────────────────────────────────────────── */
 .nav {
   display: flex;
   flex-direction: column;
@@ -206,7 +206,7 @@ label,
   transform: translateX(0);
 }
 
-/* Colores por secciÃ³n */
+/* Colores por sección */
 .nav-link[data-color="green"]  { --nav-c: #2d8f5e; --nav-bg: rgba(45,143,94,0.12); }
 .nav-link[data-color="blue"]   { --nav-c: #2f6fa8; --nav-bg: rgba(47,111,168,0.12); }
 .nav-link[data-color="amber"]  { --nav-c: #c07b1a; --nav-bg: rgba(192,123,26,0.12); }
@@ -263,7 +263,7 @@ label,
   text-overflow: ellipsis;
 }
 
-/* â”€â”€ icon-slot (pequeÃ±o, dentro del contenido) â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── icon-slot (pequeño, dentro del contenido) ───────── */
 .icon-slot {
   display: inline-grid;
   width: 22px;
@@ -279,12 +279,60 @@ label,
 
 .icon-slot::before {
   content: "";
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  opacity: 0.86;
+  mask: var(--slot-icon, none) center / contain no-repeat;
+  -webkit-mask: var(--slot-icon, none) center / contain no-repeat;
+}
+
+.icon-slot:not([data-icon])::before,
+.icon-slot[data-icon=""]::before {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: currentColor;
-  opacity: 0.78;
+  mask: none;
+  -webkit-mask: none;
 }
+
+.icon-slot[data-icon="timer"] { --slot-icon: url("../icons/ui/timer.svg"); }
+.icon-slot[data-icon="month"] { --slot-icon: url("../icons/ui/calendar-days.svg"); }
+.icon-slot[data-icon="week"] { --slot-icon: url("../icons/ui/calendar-range.svg"); }
+.icon-slot[data-icon="pending"] { --slot-icon: url("../icons/ui/list-checks.svg"); }
+.icon-slot[data-icon="average"] { --slot-icon: url("../icons/ui/gauge.svg"); }
+.icon-slot[data-icon="today"] { --slot-icon: url("../icons/ui/sun.svg"); }
+.icon-slot[data-icon="next"] { --slot-icon: url("../icons/ui/arrow-right.svg"); }
+.icon-slot[data-icon="bars"] { --slot-icon: url("../icons/ui/bar-chart.svg"); }
+.icon-slot[data-icon="edit"] { --slot-icon: url("../icons/ui/pencil.svg"); }
+.icon-slot[data-icon="log"] { --slot-icon: url("../icons/ui/clipboard-list.svg"); }
+.icon-slot[data-icon="tasks"] { --slot-icon: url("../icons/ui/list-checks.svg"); }
+.icon-slot[data-icon="schedule"] { --slot-icon: url("../icons/ui/calendar-clock.svg"); }
+.icon-slot[data-icon="map"] { --slot-icon: url("../icons/ui/map-pin.svg"); }
+.icon-slot[data-icon="stable"] { --slot-icon: url("../icons/ui/stable.svg"); }
+.icon-slot[data-icon="horse"] { --slot-icon: url("../icons/ui/horse.svg"); }
+.icon-slot[data-icon="water"] { --slot-icon: url("../icons/ui/droplet.svg"); }
+.icon-slot[data-icon="feed"] { --slot-icon: url("../icons/ui/wheat.svg"); }
+.icon-slot[data-icon="tools"] { --slot-icon: url("../icons/ui/wrench.svg"); }
+.icon-slot[data-icon="prune"] { --slot-icon: url("../icons/ui/scissors.svg"); }
+.icon-slot[data-icon="custom-task"] { --slot-icon: url("../icons/ui/sparkle.svg"); }
+.icon-slot[data-icon="notes"] { --slot-icon: url("../icons/ui/sticky-note.svg"); }
+.icon-slot[data-icon="line"] { --slot-icon: url("../icons/ui/trending-up.svg"); }
+.icon-slot[data-icon="donut"] { --slot-icon: url("../icons/ui/pie-chart.svg"); }
+.icon-slot[data-icon="days"] { --slot-icon: url("../icons/ui/calendar-check.svg"); }
+.icon-slot[data-icon="top"] { --slot-icon: url("../icons/ui/trophy.svg"); }
+.icon-slot[data-icon="history"] { --slot-icon: url("../icons/ui/history.svg"); }
+.icon-slot[data-icon="trash"] { --slot-icon: url("../icons/ui/trash.svg"); }
+.icon-slot[data-icon="share"] { --slot-icon: url("../icons/ui/share.svg"); }
+.icon-slot[data-icon="check"] { --slot-icon: url("../icons/ui/check.svg"); }
+.icon-slot[data-icon="eye"] { --slot-icon: url("../icons/ui/eye.svg"); }
+.icon-slot[data-icon="save"] { --slot-icon: url("../icons/ui/save.svg"); }
+.icon-slot[data-icon="eraser"] { --slot-icon: url("../icons/ui/eraser.svg"); }
+.icon-slot[data-icon="plus"] { --slot-icon: url("../icons/ui/plus.svg"); }
+.icon-slot[data-icon="download"] { --slot-icon: url("../icons/ui/download.svg"); }
+.icon-slot[data-icon="upload"] { --slot-icon: url("../icons/ui/upload.svg"); }
+.icon-slot[data-icon="camera"] { --slot-icon: url("../icons/ui/camera.svg"); }
+.icon-slot[data-icon="bell"] { --slot-icon: url("../icons/ui/bell.svg"); }
 
 .brand-mark.icon-slot::before {
   display: none;
@@ -306,7 +354,7 @@ label,
   padding: 0 28px 28px;
 }
 
-/* â”€â”€ Login screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Login screen ───────────────────────────────────────── */
 .login-screen {
   position: fixed;
   inset: 0;
@@ -368,7 +416,7 @@ label,
 .google-login-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
 .login-note { font-size: 0.75rem !important; color: var(--muted) !important; }
 
-/* â”€â”€ User chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── User chip ──────────────────────────────────────────── */
 .user-chip {
   display: flex;
   align-items: center;
@@ -686,10 +734,6 @@ label,
 }
 
 .topbar-avatar,
-.sync-btn {
-  display: none !important;
-}
-
 .sync-btn .sync-check { color: #16a34a; }
 .sync-btn .sync-icon { transition: transform 0.3s; }
 
@@ -1153,11 +1197,16 @@ textarea {
 .danger-button,
 .icon-button,
 .small-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 44px;
   border-radius: 12px;
   border: 1px solid transparent;
   padding: 10px 14px;
   font-weight: 800;
+  transition: transform 0.16s, box-shadow 0.18s, background 0.18s, border-color 0.18s;
 }
 
 .primary-button {
@@ -1168,9 +1217,10 @@ textarea {
 
 .primary-button:hover {
   filter: brightness(0.96);
+  transform: translateY(-1px);
 }
 
-/* â”€â”€ BotÃ³n guardar caballo: spinner â†’ tic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Botón guardar caballo: spinner → tic ─────────────── */
 .btn-save-spinner,
 .btn-save-check {
   display: none;
@@ -1238,6 +1288,42 @@ textarea {
   min-height: 34px;
   padding: 7px 10px;
   font-size: 0.85rem;
+}
+
+.ghost-button:hover,
+.small-button:hover,
+.icon-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.button-icon {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+  border-radius: 7px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.button-icon::before {
+  width: 12px;
+  height: 12px;
+}
+
+.small-button .button-icon {
+  width: 18px;
+  height: 18px;
+  flex-basis: 18px;
+}
+
+.small-button .button-icon::before {
+  width: 11px;
+  height: 11px;
+}
+
+.danger .button-icon,
+.danger-button .button-icon {
+  color: var(--danger);
 }
 
 .table-wrap {
@@ -1358,7 +1444,7 @@ th {
   background: var(--glass-strong);
 }
 
-/* â”€â”€ Modal dÃ­a calendario â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Modal día calendario ────────────────────────────────── */
 .cal-modal {
   display: none;
   position: fixed;
@@ -1580,7 +1666,7 @@ th {
   }
 }
 
-/* â”€â”€ Lightbox foto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Lightbox foto ───────────────────────────────────────── */
 .photo-lightbox {
   display: none;
   position: fixed;
@@ -1637,14 +1723,14 @@ th {
   to   { transform: scale(1);    opacity: 1; }
 }
 
-/* â”€â”€ Horse browser back button (solo mÃ³vil) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Horse browser back button (solo móvil) ──────────────── */
 .horse-browser-back {
   display: none;
   margin-bottom: 12px;
   width: fit-content;
 }
 
-/* â”€â”€ Horse browser (listado dos paneles) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Horse browser (listado dos paneles) ─────────────────── */
 .horse-browser {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -1832,14 +1918,14 @@ th {
   margin-bottom: 4px;
 }
 
-/* â”€â”€ Horse browser responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Horse browser responsive ─────────────────────────── */
 @media (max-width: 900px) {
   .horse-browser {
     grid-template-columns: 1fr;
     position: relative;
   }
 
-  /* Por defecto en mÃ³vil: lista visible, detalle oculto */
+  /* Por defecto en móvil: lista visible, detalle oculto */
   .horse-browser-detail {
     display: none;
   }
@@ -1879,7 +1965,7 @@ th {
   }
 }
 
-/* â”€â”€ AlimentaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Alimentación ──────────────────────────────────────── */
 .horse-feed-section,
 .horse-detail-feed {
   border: 1px solid var(--line);
@@ -3112,3 +3198,4 @@ details[open] .schedule-chevron {
     width: 100%;
   }
 }
+

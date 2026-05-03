@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8">
@@ -43,7 +43,7 @@
       <div class="cal-modal-box">
         <div class="cal-modal-header">
           <h2 id="calModalTitle"></h2>
-          <button class="lightbox-close" id="calModalClose" type="button" aria-label="Cerrar">âœ•</button>
+          <button class="lightbox-close" id="calModalClose" type="button" aria-label="Cerrar">✕</button>
         </div>
         <div id="calModalInfo" class="cal-modal-info"></div>
         <div id="calModalNotes" class="cal-modal-notes"></div>
@@ -52,20 +52,20 @@
           <input type="hidden" id="calNoteEditId">
           <div class="cal-note-input-row">
             <select id="calNoteColor" title="Tipo de nota">
-              <option value="green">ðŸŸ¢ Nota</option>
-              <option value="blue">ðŸ”µ Evento</option>
-              <option value="amber">ðŸŸ¡ Recordatorio</option>
-              <option value="red">ðŸ”´ Urgente</option>
+              <option value="green">🟢 Nota</option>
+              <option value="blue">🔵 Evento</option>
+              <option value="amber">🟡 Recordatorio</option>
+              <option value="red">🔴 Urgente</option>
             </select>
-            <input id="calNoteText" type="text" placeholder="Escribe una nota o eventoâ€¦" autocomplete="off" required>
+            <input id="calNoteText" type="text" placeholder="Escribe una nota o evento…" autocomplete="off" required>
           </div>
           <div class="cal-note-alarm-row">
             <label class="cal-alarm-label">
-              ðŸ”” Alarma
+              🔔 Alarma
               <input id="calNoteAlarm" type="time" title="Hora de aviso">
             </label>
             <button class="ghost-button" id="notifPermBtn" type="button">Activar notificaciones</button>
-            <button class="primary-button" id="calNoteSaveBtn" type="submit">AÃ±adir</button>
+            <button class="primary-button" id="calNoteSaveBtn" type="submit">Añadir</button>
           </div>
         </form>
       </div>
@@ -73,19 +73,19 @@
     <div id="photoExportModal" class="cal-modal" role="dialog" aria-modal="true">
       <div class="cal-modal-box">
         <div class="cal-modal-header">
-          <h2>ðŸ“· Fotos exportadas</h2>
-          <button class="lightbox-close" id="photoExportModalClose" type="button" aria-label="Cerrar">âœ•</button>
+          <h2>📷 Fotos exportadas</h2>
+          <button class="lightbox-close" id="photoExportModalClose" type="button" aria-label="Cerrar">✕</button>
         </div>
         <p id="photoExportSummary" style="margin:0 0 16px;color:var(--muted);font-size:0.9rem"></p>
         <div class="photo-export-actions">
-          <button class="primary-button" id="photoExportShareBtn" type="button">â†— Compartir (WhatsApp, Driveâ€¦)</button>
-          <button class="ghost-button" id="photoExportDownloadBtn" type="button">â¬‡ Guardar en el telÃ©fono</button>
+          <button class="primary-button" id="photoExportShareBtn" type="button">↗ Compartir (WhatsApp, Drive…)</button>
+          <button class="ghost-button" id="photoExportDownloadBtn" type="button">⬇ Guardar en el teléfono</button>
         </div>
       </div>
     </div>
 
     <div id="photoLightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
-      <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">âœ•</button>
+      <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">✕</button>
       <img id="lightboxImg" src="" alt="Foto del caballo">
     </div>
     <div class="app-shell">
@@ -158,7 +158,7 @@
                 <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
               </svg>
             </span>
-            <span class="nav-label">GrÃ¡ficos</span>
+            <span class="nav-label">Gráficos</span>
           </button>
           <button class="nav-link" data-view="historial" data-color="slate">
             <span class="nav-icon">
@@ -207,7 +207,7 @@
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L4.21 7.2a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
               </svg>
             </button>
-            <button class="topbar-icon-btn sync-btn" id="syncBtn" title="Sincronizar" aria-label="Sincronizar" type="button" style="display:none">
+            <button class="topbar-icon-btn sync-btn" id="syncBtn" title="Sincronizar" aria-label="Sincronizar" type="button">
               <svg class="sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
                 <path d="M3.51 9a9 9 0 0 1 14.36-3.36L23 10M1 14l5.13 4.36A9 9 0 0 0 20.49 15"/>
@@ -255,9 +255,9 @@
               </div>
             </div>
             <div class="clock-actions">
-              <button class="primary-button clock-main-button" id="clockToggleBtn" type="button">Iniciar jornada</button>
-              <button class="ghost-button" id="clockEditBtn" type="button">Corregir hoy</button>
-              <button class="ghost-button" id="clockResetBtn" type="button">Reiniciar hoy</button>
+              <button class="primary-button clock-main-button" id="clockToggleBtn" type="button"><span class="button-icon icon-slot" data-icon="timer" aria-hidden="true"></span><span>Iniciar jornada</span></button>
+              <button class="ghost-button" id="clockEditBtn" type="button"><span class="button-icon icon-slot" data-icon="edit" aria-hidden="true"></span><span>Corregir hoy</span></button>
+              <button class="ghost-button" id="clockResetBtn" type="button"><span class="button-icon icon-slot" data-icon="eraser" aria-hidden="true"></span><span>Reiniciar hoy</span></button>
             </div>
           </section>
 
@@ -333,7 +333,7 @@
           <section class="panel manual-editor">
             <div class="panel-heading split">
               <h2><span class="icon-slot" data-icon="edit"></span>Corregir fichaje</h2>
-              <button class="ghost-button" id="loadScheduleBtn" type="button">Usar horario previsto</button>
+              <button class="ghost-button" id="loadScheduleBtn" type="button"><span class="button-icon icon-slot" data-icon="schedule" aria-hidden="true"></span><span>Usar horario previsto</span></button>
             </div>
             <div class="manual-editor-top">
               <label>Fecha a corregir
@@ -346,8 +346,8 @@
             </div>
             <div id="manualSegments" class="manual-segments"></div>
             <div class="form-actions">
-              <button class="ghost-button" id="addSegmentBtn" type="button">AÃ±adir tramo</button>
-              <button class="primary-button" id="saveManualSegmentsBtn" type="button">Guardar correccion</button>
+              <button class="ghost-button" id="addSegmentBtn" type="button"><span class="button-icon icon-slot" data-icon="plus" aria-hidden="true"></span><span>Añadir tramo</span></button>
+              <button class="primary-button" id="saveManualSegmentsBtn" type="button"><span class="button-icon icon-slot" data-icon="save" aria-hidden="true"></span><span>Guardar correccion</span></button>
             </div>
           </section>
           </section>
@@ -383,8 +383,8 @@
               <textarea id="workNotes" rows="3" placeholder="Ej. revision veterinaria, lluvia, trabajo extra..."></textarea>
             </label>
             <div class="form-actions full">
-              <button class="primary-button" type="submit">Guardar jornada</button>
-              <button class="ghost-button" id="resetWorkBtn" type="button">Limpiar</button>
+              <button class="primary-button" type="submit"><span class="button-icon icon-slot" data-icon="save" aria-hidden="true"></span><span>Guardar jornada</span></button>
+              <button class="ghost-button" id="resetWorkBtn" type="button"><span class="button-icon icon-slot" data-icon="eraser" aria-hidden="true"></span><span>Limpiar</span></button>
             </div>
           </form>
           </section>
@@ -395,7 +395,7 @@
               <h2><span class="icon-slot" data-icon="log"></span>Jornadas registradas</h2>
               <div class="list-filter-actions">
                 <div class="selected-day-label" id="selectedWorkDateLabel">Todos los dias</div>
-                <button class="ghost-button" id="showAllWorkEntriesBtn" type="button">Ver todos</button>
+                <button class="ghost-button" id="showAllWorkEntriesBtn" type="button"><span class="button-icon icon-slot" data-icon="eye" aria-hidden="true"></span><span>Ver todos</span></button>
               </div>
             </div>
             <div class="table-wrap">
@@ -463,8 +463,8 @@
               <textarea id="taskNotes" rows="3" placeholder="Materiales, zona, detalles importantes..."></textarea>
             </label>
             <div class="form-actions full">
-              <button class="primary-button" type="submit">Guardar tarea</button>
-              <button class="ghost-button" id="resetTaskBtn" type="button">Limpiar</button>
+              <button class="primary-button" type="submit"><span class="button-icon icon-slot" data-icon="save" aria-hidden="true"></span><span>Guardar tarea</span></button>
+              <button class="ghost-button" id="resetTaskBtn" type="button"><span class="button-icon icon-slot" data-icon="eraser" aria-hidden="true"></span><span>Limpiar</span></button>
             </div>
           </form>
 
@@ -487,7 +487,7 @@
             <summary class="schedule-summary">
               <span class="icon-slot" data-icon="schedule"></span>
               Horario semanal
-              <span class="schedule-chevron">â–¾</span>
+              <span class="schedule-chevron">▾</span>
             </summary>
             <div id="weeklySchedule" class="schedule-grid"></div>
           </details>
@@ -522,8 +522,8 @@
               <label>Buscar caballo
                 <input id="horseSearch" type="text" placeholder="Ej. caballo 8, Luna, cuadra norte">
               </label>
-              <button class="primary-button" id="findHorseBtn" type="button">Buscar</button>
-              <button class="ghost-button voice-command-button" id="voiceHorseBtn" type="button">MIC</button>
+              <button class="primary-button" id="findHorseBtn" type="button"><span class="button-icon icon-slot" data-icon="map" aria-hidden="true"></span><span>Buscar</span></button>
+              <button class="ghost-button voice-command-button" id="voiceHorseBtn" type="button"><span class="button-icon icon-slot" data-icon="bell" aria-hidden="true"></span><span>MIC</span></button>
             </div>
             <div id="horseResult" class="horse-result"></div>
           </section>
@@ -536,11 +536,11 @@
             <div class="horse-photo-editor full">
               <div class="photo-box-wrap">
                 <label class="horse-photo-preview photo-button" id="horsePhotoPreview" title="Hacer foto">
-                  <span class="photo-placeholder">ðŸ“·<br><small>Hacer foto</small></span>
+                  <span class="photo-placeholder">📷<br><small>Hacer foto</small></span>
                   <input id="horsePhotoInput" type="file" accept="image/*" capture="environment">
                 </label>
-                <label class="gallery-btn" title="Elegir de galerÃ­a">
-                  ðŸ–¼ï¸
+                <label class="gallery-btn" title="Elegir de galería">
+                  🖼️
                   <input id="horseGalleryInput" type="file" accept="image/*">
                 </label>
               </div>
@@ -595,30 +595,30 @@
               </div>
             </details>
             <div class="form-actions full">
-              <button class="ghost-button" id="useStableLocationBtn" type="button">Guardar ubicacion cuadra</button>
-              <button class="ghost-button" id="usePaddockLocationBtn" type="button">Guardar ubicacion paddock</button>
+              <button class="ghost-button" id="useStableLocationBtn" type="button"><span class="button-icon icon-slot" data-icon="map" aria-hidden="true"></span><span>Guardar ubicacion cuadra</span></button>
+              <button class="ghost-button" id="usePaddockLocationBtn" type="button"><span class="button-icon icon-slot" data-icon="map" aria-hidden="true"></span><span>Guardar ubicacion paddock</span></button>
               <span class="muted location-help" id="locationHelp">Pulsa estando junto a la cuadra o paddock.</span>
             </div>
             <label class="full">Observaciones
               <textarea id="horseNotes" rows="3" placeholder="Detalles para encontrar la cuadra, referencias, acceso..."></textarea>
             </label>
             <div class="full horse-feed-section">
-              <h3 class="feed-title">AlimentaciÃ³n</h3>
+              <h3 class="feed-title">Alimentación</h3>
               <div class="feed-grid">
                 <div class="feed-slot">
-                  <span class="feed-icon">ðŸŒ…</span>
-                  <label>MaÃ±ana
+                  <span class="feed-icon">🌅</span>
+                  <label>Mañana
                     <input id="horseFeedMorning" type="text" placeholder="Ej. 3 kg pienso + heno">
                   </label>
                 </div>
                 <div class="feed-slot">
-                  <span class="feed-icon">â˜€ï¸</span>
-                  <label>MediodÃ­a
-                    <input id="horseFeedNoon" type="text" placeholder="Ej. heno a libre disposiciÃ³n">
+                  <span class="feed-icon">☀️</span>
+                  <label>Mediodía
+                    <input id="horseFeedNoon" type="text" placeholder="Ej. heno a libre disposición">
                   </label>
                 </div>
                 <div class="feed-slot">
-                  <span class="feed-icon">ðŸŒ™</span>
+                  <span class="feed-icon">🌙</span>
                   <label>Tarde
                     <input id="horseFeedEvening" type="text" placeholder="Ej. 3 kg pienso + zanahoria">
                   </label>
@@ -628,10 +628,10 @@
             <div class="form-actions full">
               <button class="primary-button" id="horseSaveBtn" type="submit">
                 <span class="btn-save-spinner" aria-hidden="true"></span>
-                <span class="btn-save-check" aria-hidden="true">âœ“</span>
+                <span class="btn-save-check" aria-hidden="true">✓</span>
                 <span class="btn-save-label">Guardar caballo</span>
               </button>
-              <button class="ghost-button" id="resetHorseBtn" type="button">Limpiar</button>
+              <button class="ghost-button" id="resetHorseBtn" type="button"><span class="button-icon icon-slot" data-icon="eraser" aria-hidden="true"></span><span>Limpiar</span></button>
             </div>
           </form>
           </section>
@@ -643,12 +643,12 @@
                   <h2><span class="icon-slot" data-icon="stable"></span>Caballos</h2>
                 </div>
                 <div class="horse-browser-search">
-                  <input type="search" id="horseListSearch" placeholder="Buscar por nombre o cÃ³digoâ€¦" autocomplete="off">
+                  <input type="search" id="horseListSearch" placeholder="Buscar por nombre o código…" autocomplete="off">
                 </div>
                 <div id="horseList" class="horse-list-compact"></div>
               </aside>
               <div class="horse-browser-detail panel" id="horseBrowserDetail">
-                <button class="horse-browser-back ghost-button" id="horseBrowserBack" type="button">â† Volver a la lista</button>
+                <button class="horse-browser-back ghost-button" id="horseBrowserBack" type="button">← Volver a la lista</button>
                 <div class="horse-browser-empty" id="horseBrowserEmpty">
                   <span class="icon-slot" data-icon="stable"></span>
                   <p>Selecciona un caballo de la lista para ver su ficha</p>
@@ -681,24 +681,24 @@
                 <form id="generalNoteForm" class="general-note-form">
                   <input type="hidden" id="generalNoteEditId">
                   <div class="general-note-input-row">
-                    <textarea id="generalNoteText" rows="3" placeholder="Escribe una anotaciÃ³n libreâ€¦" required></textarea>
+                    <textarea id="generalNoteText" rows="3" placeholder="Escribe una anotación libre…" required></textarea>
                   </div>
                   <div class="general-note-meta-row">
-                    <select id="generalNoteType" title="Tipo de observaciÃ³n">
-                      <option value="normal">ðŸŸ¢ Normal</option>
-                      <option value="recordatorio">ðŸŸ¡ Recordatorio</option>
-                      <option value="urgente">ðŸ”´ Urgente</option>
-                      <option value="info">ðŸ”µ Informativa</option>
+                    <select id="generalNoteType" title="Tipo de observación">
+                      <option value="normal">🟢 Normal</option>
+                      <option value="recordatorio">🟡 Recordatorio</option>
+                      <option value="urgente">🔴 Urgente</option>
+                      <option value="info">🔵 Informativa</option>
                     </select>
                     <label class="general-note-alarm-label">
-                      ðŸ””
-                      <input id="generalNoteAlarm" type="time" title="Alarma â€” hora de aviso">
+                      🔔
+                      <input id="generalNoteAlarm" type="time" title="Alarma — hora de aviso">
                     </label>
                     <button class="ghost-button" id="generalNoteNotifBtn" type="button" title="Activar notificaciones">Activar avisos</button>
                   </div>
                   <div class="form-actions">
-                    <button class="primary-button" id="generalNoteSaveBtn" type="submit">Guardar nota</button>
-                    <button class="ghost-button" id="generalNoteCancelBtn" type="button" style="display:none">Cancelar</button>
+                    <button class="primary-button" id="generalNoteSaveBtn" type="submit"><span class="button-icon icon-slot" data-icon="save" aria-hidden="true"></span><span>Guardar nota</span></button>
+                    <button class="ghost-button" id="generalNoteCancelBtn" type="button" style="display:none"><span class="button-icon icon-slot" data-icon="eraser" aria-hidden="true"></span><span>Cancelar</span></button>
                   </div>
                 </form>
                 <div id="generalNotesList" class="general-notes-list"></div>
@@ -739,7 +739,7 @@
         <section class="view" id="historial">
           <div class="section-tabs" aria-label="Apartados de historial">
             <button class="section-tab active" data-historial-tab="historial" type="button">Historial</button>
-            <button class="section-tab" data-historial-tab="papelera" type="button">ðŸ—‘ï¸ Papelera</button>
+            <button class="section-tab" data-historial-tab="papelera" type="button">🗑️ Papelera</button>
           </div>
 
           <section class="historial-panel active" id="historial-panel-historial">
@@ -747,12 +747,12 @@
               <div class="panel-heading split">
                 <h2><span class="icon-slot" data-icon="history"></span>Historial completo</h2>
                 <div class="backup-actions">
-                  <button class="ghost-button" id="exportDataBtn" type="button">Exportar copia</button>
-                  <label class="ghost-button import-button">Importar copia
+                  <button class="ghost-button" id="exportDataBtn" type="button"><span class="button-icon icon-slot" data-icon="download" aria-hidden="true"></span><span>Exportar copia</span></button>
+                  <label class="ghost-button import-button"><span class="button-icon icon-slot" data-icon="upload" aria-hidden="true"></span><span>Importar copia</span>
                     <input id="importDataInput" type="file" accept="application/json,.json">
                   </label>
-                  <button class="ghost-button" id="exportPhotosBtn" type="button">ðŸ“· Exportar fotos</button>
-                  <button class="danger-button" id="clearDataBtn" type="button">Borrar datos</button>
+                  <button class="ghost-button" id="exportPhotosBtn" type="button"><span class="button-icon icon-slot" data-icon="camera" aria-hidden="true"></span><span>Exportar fotos</span></button>
+                  <button class="danger-button" id="clearDataBtn" type="button"><span class="button-icon icon-slot" data-icon="trash" aria-hidden="true"></span><span>Borrar datos</span></button>
                 </div>
               </div>
               <div id="historyList" class="history-list"></div>
@@ -762,7 +762,7 @@
           <section class="historial-panel" id="historial-panel-papelera">
             <section class="panel">
               <div class="panel-heading split">
-                <h2>ðŸ—‘ï¸ Papelera</h2>
+                <h2>🗑️ Papelera</h2>
                 <button class="ghost-button" data-empty-trash type="button">Vaciar papelera</button>
               </div>
               <div id="trashList" class="trash-list"></div>
@@ -832,7 +832,7 @@
                   <input id="themeBgStrengthInput" type="range" min="0" max="100" step="1" value="100">
                 </label>
                 <div class="appearance-actions">
-                  <button class="ghost-button" id="themeResetBtn" type="button">Restablecer</button>
+                  <button class="ghost-button" id="themeResetBtn" type="button"><span class="button-icon icon-slot" data-icon="eraser" aria-hidden="true"></span><span>Restablecer</span></button>
                 </div>
               </section>
             </div>
@@ -844,4 +844,6 @@
     <script src="js/app.js" type="module"></script>
   </body>
 </html>
+
+
 

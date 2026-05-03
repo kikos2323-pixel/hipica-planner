@@ -173,6 +173,10 @@ function scheduleLabel(schedule) {
   return schedule.shifts.map((shift) => `${shift.start} - ${shift.end}`).join(" / ");
 }
 
+function buttonIcon(name) {
+  return `<span class="button-icon icon-slot" data-icon="${name}" aria-hidden="true"></span>`;
+}
+
 function isoFromDateAndTime(dateString, timeString) {
   if (!dateString || !timeString) return null;
   const date = new Date(`${dateString}T${timeString}:00`);
@@ -1100,8 +1104,8 @@ function renderWorkTable() {
         <td data-label="Total">${calculateWorkHours(entry)} h</td>
         <td data-label="Extra">${calculateExtraHours(entry)} h</td>
         <td data-label="Acciones">
-          <button class="small-button" data-edit-work="${entry.id}" type="button">Editar</button>
-          <button class="small-button" data-delete-work="${entry.id}" type="button">Borrar</button>
+          <button class="small-button icon-text-button" data-edit-work="${entry.id}" type="button">${buttonIcon("edit")}Editar</button>
+          <button class="small-button icon-text-button danger" data-delete-work="${entry.id}" type="button">${buttonIcon("trash")}Borrar</button>
         </td>
       </tr>
     `);
@@ -1134,8 +1138,8 @@ function taskCardHtml(task) {
         ${task.notes ? `<p class="muted">${escapeHtml(task.notes)}</p>` : ""}
       </div>
       <div class="card-actions">
-        <button class="small-button" data-edit-task="${task.id}" type="button">Editar</button>
-        <button class="small-button" data-delete-task="${task.id}" type="button">Borrar</button>
+        <button class="small-button icon-text-button" data-edit-task="${task.id}" type="button">${buttonIcon("edit")}Editar</button>
+        <button class="small-button icon-text-button danger" data-delete-task="${task.id}" type="button">${buttonIcon("trash")}Borrar</button>
       </div>
     </article>
   `;
@@ -1446,9 +1450,9 @@ function showHorseDetail(id) {
         </div>
       </div>
       <div class="horse-detail-actions">
-        ${canEdit ? `<button class="small-button" data-share-horse="${horse.id}" type="button">Compartir</button>
-        <button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
-        <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>` : ""}
+        ${canEdit ? `<button class="small-button icon-text-button" data-share-horse="${horse.id}" type="button">${buttonIcon("share")}Compartir</button>
+        <button class="small-button icon-text-button" data-edit-horse="${horse.id}" type="button">${buttonIcon("edit")}Editar</button>
+        <button class="small-button icon-text-button danger" data-delete-horse="${horse.id}" type="button">${buttonIcon("trash")}Borrar</button>` : ""}
       </div>
     </div>
 
@@ -1520,8 +1524,8 @@ function renderHorseObservations() {
         </div>
       </div>
       <div class="card-actions">
-        <button class="small-button" data-open-horse="${horse.id}" type="button">Abrir ficha</button>
-        <button class="small-button" data-complete-horse-note="${horse.id}" type="button">Hecho</button>
+        <button class="small-button icon-text-button" data-open-horse="${horse.id}" type="button">${buttonIcon("stable")}Abrir ficha</button>
+        <button class="small-button icon-text-button" data-complete-horse-note="${horse.id}" type="button">${buttonIcon("check")}Hecho</button>
       </div>
     </article>
   `).join("") || emptyState("No hay observaciones pendientes.");
@@ -1559,8 +1563,8 @@ function renderGeneralNotes() {
       <div class="general-note-footer">
         <span>${formatDate(note.createdAt.slice(0, 10))}</span>
         <div class="card-actions">
-          <button class="small-button" data-edit-general-note="${note.id}" type="button">Editar</button>
-          <button class="small-button danger" data-delete-general-note="${note.id}" type="button">Borrar</button>
+          <button class="small-button icon-text-button" data-edit-general-note="${note.id}" type="button">${buttonIcon("edit")}Editar</button>
+          <button class="small-button icon-text-button danger" data-delete-general-note="${note.id}" type="button">${buttonIcon("trash")}Borrar</button>
         </div>
       </div>
     </article>`;
@@ -1767,9 +1771,9 @@ function horseCardHtml(horse) {
         ${horse.notes ? `<p class="muted">${escapeHtml(horse.notes)}</p>` : ""}
       </div>
       <div class="card-actions">
-        <button class="small-button" data-find-horse="${horse.id}" type="button">Ver</button>
-        ${canEdit ? `<button class="small-button" data-edit-horse="${horse.id}" type="button">Editar</button>
-        <button class="small-button" data-delete-horse="${horse.id}" type="button">Borrar</button>` : ""}
+        <button class="small-button icon-text-button" data-find-horse="${horse.id}" type="button">${buttonIcon("eye")}Ver</button>
+        ${canEdit ? `<button class="small-button icon-text-button" data-edit-horse="${horse.id}" type="button">${buttonIcon("edit")}Editar</button>
+        <button class="small-button icon-text-button danger" data-delete-horse="${horse.id}" type="button">${buttonIcon("trash")}Borrar</button>` : ""}
       </div>
     </article>
   `;
@@ -2033,7 +2037,7 @@ function showHorseResult(horse) {
       <div class="map-link-row">
         ${horseHasLocation(horse, "stable") ? `<a class="map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener">Google Maps cuadra</a>` : ""}
         ${horseHasLocation(horse, "paddock") ? `<a class="map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener">Google Maps paddock</a>` : ""}
-        <button class="ghost-button" data-open-horse-list="${horse.id}" type="button">Ver ficha</button>
+        <button class="ghost-button icon-text-button" data-open-horse-list="${horse.id}" type="button">${buttonIcon("stable")}Ver ficha</button>
       </div>
     </article>
   `;
@@ -3174,7 +3178,7 @@ function updateUserChip(user) {
     if (authCardActionBtn) authCardActionBtn.textContent = "Iniciar sesion con Google";
   }
 
-  if (syncBtn) syncBtn.style.display = "none";
+  if (syncBtn) syncBtn.style.display = user ? "" : "none";
 }
 
 async function loginWithGoogle() {
@@ -3405,6 +3409,10 @@ if ("serviceWorker" in navigator) {
 }
 
 init();
+
+
+
+
 
 
 
