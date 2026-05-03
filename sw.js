@@ -1,4 +1,4 @@
-const CACHE = "finca-planner-v1";
+const CACHE = "finca-planner-v2";
 const BASE = "/hipica-planner";
 const ASSETS = [
   BASE + "/",
