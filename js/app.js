@@ -1597,19 +1597,19 @@ function showHorseDetail(id) {
     </div>
 
     <div class="horse-detail-feed">
-      <h4 class="feed-title">Alimentación</h4>
+      <h4 class="feed-title">${buttonIcon("feed")}Alimentación</h4>
       <div class="feed-grid">
         <div class="feed-slot">
-          <span class="feed-icon">??</span>
-          <div><label>Mañana</label><p>${escapeHtml(horse.feedMorning || "—")}</p></div>
+          <span class="feed-icon icon-slot" data-icon="sun"></span>
+          <div><label><span class="inline-label-icon"><span class="icon-slot" data-icon="sun"></span>Mañana</span></label><p>${escapeHtml(horse.feedMorning || "—")}</p></div>
         </div>
         <div class="feed-slot">
-          <span class="feed-icon">??</span>
-          <div><label>Mediodía</label><p>${escapeHtml(horse.feedNoon || "—")}</p></div>
+          <span class="feed-icon icon-slot" data-icon="today"></span>
+          <div><label><span class="inline-label-icon"><span class="icon-slot" data-icon="today"></span>Mediodía</span></label><p>${escapeHtml(horse.feedNoon || "—")}</p></div>
         </div>
         <div class="feed-slot">
-          <span class="feed-icon">??</span>
-          <div><label>Tarde</label><p>${escapeHtml(horse.feedEvening || "—")}</p></div>
+          <span class="feed-icon icon-slot" data-icon="moon"></span>
+          <div><label><span class="inline-label-icon"><span class="icon-slot" data-icon="moon"></span>Tarde</span></label><p>${escapeHtml(horse.feedEvening || "—")}</p></div>
         </div>
       </div>
     </div>

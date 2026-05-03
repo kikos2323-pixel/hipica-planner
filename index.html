@@ -554,11 +554,11 @@
             <div class="horse-photo-editor full">
               <div class="photo-box-wrap">
                 <label class="horse-photo-preview photo-button" id="horsePhotoPreview" title="Hacer foto">
-                  <span class="photo-placeholder">ðŸ“·<br><small>Hacer foto</small></span>
+                  <span class="photo-placeholder"><span class="icon-slot" data-icon="camera"></span><small>Hacer foto</small></span>
                   <input id="horsePhotoInput" type="file" accept="image/*" capture="environment">
                 </label>
                 <label class="gallery-btn" title="Elegir de galería">
-                  🖼️
+                  <span class="icon-slot" data-icon="camera"></span>
                   <input id="horseGalleryInput" type="file" accept="image/*">
                 </label>
               </div>
@@ -621,22 +621,22 @@
               <textarea id="horseNotes" rows="3" placeholder="Detalles para encontrar la cuadra, referencias, acceso..."></textarea>
             </label>
             <div class="full horse-feed-section">
-              <h3 class="feed-title">Alimentación</h3>
+              <h3 class="feed-title"><span class="icon-slot" data-icon="feed"></span>Alimentación</h3>
               <div class="feed-grid">
                 <div class="feed-slot">
-                  <span class="feed-icon">🌅</span>
-                  <label>Mañana
+                  <span class="feed-icon icon-slot" data-icon="sun"></span>
+                  <label><span class="inline-label-icon"><span class="icon-slot" data-icon="sun"></span>Mañana</span>
                     <input id="horseFeedMorning" type="text" placeholder="Ej. 3 kg pienso + heno">
                   </label>
                 </div>
                 <div class="feed-slot">
-                  <span class="feed-icon">☀️</span>
-                  <label>Mediodía
+                  <span class="feed-icon icon-slot" data-icon="today"></span>
+                  <label><span class="inline-label-icon"><span class="icon-slot" data-icon="today"></span>Mediodía</span>
                     <input id="horseFeedNoon" type="text" placeholder="Ej. heno a libre disposición">
                   </label>
                 </div>
                 <div class="feed-slot">
-                  <span class="feed-icon">🌙</span>
+                  <span class="feed-icon icon-slot" data-icon="moon"></span>
                   <label><span class="inline-label-icon"><span class="icon-slot" data-icon="moon"></span>Tarde</span>
                     <input id="horseFeedEvening" type="text" placeholder="Ej. 3 kg pienso + zanahoria">
                   </label>
