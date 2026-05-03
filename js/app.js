@@ -2432,6 +2432,30 @@ function mergeDataSets(localData, cloudData) {
   };
 }
 
+function dataHasContent(data) {
+  if (!data || typeof data !== "object") return false;
+  return Boolean(
+    (Array.isArray(data.workEntries) && data.workEntries.length) ||
+    (Array.isArray(data.tasks) && data.tasks.length) ||
+    (Array.isArray(data.horses) && data.horses.length) ||
+    (Array.isArray(data.calendarNotes) && data.calendarNotes.length) ||
+    (Array.isArray(data.generalNotes) && data.generalNotes.length) ||
+    (Array.isArray(data.trash) && data.trash.length) ||
+    (data.clock && Array.isArray(data.clock.segments) && data.clock.segments.length)
+  );
+}
+
+function readLegacyLocalData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return dataHasContent(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeWorkEntry(entry) {
   const source = entry && typeof entry === "object" ? entry : {};
   return {
@@ -2727,6 +2751,23 @@ function bindEvents() {
   $("#photoExportDownloadBtn").addEventListener("click", downloadPhotosZip);
   $("#showAllWorkEntriesBtn").addEventListener("click", showAllWorkEntries);
   $("#backBtn").addEventListener("click", goBack);
+  const authBtn = $("#authBtn");
+  const authHoverCard = $("#authHoverCard");
+  const topbarActions = document.querySelector(".topbar-actions");
+  if (authBtn && authHoverCard && topbarActions) {
+    const openAuthHover = () => topbarActions.classList.add("auth-hover-open");
+    const closeAuthHover = () => topbarActions.classList.remove("auth-hover-open");
+    authBtn.addEventListener("mouseenter", openAuthHover);
+    authBtn.addEventListener("mouseleave", () => setTimeout(() => {
+      if (!authHoverCard.matches(":hover")) closeAuthHover();
+    }, 40));
+    authBtn.addEventListener("focus", openAuthHover);
+    authHoverCard.addEventListener("mouseenter", openAuthHover);
+    authHoverCard.addEventListener("mouseleave", closeAuthHover);
+    authBtn.addEventListener("blur", () => setTimeout(() => {
+      if (!authHoverCard.matches(":hover")) closeAuthHover();
+    }, 40));
+  }
   $("#adminBtn").addEventListener("click", openAdminModal);
   $("#adminModalClose").addEventListener("click", closeAdminModal);
   $("#adminModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAdminModal(); });
@@ -2873,11 +2914,27 @@ function updateUserChip(user) {
   const syncBtn = $("#syncBtn");
   const iconEnter = authBtn?.querySelector(".auth-icon-enter");
   const iconExit = authBtn?.querySelector(".auth-icon-exit");
+  const hoverTitle = $("#authHoverTitle");
+  const hoverEmail = $("#authHoverEmail");
+  const hoverAction = $("#authHoverAction");
+  const hoverPhoto = $("#authHoverPhoto");
+  const hoverInitial = $("#authHoverInitial");
+  const adminBadge = $("#authAdminBadge");
 
   if (avatar) {
     avatar.style.display = "none";
     avatar.title = user ? (user.displayName || user.email || "") : "";
   }
+
+  if (hoverPhoto) {
+    hoverPhoto.style.display = "none";
+    hoverPhoto.src = "";
+  }
+  if (hoverInitial) {
+    hoverInitial.style.display = "";
+    hoverInitial.textContent = user?.displayName?.[0] || user?.email?.[0] || "G";
+  }
+  if (adminBadge) adminBadge.style.display = "none";
 
   if (user) {
     if (authBtn) {
@@ -2887,6 +2944,15 @@ function updateUserChip(user) {
     }
     if (iconEnter) iconEnter.style.display = "none";
     if (iconExit) iconExit.style.display = "";
+    if (hoverTitle) hoverTitle.textContent = user.displayName || "Cuenta conectada";
+    if (hoverEmail) hoverEmail.textContent = user.email || user.displayName || "Sesion iniciada";
+    if (hoverAction) hoverAction.textContent = "Pulsa para cerrar sesion";
+    if (hoverPhoto && user.photoURL) {
+      hoverPhoto.src = user.photoURL;
+      hoverPhoto.style.display = "";
+      if (hoverInitial) hoverInitial.style.display = "none";
+    }
+    if (adminBadge && isPrimaryAdmin(user)) adminBadge.style.display = "";
   } else {
     if (authBtn) {
       authBtn.classList.remove("auth-logged-in");
@@ -2895,6 +2961,9 @@ function updateUserChip(user) {
     }
     if (iconEnter) iconEnter.style.display = "";
     if (iconExit) iconExit.style.display = "none";
+    if (hoverTitle) hoverTitle.textContent = "Sesion no iniciada";
+    if (hoverEmail) hoverEmail.textContent = "No conectado";
+    if (hoverAction) hoverAction.textContent = "Pulsa para iniciar sesion con Google";
   }
 
   if (syncBtn) syncBtn.style.display = "none";
@@ -2948,29 +3017,59 @@ async function migrateOrLoadData(user) {
   try {
     const snap = await getDoc(userDoc);
     const hasCloudData = snap.exists();
+    const legacyLocalData = readLegacyLocalData();
 
     if (hasCloudData) {
-      applyDataFromObject(snap.data());
+      const cloudData = snap.data();
+      if (legacyLocalData && !dataHasContent(cloudData)) {
+        showSyncBanner("Recuperando datos antiguos de este dispositivo...");
+        const mergedData = mergeDataSets(legacyLocalData, cloudData);
+        await setDoc(userDoc, {
+          ...cloudData,
+          workEntries: mergedData.workEntries,
+          tasks: mergedData.tasks,
+          horses: mergedData.horses,
+          clock: mergedData.clock,
+          theme: mergedData.theme
+        });
+        applyDataFromObject(mergedData);
+        localStorage.removeItem(STORAGE_KEY);
+        hideSyncBanner("Datos antiguos subidos a tu cuenta");
+      } else {
+        applyDataFromObject(cloudData);
+      }
     } else {
-      await setDoc(userDoc, {
+      const seedData = legacyLocalData ? mergeDataSets(legacyLocalData, {}) : {
         workEntries: [],
         tasks: [],
         horses: [],
-        calendarNotes: [],
-        generalNotes: [],
-        trash: [],
         clock: normalizeClock(),
         theme: normalizeTheme(state.theme)
-      });
-      applyDataFromObject({
-        workEntries: [],
-        tasks: [],
-        horses: [],
+      };
+      if (legacyLocalData) showSyncBanner("Subiendo datos antiguos a tu cuenta...");
+      await setDoc(userDoc, {
+        workEntries: seedData.workEntries,
+        tasks: seedData.tasks,
+        horses: seedData.horses,
         calendarNotes: [],
         generalNotes: [],
         trash: [],
-        clock: normalizeClock()
+        clock: seedData.clock,
+        theme: seedData.theme
       });
+      applyDataFromObject({
+        workEntries: seedData.workEntries,
+        tasks: seedData.tasks,
+        horses: seedData.horses,
+        calendarNotes: [],
+        generalNotes: [],
+        trash: [],
+        clock: seedData.clock
+      });
+      if (legacyLocalData) {
+        localStorage.removeItem(STORAGE_KEY);
+        hideSyncBanner("Datos antiguos subidos a tu cuenta");
+      }
     }
   } catch (e) {
     console.warn("Error en migraciÃ³n/carga:", e);
