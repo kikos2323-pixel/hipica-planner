@@ -222,6 +222,27 @@ function isSameMonth(dateString, date = new Date()) {
   return value.getMonth() === date.getMonth() && value.getFullYear() === date.getFullYear();
 }
 
+function sanitizeHorseForCloud(horse) {
+  const normalized = normalizeHorse(horse);
+  return {
+    ...normalized,
+    photo: ""
+  };
+}
+
+function buildCloudPayload() {
+  return {
+    workEntries: state.workEntries.map(normalizeWorkEntry),
+    tasks: state.tasks.map(normalizeTask),
+    horses: state.horses.map(sanitizeHorseForCloud),
+    calendarNotes: state.calendarNotes,
+    generalNotes: state.generalNotes,
+    trash: state.trash,
+    clock: normalizeClock(state.clock),
+    theme: normalizeTheme(state.theme)
+  };
+}
+
 function buildPersistentPayload() {
   return {
     workEntries: state.workEntries,
@@ -244,7 +265,7 @@ function saveData() {
   } catch (error) {
     console.warn("No se pudo guardar la copia local:", error);
   }
-  syncToFirestore(payload);
+  syncToFirestore(buildCloudPayload());
   queueRemoteMetadataSync();
 }
 
@@ -3292,7 +3313,7 @@ async function migrateOrLoadData(user) {
             ...cloudData,
             workEntries: mergedData.workEntries,
             tasks: mergedData.tasks,
-            horses: mergedData.horses,
+            horses: mergedData.horses.map(sanitizeHorseForCloud),
             calendarNotes: mergedData.calendarNotes,
             generalNotes: mergedData.generalNotes,
             trash: mergedData.trash,
@@ -3317,7 +3338,7 @@ async function migrateOrLoadData(user) {
       await setDoc(userDoc, {
         workEntries: seedData.workEntries,
         tasks: seedData.tasks,
-        horses: seedData.horses,
+        horses: seedData.horses.map(sanitizeHorseForCloud),
         calendarNotes: seedData.calendarNotes,
         generalNotes: seedData.generalNotes,
         trash: seedData.trash,
@@ -3400,15 +3421,7 @@ async function manualSync() {
   if (icon) icon.style.display = "";
 
   try {
-    const payload = {
-      workEntries: state.workEntries,
-      tasks: state.tasks,
-      horses: state.horses,
-      calendarNotes: state.calendarNotes,
-      generalNotes: state.generalNotes,
-      trash: state.trash,
-      clock: state.clock
-    };
+    const payload = buildCloudPayload();
     await setDoc(doc(db, "users", user.uid, "data", "main"), payload);
     await syncOptionalRemoteData();
     icon?.classList.remove("spinning");
@@ -3453,6 +3466,9 @@ if ("serviceWorker" in navigator) {
 }
 
 init();
+
+
+
 
 
 
