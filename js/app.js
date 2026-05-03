@@ -3444,15 +3444,23 @@ const INSTALL_DISMISSED_KEY = "fincaPlanner.installDismissed";
 function updateInstallBtn() {
   const btn = $("#installBtn");
   if (!btn) return;
-  if (_installPrompt) {
-    btn.style.opacity = "1";
-    btn.title = "Instalar app";
-    btn.disabled = false;
+  btn.style.opacity = "1";
+  btn.disabled = false;
+  btn.title = _installPrompt ? "Instalar app" : "Cómo instalar la app";
+}
+
+function showInstallGuide() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isAndroid = /android/i.test(navigator.userAgent);
+  let msg = "";
+  if (isIOS) {
+    msg = "En iPhone/iPad:\n1. Pulsa el botón compartir (□↑) en Safari\n2. Selecciona «Añadir a pantalla de inicio»\n3. Pulsa «Añadir»";
+  } else if (isAndroid) {
+    msg = "En Android:\n1. Abre el menú de Chrome (⋮)\n2. Selecciona «Añadir a pantalla de inicio» o «Instalar app»\n3. Confirma";
   } else {
-    btn.style.opacity = "0.4";
-    btn.title = "Ya instalada o no disponible en este navegador";
-    btn.disabled = true;
+    msg = "En ordenador:\n1. En Chrome/Edge busca el icono ⊕ en la barra de direcciones\n2. O abre el menú (⋮) → «Instalar Hípica App»";
   }
+  alert(msg);
 }
 
 function showInstallBanner() {
@@ -3466,7 +3474,10 @@ function hideInstallBanner() {
 }
 
 async function triggerInstall() {
-  if (!_installPrompt) return;
+  if (!_installPrompt) {
+    showInstallGuide();
+    return;
+  }
   _installPrompt.prompt();
   const { outcome } = await _installPrompt.userChoice;
   if (outcome === "accepted") {
