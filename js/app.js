@@ -1,5 +1,25 @@
-﻿import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
-  from "./firebase.js";
+﻿import {
+  auth, db, provider, signInWithPopup, signOut, onAuthStateChanged,
+  doc, setDoc, getDoc, collection, getDocs, deleteDoc
+} from "./firebase.js";
+
+const CLOUDINARY_CLOUD = "dozjsexgz";
+const CLOUDINARY_PRESET = "Hipica_photos";
+
+async function uploadHorsePhotoCloudinary(horseId, dataUrl) {
+  const formData = new FormData();
+  formData.append("file", dataUrl);
+  formData.append("upload_preset", CLOUDINARY_PRESET);
+  formData.append("public_id", `horses/${horseId}`);
+  formData.append("overwrite", "true");
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+  if (!res.ok) throw new Error("Cloudinary upload failed: " + res.status);
+  const json = await res.json();
+  return json.secure_url;
+}
 
 const STORAGE_KEY = "fincaPlanner.v1";
 const THEME_KEY = "fincaPlanner.theme";
@@ -248,10 +268,9 @@ function isSameMonth(dateString, date = new Date()) {
 
 function sanitizeHorseForCloud(horse) {
   const normalized = normalizeHorse(horse);
-  return {
-    ...normalized,
-    photo: ""
-  };
+  // Keep Storage URLs, strip Base64 (too large for Firestore)
+  const photo = normalized.photo && normalized.photo.startsWith("https://") ? normalized.photo : "";
+  return { ...normalized, photo };
 }
 
 function buildCloudPayload() {
@@ -1900,7 +1919,11 @@ function syncHiddenCoordinatesToManualInputs() {
   });
 }
 
-function saveHorse(event) {
+async function uploadHorsePhoto(uid, horseId, dataUrl) {
+  return await uploadHorsePhotoCloudinary(horseId, dataUrl);
+}
+
+async function saveHorse(event) {
   event.preventDefault();
   syncManualCoordinateInputsToHidden();
   const user = currentUser();
@@ -1913,6 +1936,21 @@ function saveHorse(event) {
   }
 
   const id = $("#horseId").value || uid();
+  let photoValue = $("#horsePhotoData").value;
+
+  // Si la foto es Base64 y hay usuario conectado, súbela a Storage
+  if (photoValue && photoValue.startsWith("data:") && user) {
+    const btn = $("#horseSaveBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "Subiendo foto…"; }
+    try {
+      photoValue = await uploadHorsePhoto(user.uid, id, photoValue);
+    } catch (err) {
+      console.warn("Error subiendo foto a Storage:", err);
+      // Mantiene Base64 como fallback si falla Storage
+    }
+    if (btn) { btn.disabled = false; btn.textContent = "Guardar"; }
+  }
+
   const horse = {
     id,
     number,
@@ -1923,7 +1961,7 @@ function saveHorse(event) {
     lng: coordinateValue("#stableLng"),
     paddockLat: coordinateValue("#paddockLat"),
     paddockLng: coordinateValue("#paddockLng"),
-    photo: $("#horsePhotoData").value,
+    photo: photoValue,
     notes: $("#horseNotes").value.trim(),
     feedMorning: $("#horseFeedMorning").value.trim(),
     feedNoon: $("#horseFeedNoon").value.trim(),
@@ -3298,6 +3336,7 @@ onAuthStateChanged(auth, async (user) => {
     state.isAdmin = isPrimaryAdmin(user);
     updateUserChip(user);
     await migrateOrLoadData(user);
+    await migrateHorsePhotosToStorage(user);
     await loadSharedHorses();
     await syncUserProfile();
     await loadAdminProfiles();
@@ -3315,6 +3354,89 @@ onAuthStateChanged(auth, async (user) => {
     updateAdminAccess();
   }
 });
+
+function showPhotoMigrationPanel(total) {
+  let panel = $("#photoMigrationPanel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "photoMigrationPanel";
+    panel.className = "photo-migration-panel";
+    panel.innerHTML = `
+      <div class="pmp-header">
+        <span class="pmp-icon">🐴</span>
+        <div class="pmp-texts">
+          <strong class="pmp-title">Sincronizando fotos</strong>
+          <span class="pmp-subtitle" id="pmpSubtitle">Preparando…</span>
+        </div>
+      </div>
+      <div class="pmp-bar-track"><div class="pmp-bar-fill" id="pmpBarFill"></div></div>
+      <div class="pmp-steps" id="pmpSteps"></div>
+    `;
+    document.body.appendChild(panel);
+  }
+  panel.classList.add("visible");
+  updatePhotoMigrationPanel(0, total, "Detectando fotos en este dispositivo…");
+  return panel;
+}
+
+function updatePhotoMigrationPanel(done, total, subtitle, horseName, status) {
+  const fill = $("#pmpBarFill");
+  const sub = $("#pmpSubtitle");
+  const steps = $("#pmpSteps");
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  if (fill) fill.style.width = pct + "%";
+  if (sub) sub.textContent = subtitle;
+  if (steps && horseName) {
+    const item = document.createElement("div");
+    item.className = `pmp-step pmp-step-${status}`;
+    item.textContent = (status === "ok" ? "✓ " : "✗ ") + horseName;
+    steps.appendChild(item);
+    steps.scrollTop = steps.scrollHeight;
+  }
+}
+
+function hidePhotoMigrationPanel(success) {
+  const panel = $("#photoMigrationPanel");
+  if (!panel) return;
+  const sub = $("#pmpSubtitle");
+  const fill = $("#pmpBarFill");
+  if (fill) fill.style.width = "100%";
+  if (sub) sub.textContent = success ? "¡Fotos sincronizadas correctamente!" : "Proceso finalizado con algunos errores";
+  panel.classList.add(success ? "pmp-done" : "pmp-error");
+  setTimeout(() => panel.classList.remove("visible"), 4000);
+}
+
+async function migrateHorsePhotosToStorage(user) {
+  const horsesWithBase64 = state.horses.filter(
+    (h) => h.photo && h.photo.startsWith("data:")
+  );
+  if (horsesWithBase64.length === 0) return;
+
+  const total = horsesWithBase64.length;
+  showPhotoMigrationPanel(total);
+  let uploaded = 0;
+  let failed = 0;
+
+  for (let i = 0; i < horsesWithBase64.length; i++) {
+    const horse = horsesWithBase64[i];
+    const label = horse.name || horse.number || `Caballo ${i + 1}`;
+    updatePhotoMigrationPanel(i, total, `Subiendo ${i + 1} de ${total}: ${label}…`);
+    try {
+      const url = await uploadHorsePhoto(user.uid, horse.id, horse.photo);
+      const idx = state.horses.findIndex((h) => h.id === horse.id);
+      if (idx !== -1) state.horses[idx] = { ...state.horses[idx], photo: url };
+      uploaded++;
+      updatePhotoMigrationPanel(i + 1, total, `Subiendo ${i + 1} de ${total}: ${label}…`, label, "ok");
+    } catch (err) {
+      console.warn("Error migrando foto del caballo", horse.id, err);
+      failed++;
+      updatePhotoMigrationPanel(i + 1, total, `Error con ${label}`, label, "error");
+    }
+  }
+
+  if (uploaded > 0) saveData();
+  hidePhotoMigrationPanel(failed === 0);
+}
 
 async function migrateOrLoadData(user) {
   const userDoc = doc(db, "users", user.uid, "data", "main");

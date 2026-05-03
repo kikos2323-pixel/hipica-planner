@@ -3582,6 +3582,125 @@ table tbody tr:hover {
   to   { transform: translateX(-50%) translateY(0); opacity: 1; }
 }
 
+/* ── Photo migration panel ────────────────────────────────── */
+.photo-migration-panel {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 900;
+  width: 320px;
+  background: var(--glass-strong);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: var(--blur);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(20px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.38, 0.64, 1);
+}
+
+.photo-migration-panel.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.pmp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pmp-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pmp-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pmp-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pmp-subtitle {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pmp-bar-track {
+  height: 6px;
+  background: var(--glass-soft);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.pmp-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pmp-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 90px;
+  overflow-y: auto;
+}
+
+.pmp-step {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  animation: slideUpFade 0.2s ease both;
+}
+
+.pmp-step-ok {
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.pmp-step-error {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.photo-migration-panel.pmp-done .pmp-bar-fill {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.photo-migration-panel.pmp-error .pmp-bar-fill {
+  background: linear-gradient(90deg, var(--danger), #f87171);
+}
+
+@media (max-width: 480px) {
+  .photo-migration-panel {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: 16px;
+  }
+}
+
 /* ── Reduce motion ────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
