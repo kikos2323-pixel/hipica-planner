@@ -10,14 +10,16 @@ async function uploadHorsePhotoCloudinary(horseId, dataUrl) {
   const formData = new FormData();
   formData.append("file", dataUrl);
   formData.append("upload_preset", CLOUDINARY_PRESET);
-  formData.append("public_id", `horses/${horseId}`);
-  formData.append("overwrite", "true");
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
     method: "POST",
     body: formData
   });
-  if (!res.ok) throw new Error("Cloudinary upload failed: " + res.status);
   const json = await res.json();
+  if (!res.ok || json.error) {
+    const msg = json.error?.message || res.status;
+    console.error("Cloudinary error:", msg, json);
+    throw new Error("Cloudinary: " + msg);
+  }
   return json.secure_url;
 }
 
@@ -3430,7 +3432,7 @@ async function migrateHorsePhotosToStorage(user) {
     } catch (err) {
       console.warn("Error migrando foto del caballo", horse.id, err);
       failed++;
-      updatePhotoMigrationPanel(i + 1, total, `Error con ${label}`, label, "error");
+      updatePhotoMigrationPanel(i + 1, total, `Error: ${err.message}`, label, "error");
     }
   }
 
