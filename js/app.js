@@ -134,7 +134,8 @@ const DEFAULT_GAMES = {
   flappyHorse: {
     bestScore: 0,
     lastScore: 0,
-    selectedColor: "castano"
+    selectedColor: "castano",
+    speedFactor: 1
   }
 };
 const FLAPPY_HORSE_THEMES = [
@@ -209,6 +210,11 @@ const flappyGame = {
   currentGap: 248,
   frame: 0,
   horseTheme: FLAPPY_HORSE_THEMES[0],
+  fullscreenOpen: false,
+  previewCanvas: null,
+  fullscreenCanvas: null,
+  previewCtx: null,
+  fullscreenCtx: null,
   horse: {
     x: 180,
     y: 240,
@@ -635,7 +641,8 @@ function normalizeGamesData(games) {
     flappyHorse: {
       bestScore: Math.max(0, Number(flappyHorse.bestScore) || 0),
       lastScore: Math.max(0, Number(flappyHorse.lastScore) || 0),
-      selectedColor
+      selectedColor,
+      speedFactor: Math.min(1.7, Math.max(0.7, Number(flappyHorse.speedFactor) || 1))
     }
   };
 }
@@ -1382,16 +1389,17 @@ function renderGames() {
 function updateFlappyHorseDeviceProfile() {
   const compact = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
   const portrait = compact && window.innerHeight > window.innerWidth;
+  const userFactor = Math.min(1.7, Math.max(0.7, Number(state.games?.flappyHorse?.speedFactor) || 1));
   flappyGame.isCompactMode = compact;
   flappyGame.isPortraitMode = portrait;
-  flappyGame.baseSpeed = portrait ? 5.35 : compact ? 3.95 : flappyGame.desktopBaseSpeed;
+  flappyGame.baseSpeed = (portrait ? 5.35 : compact ? 3.95 : flappyGame.desktopBaseSpeed) * userFactor;
   flappyGame.spawnEvery = portrait ? 88 : compact ? 104 : flappyGame.desktopSpawnEvery;
   flappyGame.gravityBase = portrait ? 0.31 : 0.27;
   flappyGame.flap = portrait ? -7.2 : -6.6;
 }
 
 function resizeFlappyCanvas() {
-  const wrap = $("#flappyWrap");
+  const wrap = flappyGame.fullscreenOpen ? $("#gameFullscreenStage") : $("#flappyWrap");
   const canvas = flappyGame.canvas;
   if (!wrap || !canvas) return;
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -1418,22 +1426,38 @@ function flappyThemeById(themeId) {
 
 function initFlappyHorse() {
   if (flappyGame.initialized) return;
-  flappyGame.canvas = $("#flappyCanvas");
-  flappyGame.ctx = flappyGame.canvas?.getContext("2d");
-  if (!flappyGame.canvas || !flappyGame.ctx) return;
+  flappyGame.previewCanvas = $("#flappyCanvas");
+  flappyGame.previewCtx = flappyGame.previewCanvas?.getContext("2d");
+  flappyGame.fullscreenCanvas = $("#flappyCanvasFullscreen");
+  flappyGame.fullscreenCtx = flappyGame.fullscreenCanvas?.getContext("2d");
+  flappyGame.canvas = flappyGame.previewCanvas;
+  flappyGame.ctx = flappyGame.previewCtx;
+  if (!flappyGame.previewCanvas || !flappyGame.previewCtx || !flappyGame.fullscreenCanvas || !flappyGame.fullscreenCtx) return;
   flappyGame.initialized = true;
   updateFlappyHorseDeviceProfile();
   resizeFlappyCanvas();
   flappyGame.horseTheme = flappyThemeById(state.games?.flappyHorse?.selectedColor);
 
-  $("#flappyStartBtn")?.addEventListener("click", () => startFlappyHorse());
-  $("#flappyRestartBtn")?.addEventListener("click", () => resetFlappyHorse(false));
-  $("#flappyWrap")?.addEventListener("pointerdown", (event) => {
+  $("#flappyStartBtn")?.addEventListener("click", () => {
+    openFlappyFullscreen();
+    startFlappyHorse();
+  });
+  $("#flappyRestartBtn")?.addEventListener("click", () => {
+    openFlappyFullscreen();
+    resetFlappyHorse(false);
+  });
+  $("#gameFullscreenClose")?.addEventListener("click", closeFlappyFullscreen);
+  $("#flappyExitBtn")?.addEventListener("click", closeFlappyFullscreen);
+  $("#flappyPlayAgainBtn")?.addEventListener("click", () => {
+    resetFlappyHorse(false);
+    startFlappyHorse();
+  });
+  $("#gameFullscreenStage")?.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     flapFlappyHorse();
   });
   window.addEventListener("keydown", (event) => {
-    if (event.code === "Space" && state.currentView === "juegos") {
+    if (event.code === "Space" && state.currentView === "juegos" && flappyGame.fullscreenOpen) {
       event.preventDefault();
       flapFlappyHorse();
     }
@@ -1455,6 +1479,15 @@ function initFlappyHorse() {
     persistGames();
     renderFlappyHorseSwatches();
   });
+  $("#flappySpeedSlider")?.addEventListener("input", (event) => {
+    const value = Number(event.target.value) || 100;
+    state.games.flappyHorse.speedFactor = Math.min(1.7, Math.max(0.7, value / 100));
+    updateFlappyHorseDeviceProfile();
+    renderFlappyHorseHud();
+  });
+  $("#flappySpeedSlider")?.addEventListener("change", () => {
+    persistGames();
+  });
 
   resetFlappyHorse(false);
   renderFlappyHorseSwatches();
@@ -1466,6 +1499,34 @@ function initFlappyHorse() {
   }
 }
 
+function openFlappyFullscreen() {
+  flappyGame.fullscreenOpen = true;
+  flappyGame.canvas = flappyGame.fullscreenCanvas;
+  flappyGame.ctx = flappyGame.fullscreenCtx;
+  $("#gameFullscreenOverlay")?.classList.add("open");
+  document.body.classList.add("game-fullscreen-open");
+  resizeFlappyCanvas();
+  if (!flappyGame.running && !flappyGame.gameOver) {
+    flappyGame.horse.x = flappyGame.canvas.width * (flappyGame.isPortraitMode ? 0.32 : 0.19);
+    flappyGame.horse.y = flappyGame.canvas.height * 0.44;
+  }
+}
+
+function closeFlappyFullscreen() {
+  flappyGame.fullscreenOpen = false;
+  flappyGame.running = false;
+  flappyGame.countdown = 0;
+  if (flappyGame.countdownTimer) {
+    clearInterval(flappyGame.countdownTimer);
+    flappyGame.countdownTimer = null;
+  }
+  $("#gameFullscreenOverlay")?.classList.remove("open");
+  document.body.classList.remove("game-fullscreen-open");
+  flappyGame.canvas = flappyGame.previewCanvas;
+  flappyGame.ctx = flappyGame.previewCtx;
+  showFlappyOverlay(false);
+}
+
 function renderFlappyHorseHud() {
   const games = normalizeGamesData(state.games);
   $("#flappyScoreValue") && ($("#flappyScoreValue").textContent = String(flappyGame.score || 0));
@@ -1474,6 +1535,8 @@ function renderFlappyHorseHud() {
   $("#flappyBestObstaclesValue") && ($("#flappyBestObstaclesValue").textContent = String(games.flappyHorse.bestScore || 0));
   $("#flappyLevelValue") && ($("#flappyLevelValue").textContent = String(flappyGame.level || 1));
   $("#flappySpeedValue") && ($("#flappySpeedValue").textContent = `${Math.round(flappyGame.speedPercent || 100)}%`);
+  $("#flappySpeedSlider") && ($("#flappySpeedSlider").value = String(Math.round((games.flappyHorse.speedFactor || 1) * 100)));
+  $("#flappySpeedSliderValue") && ($("#flappySpeedSliderValue").textContent = `${Math.round((games.flappyHorse.speedFactor || 1) * 100)}%`);
 }
 
 function renderFlappyHorseSwatches() {
@@ -1521,29 +1584,34 @@ function resetFlappyHorse(start = false) {
 }
 
 function showFlappyOverlay(show, title = "", text = "") {
-  const overlay = $("#flappyOverlay");
-  const card = $("#flappyOverlayCard");
-  const titleEl = $("#flappyOverlayTitle");
-  const textEl = $("#flappyOverlayText");
+  const overlay = flappyGame.fullscreenOpen ? $("#flappyOverlayFullscreen") : $("#flappyOverlay");
+  const card = flappyGame.fullscreenOpen ? $("#flappyOverlayCardFullscreen") : $("#flappyOverlayCard");
+  const titleEl = flappyGame.fullscreenOpen ? $("#flappyOverlayTitleFullscreen") : $("#flappyOverlayTitle");
+  const textEl = flappyGame.fullscreenOpen ? $("#flappyOverlayTextFullscreen") : $("#flappyOverlayText");
+  const actions = flappyGame.fullscreenOpen ? $("#flappyOverlayActionsFullscreen") : null;
   if (!overlay || !card || !titleEl || !textEl) return;
   overlay.style.display = show ? "grid" : "none";
   if (!show) card.classList.remove("countdown");
+  if (actions) actions.classList.remove("show");
   titleEl.textContent = title;
   textEl.textContent = text;
 }
 
 function startFlappyHorse() {
+  if (!flappyGame.fullscreenOpen) return;
   if (flappyGame.running || flappyGame.countdown > 0) return;
   if (flappyGame.gameOver) resetFlappyHorse(false);
   flappyGame.gameOver = false;
   flappyGame.countdown = 3;
-  const card = $("#flappyOverlayCard");
-  const overlay = $("#flappyOverlay");
-  const titleEl = $("#flappyOverlayTitle");
-  const textEl = $("#flappyOverlayText");
+  const card = $("#flappyOverlayCardFullscreen");
+  const overlay = $("#flappyOverlayFullscreen");
+  const titleEl = $("#flappyOverlayTitleFullscreen");
+  const textEl = $("#flappyOverlayTextFullscreen");
+  const actions = $("#flappyOverlayActionsFullscreen");
   if (!overlay || !card || !titleEl || !textEl) return;
   overlay.style.display = "grid";
   card.classList.add("countdown");
+  actions?.classList.remove("show");
   titleEl.textContent = "3";
   textEl.textContent = "";
   flappyGame.countdownTimer = setInterval(() => {
@@ -1560,6 +1628,7 @@ function startFlappyHorse() {
 }
 
 function flapFlappyHorse() {
+  if (!flappyGame.fullscreenOpen) return;
   if (flappyGame.countdown > 0) return;
   if (!flappyGame.running) {
     startFlappyHorse();
@@ -1597,6 +1666,7 @@ function endFlappyHorse() {
   }
   persistGames();
   showFlappyOverlay(true, "Has tirado la valla", `Puntuación: ${flappyGame.score}. Pulsa jugar para volver a intentarlo.`);
+  $("#flappyOverlayActionsFullscreen")?.classList.add("show");
 }
 
 function flappyHorseLoop() {
@@ -1705,6 +1775,30 @@ function drawFlappyHorse() {
 
   flappyGame.fences.forEach((fence) => drawFlappyFence(ctx, canvas, fence));
   drawFlappyHorseBody(ctx);
+  drawFlappyHorsePreviewCard();
+}
+
+function drawFlappyHorsePreviewCard() {
+  const canvas = flappyGame.previewCanvas;
+  const ctx = flappyGame.previewCtx;
+  const wrap = $("#flappyWrap");
+  if (!canvas || !ctx || !wrap || flappyGame.fullscreenOpen) return;
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.max(320, Math.round(wrap.clientWidth * ratio));
+  const height = Math.max(200, Math.round(wrap.clientHeight * ratio));
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  sky.addColorStop(0, "#bdeeff");
+  sky.addColorStop(0.68, "#ecf9ff");
+  sky.addColorStop(0.68, "#f3ddb0");
+  sky.addColorStop(1, "#d2b57b");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  ctx.fillRect(0, canvas.height * 0.74, canvas.width, canvas.height * 0.26);
 }
 
 function drawFlappyCloud(ctx, x, y, scale) {
