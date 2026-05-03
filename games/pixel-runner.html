@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Caballo Pixel Runner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; min-height: 100%; overflow: hidden; font-family: monospace; background: #f3f3f3; touch-action: none; }
+    body { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+    .game-shell { width: min(100%, 820px); }
+    .game { position: relative; width: 100%; height: clamp(230px, 58vh, 360px); overflow: hidden; background: #fff; border: 3px solid #222; border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.18); user-select: none; image-rendering: pixelated; }
+    .hud { position: absolute; top: 12px; right: 14px; display: flex; gap: 16px; color: #555; font-size: clamp(13px, 3.5vw, 18px); font-weight: 900; letter-spacing: 1px; z-index: 20; }
+    .ground { position: absolute; left: 0; right: 0; bottom: var(--ground-bottom); height: 3px; background: repeating-linear-gradient(to right, #555 0, #555 18px, transparent 18px, transparent 32px); z-index: 2; }
+    .cloud { position: absolute; top: 52px; right: -90px; width: 56px; height: 18px; opacity: .45; z-index: 1; }
+    .cloud::before, .cloud::after, .cloud span { content: ""; position: absolute; bottom: 0; border-top: 3px solid #999; border-radius: 50%; }
+    .cloud::before { left: 0; width: 22px; height: 12px; }
+    .cloud span { left: 17px; width: 28px; height: 18px; }
+    .cloud::after { left: 38px; width: 22px; height: 12px; }
+    .horse { position: absolute; left: clamp(28px, 11vw, 72px); bottom: calc(var(--ground-bottom) + 3px); width: 84px; height: 72px; z-index: 10; transform-origin: bottom left; }
+    .horse.duck { height: 48px; }
+    .horse.duck .pixel-horse { transform: translateY(20px) scaleY(.72); transform-origin: bottom left; }
+    .pixel-horse { position: absolute; left: 0; bottom: 0; width: 84px; height: 72px; transition: transform 70ms linear; }
+    .horse-runner-svg { position: absolute; left: -14px; bottom: -10px; width: 112px; height: 88px; overflow: visible; }
+    .px { position: absolute; width: 6px; height: 6px; background: #555; }
+    .mane, .hoof, .eye { background: #333; }
+    .tail-anim-a, .tail-anim-b, .leg-a, .leg-b { animation-duration: 260ms; animation-iteration-count: infinite; animation-timing-function: steps(1, end); }
+    .tail-anim-a { animation-name: tailA; } .tail-anim-b { animation-name: tailB; } .leg-a { animation-name: legA; } .leg-b { animation-name: legB; }
+    @keyframes legA { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    @keyframes legB { 0%,100% { transform: translateY(-6px); } 50% { transform: translateY(0); } }
+    @keyframes tailA { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-6px,6px); } }
+    @keyframes tailB { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-6px,-6px); } }
+    .obstacle, .low-obstacle { position: absolute; z-index: 8; image-rendering: pixelated; }
+    .fence { bottom: calc(var(--ground-bottom) + 3px); height: 66px; }
+    .fence.small { width: 48px; } .fence.medium { width: 68px; } .fence.long { width: 96px; }
+    .fence .post, .fence .bar, .low-obstacle .rail, .low-obstacle .cap { position: absolute; background: #555; }
+    .fence .post { bottom: 0; width: 7px; height: 62px; }
+    .fence .post.left { left: 4px; } .fence .post.right { right: 4px; }
+    .fence .bar { left: 0; height: 7px; width: 100%; }
+    .fence .bar.one { bottom: 12px; } .fence .bar.two { bottom: 28px; } .fence .bar.three { bottom: 44px; }
+    .low-obstacle { width: 86px; height: 52px; bottom: calc(var(--ground-bottom) + 64px); }
+    .low-obstacle .rail { left: 0; top: 0; width: 86px; height: 8px; }
+    .low-obstacle .cap { width: 9px; height: 20px; top: 0; }
+    .low-obstacle .cap.left { left: 0; } .low-obstacle .cap.right { right: 0; }
+    .msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(255,255,255,.78); color: #333; text-align: center; z-index: 40; padding: 24px; }
+    .msg.hidden { display: none; }
+    .msg h1 { font-size: clamp(24px, 8vw, 42px); letter-spacing: 1px; }
+    .msg p { max-width: 440px; color: #666; font-size: clamp(13px, 3.8vw, 16px); line-height: 1.35; }
+    .btn { border: 0; border-radius: 999px; padding: 11px 20px; background: #333; color: #fff; font-weight: 900; font-family: monospace; cursor: pointer; }
+    .controls-mobile { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .control-btn { height: 58px; border: 3px solid #222; border-radius: 12px; background: #fff; color: #333; font-family: monospace; font-size: 18px; font-weight: 900; touch-action: none; }
+    .runner-character-panel { margin-top: 10px; padding: 10px; border: 3px solid #222; border-radius: 12px; background: #fff; }
+    .runner-character-panel strong { display: block; margin-bottom: 8px; color: #333; font-size: 13px; }
+    .runner-character-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 8px; }
+    .runner-character-btn { height: 56px; border: 2px solid #ddd; border-radius: 10px; background: #f7f7f7; cursor: pointer; overflow: hidden; }
+    .runner-character-btn.active { border-color: #222; background: #fff3c4; }
+    .runner-character-btn svg { width: 70px; height: 55px; margin-top: 1px; overflow: visible; }
+    @media (max-width: 620px) {
+      body { align-items: flex-start; padding: 8px; }
+      .game-shell { width: 100%; }
+      .game { height: min(62vh, 430px); min-height: 310px; }
+      .horse { left: 28px; transform: scale(.82); }
+      .controls-mobile { display: grid; }
+    }
+    @media (max-width: 380px) { .horse { transform: scale(.72); } }
+  </style>
+</head>
+<body>
+  <div class="game-shell">
+    <div class="game" id="game" style="--ground-bottom: 54px;">
+      <div class="hud"><span>HI <span id="best">00000</span></span><span id="score">00000</span></div>
+      <div class="cloud" id="cloud"><span></span></div>
+      <div class="ground" id="ground"></div>
+      <div class="horse pixel" id="horse" aria-label="Caballo pixel art">
+        <div class="pixel-horse">
+          <i class="px tail-anim-a" style="left:0px;top:24px"></i><i class="px tail-anim-a" style="left:6px;top:30px"></i><i class="px tail-anim-b" style="left:0px;top:30px"></i><i class="px tail-anim-b" style="left:6px;top:36px"></i>
+          <i class="px" style="left:12px;top:24px"></i><i class="px" style="left:18px;top:18px"></i><i class="px" style="left:18px;top:24px"></i><i class="px" style="left:24px;top:18px"></i><i class="px" style="left:24px;top:24px"></i><i class="px" style="left:30px;top:18px"></i><i class="px" style="left:30px;top:24px"></i><i class="px" style="left:36px;top:18px"></i><i class="px" style="left:36px;top:24px"></i><i class="px" style="left:42px;top:18px"></i><i class="px" style="left:42px;top:24px"></i><i class="px" style="left:48px;top:24px"></i><i class="px" style="left:18px;top:30px"></i><i class="px" style="left:24px;top:30px"></i><i class="px" style="left:30px;top:30px"></i><i class="px" style="left:36px;top:30px"></i><i class="px" style="left:42px;top:30px"></i><i class="px" style="left:48px;top:30px"></i>
+          <i class="px" style="left:48px;top:12px"></i><i class="px mane" style="left:42px;top:12px"></i><i class="px" style="left:54px;top:6px"></i><i class="px mane" style="left:48px;top:6px"></i><i class="px" style="left:60px;top:0px"></i><i class="px" style="left:66px;top:0px"></i><i class="px" style="left:66px;top:6px"></i><i class="px" style="left:72px;top:6px"></i><i class="px" style="left:60px;top:6px"></i><i class="px eye" style="left:66px;top:6px"></i><i class="px" style="left:60px;top:12px"></i><i class="px" style="left:66px;top:12px"></i><i class="px" style="left:72px;top:12px"></i><i class="px" style="left:78px;top:12px"></i>
+          <i class="px leg-a" style="left:18px;top:36px"></i><i class="px leg-a" style="left:18px;top:42px"></i><i class="px hoof leg-a" style="left:12px;top:48px"></i><i class="px leg-b" style="left:30px;top:36px"></i><i class="px leg-b" style="left:30px;top:42px"></i><i class="px hoof leg-b" style="left:30px;top:48px"></i><i class="px leg-b" style="left:42px;top:36px"></i><i class="px leg-b" style="left:42px;top:42px"></i><i class="px hoof leg-b" style="left:48px;top:48px"></i><i class="px leg-a" style="left:54px;top:36px"></i><i class="px leg-a" style="left:54px;top:42px"></i><i class="px hoof leg-a" style="left:54px;top:48px"></i>
+        </div>
+      </div>
+      <div class="msg" id="msg">
+        <h1>Caballo Pixel</h1>
+        <p>Salta las vallas y agáchate bajo las barras altas. En móvil usa los botones o toca para saltar.</p>
+        <button class="btn" id="startBtn">Empezar</button>
+      </div>
+    </div>
+    <div class="controls-mobile">
+      <button class="control-btn" id="jumpBtn">SALTAR</button>
+      <button class="control-btn" id="duckBtn">AGACHAR</button>
+    </div>
+    <div class="runner-character-panel">
+      <strong>Caballo</strong>
+      <div class="runner-character-grid" id="runnerCharacterGrid"></div>
+    </div>
+  </div>
+  <script src="game-characters.js"></script>
+  <script>
+    const game = document.getElementById("game");
+    const horse = document.getElementById("horse");
+    const scoreEl = document.getElementById("score");
+    const bestEl = document.getElementById("best");
+    const msg = document.getElementById("msg");
+    const startBtn = document.getElementById("startBtn");
+    const jumpBtn = document.getElementById("jumpBtn");
+    const duckBtn = document.getElementById("duckBtn");
+    const cloud = document.getElementById("cloud");
+    const runnerCharacterGrid = document.getElementById("runnerCharacterGrid");
+    const groundBottom = 54;
+    const gravity = 0.62;
+    const jumpPower = 13.2;
+    let running = false;
+    let score = 0;
+    let best = Number(localStorage.getItem("horsePixelBest") || 0);
+    let speed = 3.4;
+    let horseY = 0;
+    let velocityY = 0;
+    let isJumping = false;
+    let isDucking = false;
+    let obstacles = [];
+    let nextObstacleIn = 0;
+    let animationId = null;
+    let lastTime = 0;
+    let cloudX = -80;
+    const initialHorse = new URLSearchParams(window.location.search).get("horse");
+    let selectedHorse = initialHorse || localStorage.getItem("horsePixelCharacter") || "horse-caramelo";
+    bestEl.textContent = format(best);
+    window.GAME_CHARACTERS?.injectHorseSprite(document);
+    renderCharacterPicker();
+    applyRunnerCharacter(selectedHorse);
+
+    function format(n) { return String(Math.floor(n)).padStart(5, "0"); }
+    function renderCharacterPicker() {
+      const characters = window.GAME_CHARACTERS?.horses || [];
+      runnerCharacterGrid.innerHTML = characters.map((character) => `
+        <button class="runner-character-btn ${character.id === selectedHorse ? "active" : ""}" type="button" data-runner-character="${character.id}" title="${character.name}" aria-label="Caballo ${character.name}">
+          ${window.GAME_CHARACTERS.horseSvg(character.id)}
+        </button>
+      `).join("");
+    }
+    function applyRunnerCharacter(characterId) {
+      selectedHorse = characterId;
+      localStorage.setItem("horsePixelCharacter", selectedHorse);
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: "pixel-runner-character", characterId: selectedHorse }, window.location.origin);
+      }
+      const pixelHorse = horse.querySelector(".pixel-horse");
+      if (pixelHorse && window.GAME_CHARACTERS) {
+        pixelHorse.innerHTML = window.GAME_CHARACTERS.horseSvg(selectedHorse, "horse-run horse-runner-svg");
+      }
+      document.querySelectorAll("[data-runner-character]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.runnerCharacter === selectedHorse);
+      });
+    }
+    function notifyScore() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: "pixel-runner-score", score: Math.floor(score), best: Math.floor(best) }, window.location.origin);
+      }
+    }
+    function startGame() {
+      clearObstacles();
+      running = true;
+      score = 0;
+      speed = 4.2;
+      horseY = 0;
+      velocityY = 0;
+      isJumping = false;
+      isDucking = false;
+      nextObstacleIn = 190;
+      lastTime = performance.now();
+      horse.classList.remove("duck");
+      msg.classList.add("hidden");
+      scoreEl.textContent = format(score);
+      cancelAnimationFrame(animationId);
+      animationId = requestAnimationFrame(loop);
+    }
+    function endGame() {
+      running = false;
+      cancelAnimationFrame(animationId);
+      if (score > best) {
+        best = score;
+        localStorage.setItem("horsePixelBest", String(best));
+        bestEl.textContent = format(best);
+      }
+      notifyScore();
+      msg.classList.remove("hidden");
+      msg.innerHTML = `<h1>Fin del juego</h1><p>Puntos: ${format(score)} · Récord: ${format(best)}</p><button class="btn" id="restartBtn">Reiniciar</button>`;
+      document.getElementById("restartBtn").addEventListener("click", startGame);
+    }
+    function loop(now) {
+      if (!running) return;
+      const delta = Math.min((now - lastTime) / 16.67, 2);
+      lastTime = now;
+      updateHorse(delta);
+      updateWorld(delta);
+      updateObstacles(delta);
+      updateScore(delta);
+      checkCollision();
+      animationId = requestAnimationFrame(loop);
+    }
+    function updateHorse(delta) {
+      if (isJumping) {
+        horseY += velocityY * delta;
+        velocityY -= gravity * delta;
+        if (horseY <= 0) {
+          horseY = 0;
+          velocityY = 0;
+          isJumping = false;
+        }
+      }
+      horse.style.bottom = `calc(var(--ground-bottom) + 3px + ${horseY}px)`;
+    }
+    function updateWorld(delta) {
+      const ground = document.getElementById("ground");
+      const groundOffset = (Number(ground.dataset.offset || 0) + speed * delta) % 32;
+      ground.dataset.offset = groundOffset;
+      ground.style.backgroundPositionX = `-${groundOffset}px`;
+      cloudX += speed * .28 * delta;
+      if (cloudX > game.clientWidth + 100) cloudX = -90;
+      cloud.style.right = "auto";
+      cloud.style.left = `${game.clientWidth - cloudX}px`;
+    }
+    function updateScore(delta) {
+      score += speed * .23 * delta;
+      scoreEl.textContent = format(score);
+    }
+    function updateObstacles(delta) {
+      nextObstacleIn -= speed * delta;
+      if (nextObstacleIn <= 0) {
+        spawnObstacle();
+        const minGap = Math.max(210, 330 - speed * 8);
+        const maxGap = Math.max(300, 460 - speed * 10);
+        nextObstacleIn = random(minGap, maxGap);
+      }
+      for (const obstacle of obstacles) {
+        obstacle.x -= speed * delta;
+        obstacle.el.style.transform = `translateX(${obstacle.x}px)`;
+      }
+      obstacles = obstacles.filter((obstacle) => {
+        if (obstacle.x + obstacle.width < -40) {
+          obstacle.el.remove();
+          speed = Math.min(speed + (obstacle.type === "low" ? .09 : .12), 8.8);
+          return false;
+        }
+        return true;
+      });
+    }
+    function spawnObstacle() {
+      const gameWidth = game.clientWidth;
+      const difficulty = Math.min(score / 280, 1);
+      const roll = Math.random();
+      let type = "small";
+      if (score > 120 && roll < .20 + difficulty * .12) type = "long";
+      else if (score > 70 && roll < .48) type = "medium";
+      if (score > 180 && Math.random() < .22 + difficulty * .12) type = "low";
+      if (type === "low") {
+        const el = document.createElement("div");
+        el.className = "low-obstacle";
+        el.innerHTML = '<span class="rail"></span><span class="cap left"></span><span class="cap right"></span>';
+        game.appendChild(el);
+        obstacles.push({ el, x: gameWidth + 40, width: 86, type: "low" });
+        el.style.transform = `translateX(${gameWidth + 40}px)`;
+        return;
+      }
+      const el = document.createElement("div");
+      el.className = `obstacle fence ${type}`;
+      el.innerHTML = '<span class="post left"></span><span class="post right"></span><span class="bar one"></span><span class="bar two"></span><span class="bar three"></span>';
+      game.appendChild(el);
+      const width = type === "long" ? 96 : type === "medium" ? 68 : 48;
+      obstacles.push({ el, x: gameWidth + 40, width, type });
+      el.style.transform = `translateX(${gameWidth + 40}px)`;
+    }
+    function checkCollision() {
+      const horseRect = getHorseHitbox();
+      for (const obstacle of obstacles) {
+        const r = obstacle.el.getBoundingClientRect();
+        const g = game.getBoundingClientRect();
+        const obsRect = obstacle.type === "low"
+          ? { left: r.left - g.left + 4, right: r.right - g.left - 4, top: r.top - g.top, bottom: r.top - g.top + 18 }
+          : { left: r.left - g.left + 7, right: r.right - g.left - 7, top: r.top - g.top + 6, bottom: r.bottom - g.top };
+        if (rectsOverlap(horseRect, obsRect)) {
+          endGame();
+          return;
+        }
+      }
+    }
+    function getHorseHitbox() {
+      const r = horse.getBoundingClientRect();
+      const g = game.getBoundingClientRect();
+      const duckBonus = isDucking ? 20 : 0;
+      return { left: r.left - g.left + 10, right: r.right - g.left - 12, top: r.top - g.top + 8 + duckBonus, bottom: r.bottom - g.top - 4 };
+    }
+    function rectsOverlap(a, b) { return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top; }
+    function jump() {
+      if (!running) {
+        startGame();
+        return;
+      }
+      if (!isJumping && !isDucking) {
+        isJumping = true;
+        velocityY = jumpPower;
+      }
+    }
+    function setDuck(value) {
+      if (!running || isJumping) return;
+      isDucking = value;
+      horse.classList.toggle("duck", value);
+    }
+    function clearObstacles() {
+      for (const obstacle of obstacles) obstacle.el.remove();
+      obstacles = [];
+    }
+    function random(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    startBtn.addEventListener("click", startGame);
+    game.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("button")) return;
+      jump();
+    });
+    jumpBtn.addEventListener("pointerdown", (event) => { event.preventDefault(); jump(); });
+    duckBtn.addEventListener("pointerdown", (event) => { event.preventDefault(); setDuck(true); });
+    duckBtn.addEventListener("pointerup", () => setDuck(false));
+    duckBtn.addEventListener("pointercancel", () => setDuck(false));
+    duckBtn.addEventListener("pointerleave", () => setDuck(false));
+    runnerCharacterGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-runner-character]");
+      if (!button) return;
+      applyRunnerCharacter(button.dataset.runnerCharacter);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "ArrowUp") {
+        event.preventDefault();
+        jump();
+      }
+      if (event.code === "ArrowDown") {
+        event.preventDefault();
+        setDuck(true);
+      }
+    });
+    document.addEventListener("keyup", (event) => {
+      if (event.code === "ArrowDown") {
+        event.preventDefault();
+        setDuck(false);
+      }
+    });
+  </script>
+</body>
+</html>

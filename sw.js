@@ -1,4 +1,4 @@
-const CACHE = "finca-planner-v5";
+const CACHE = "finca-planner-v7";
 const BASE = "/hipica-planner";
 const ASSETS = [
   BASE + "/",
@@ -6,6 +6,8 @@ const ASSETS = [
   BASE + "/css/styles.css",
   BASE + "/js/app.js",
   BASE + "/js/firebase.js",
+  BASE + "/games/game-characters.js",
+  BASE + "/games/pixel-runner.html",
   BASE + "/manifest.json",
   BASE + "/icons/ui/timer.svg",
   BASE + "/icons/ui/calendar-days.svg",

@@ -134,8 +134,13 @@ const DEFAULT_GAMES = {
   flappyHorse: {
     bestScore: 0,
     lastScore: 0,
-    selectedColor: "castano",
+    selectedColor: "bird-tropical",
     speedFactor: 1
+  },
+  pixelRunner: {
+    bestScore: 0,
+    lastScore: 0,
+    selectedHorse: "horse-caramelo"
   }
 };
 const FLAPPY_HORSE_THEMES = [
@@ -144,6 +149,9 @@ const FLAPPY_HORSE_THEMES = [
   { id: "blanco", name: "Blanco", body: "#f2ede3", dark: "#8f867b", mane: "#c9c0b3", accent: "#d8d0c3" },
   { id: "alazan", name: "Alazán", body: "#ba6a36", dark: "#6a381c", mane: "#82411e", accent: "#99532a" },
   { id: "gris", name: "Gris", body: "#adb4bb", dark: "#5f6870", mane: "#7f8891", accent: "#929aa3" }
+];
+const FLAPPY_CHARACTERS = window.GAME_CHARACTERS?.birds || [
+  { id: "bird-tropical", name: "Tropical", body: "#ffd447", belly: "#fff29e", wing: "#22b573", beak: "#ff8a1f", cheek: "#ff6b9f", feet: "#d78b00", accent: "#22b573", decal: "crest" }
 ];
 
 const state = {
@@ -634,8 +642,17 @@ function normalizeTheme(theme) {
 function normalizeGamesData(games) {
   const source = games && typeof games === "object" ? games : {};
   const flappyHorse = source.flappyHorse && typeof source.flappyHorse === "object" ? source.flappyHorse : {};
-  const selectedColor = FLAPPY_HORSE_THEMES.some((theme) => theme.id === flappyHorse.selectedColor)
+  const legacyColorMap = {
+    castano: "bird-tropical",
+    negro: "bird-pirata",
+    blanco: "bird-nube",
+    alazan: "bird-fuego",
+    gris: "bird-cielo"
+  };
+  const selectedColor = FLAPPY_CHARACTERS.some((theme) => theme.id === flappyHorse.selectedColor)
     ? flappyHorse.selectedColor
+    : legacyColorMap[flappyHorse.selectedColor]
+    ? legacyColorMap[flappyHorse.selectedColor]
     : DEFAULT_GAMES.flappyHorse.selectedColor;
   return {
     flappyHorse: {
@@ -643,6 +660,13 @@ function normalizeGamesData(games) {
       lastScore: Math.max(0, Number(flappyHorse.lastScore) || 0),
       selectedColor,
       speedFactor: Math.min(1.7, Math.max(0.7, Number(flappyHorse.speedFactor) || 1))
+    },
+    pixelRunner: {
+      bestScore: Math.max(0, Number(source.pixelRunner?.bestScore) || 0),
+      lastScore: Math.max(0, Number(source.pixelRunner?.lastScore) || 0),
+      selectedHorse: window.GAME_CHARACTERS?.horses?.some((horse) => horse.id === source.pixelRunner?.selectedHorse)
+        ? source.pixelRunner.selectedHorse
+        : DEFAULT_GAMES.pixelRunner.selectedHorse
     }
   };
 }
@@ -1384,6 +1408,7 @@ function renderGames() {
   flappyGame.horseTheme = flappyThemeById(state.games?.flappyHorse?.selectedColor);
   renderFlappyHorseHud();
   renderFlappyHorseSwatches();
+  renderPixelRunnerHud();
 }
 
 function updateFlappyHorseDeviceProfile() {
@@ -1418,10 +1443,11 @@ function persistGames() {
   state.games = normalizeGamesData(state.games);
   saveData();
   renderFlappyHorseHud();
+  renderPixelRunnerHud();
 }
 
 function flappyThemeById(themeId) {
-  return FLAPPY_HORSE_THEMES.find((theme) => theme.id === themeId) || FLAPPY_HORSE_THEMES[0];
+  return FLAPPY_CHARACTERS.find((theme) => theme.id === themeId) || FLAPPY_CHARACTERS[0];
 }
 
 function initFlappyHorse() {
@@ -1442,12 +1468,9 @@ function initFlappyHorse() {
     openFlappyFullscreen();
     startFlappyHorse();
   });
-  $("#flappyRestartBtn")?.addEventListener("click", () => {
-    openFlappyFullscreen();
-    resetFlappyHorse(false);
-  });
   $("#gameFullscreenClose")?.addEventListener("click", closeFlappyFullscreen);
   $("#flappyExitBtn")?.addEventListener("click", closeFlappyFullscreen);
+  $("#pixelRunnerStartBtn")?.addEventListener("click", openPixelRunnerFullscreen);
   $("#flappyPlayAgainBtn")?.addEventListener("click", () => {
     resetFlappyHorse(false);
     startFlappyHorse();
@@ -1462,6 +1485,7 @@ function initFlappyHorse() {
       flapFlappyHorse();
     }
   });
+  window.addEventListener("message", handleGameMessage);
   window.addEventListener("resize", () => {
     updateFlappyHorseDeviceProfile();
     resizeFlappyCanvas();
@@ -1503,8 +1527,12 @@ function openFlappyFullscreen() {
   flappyGame.fullscreenOpen = true;
   flappyGame.canvas = flappyGame.fullscreenCanvas;
   flappyGame.ctx = flappyGame.fullscreenCtx;
-  $("#gameFullscreenOverlay")?.classList.add("open");
+  const overlay = $("#gameFullscreenOverlay");
+  overlay?.classList.remove("pixel-runner-open");
+  overlay?.classList.add("open");
   document.body.classList.add("game-fullscreen-open");
+  const frame = $("#pixelRunnerFrame");
+  if (frame) frame.src = "about:blank";
   resizeFlappyCanvas();
   if (!flappyGame.running && !flappyGame.gameOver) {
     flappyGame.horse.x = flappyGame.canvas.width * (flappyGame.isPortraitMode ? 0.32 : 0.19);
@@ -1513,6 +1541,14 @@ function openFlappyFullscreen() {
 }
 
 function closeFlappyFullscreen() {
+  const overlay = $("#gameFullscreenOverlay");
+  const frame = $("#pixelRunnerFrame");
+  if (overlay?.classList.contains("pixel-runner-open")) {
+    overlay.classList.remove("open", "pixel-runner-open");
+    document.body.classList.remove("game-fullscreen-open");
+    if (frame) frame.src = "about:blank";
+    return;
+  }
   flappyGame.fullscreenOpen = false;
   flappyGame.running = false;
   flappyGame.countdown = 0;
@@ -1520,11 +1556,52 @@ function closeFlappyFullscreen() {
     clearInterval(flappyGame.countdownTimer);
     flappyGame.countdownTimer = null;
   }
-  $("#gameFullscreenOverlay")?.classList.remove("open");
+  overlay?.classList.remove("open", "pixel-runner-open");
   document.body.classList.remove("game-fullscreen-open");
   flappyGame.canvas = flappyGame.previewCanvas;
   flappyGame.ctx = flappyGame.previewCtx;
   showFlappyOverlay(false);
+}
+
+function openPixelRunnerFullscreen() {
+  flappyGame.fullscreenOpen = false;
+  flappyGame.running = false;
+  flappyGame.countdown = 0;
+  if (flappyGame.countdownTimer) {
+    clearInterval(flappyGame.countdownTimer);
+    flappyGame.countdownTimer = null;
+  }
+  const overlay = $("#gameFullscreenOverlay");
+  const frame = $("#pixelRunnerFrame");
+  if (!overlay || !frame) return;
+  overlay.classList.add("open", "pixel-runner-open");
+  document.body.classList.add("game-fullscreen-open");
+  const selectedHorse = normalizeGamesData(state.games).pixelRunner.selectedHorse;
+  frame.src = `games/pixel-runner.html?horse=${encodeURIComponent(selectedHorse)}`;
+}
+
+function renderPixelRunnerHud() {
+  const games = normalizeGamesData(state.games);
+  $("#pixelRunnerBestValue") && ($("#pixelRunnerBestValue").textContent = String(Math.floor(games.pixelRunner.bestScore || 0)));
+  $("#pixelRunnerLastScoreValue") && ($("#pixelRunnerLastScoreValue").textContent = String(Math.floor(games.pixelRunner.lastScore || 0)));
+}
+
+function handleGameMessage(event) {
+  if (event.origin !== window.location.origin) return;
+  const data = event.data && typeof event.data === "object" ? event.data : {};
+  if (data.type === "pixel-runner-character") {
+    state.games = normalizeGamesData(state.games);
+    state.games.pixelRunner.selectedHorse = data.characterId;
+    persistGames();
+    return;
+  }
+  if (data.type !== "pixel-runner-score") return;
+  state.games = normalizeGamesData(state.games);
+  const score = Math.max(0, Number(data.score) || 0);
+  const best = Math.max(score, Number(data.best) || 0, state.games.pixelRunner.bestScore || 0);
+  state.games.pixelRunner.lastScore = score;
+  state.games.pixelRunner.bestScore = best;
+  persistGames();
 }
 
 function renderFlappyHorseHud() {
@@ -1532,7 +1609,6 @@ function renderFlappyHorseHud() {
   $("#flappyScoreValue") && ($("#flappyScoreValue").textContent = String(flappyGame.score || 0));
   $("#flappyBestValue") && ($("#flappyBestValue").textContent = String(games.flappyHorse.bestScore || 0));
   $("#flappyLastScoreValue") && ($("#flappyLastScoreValue").textContent = String(games.flappyHorse.lastScore || 0));
-  $("#flappyBestObstaclesValue") && ($("#flappyBestObstaclesValue").textContent = String(games.flappyHorse.bestScore || 0));
   $("#flappyLevelValue") && ($("#flappyLevelValue").textContent = String(flappyGame.level || 1));
   $("#flappySpeedValue") && ($("#flappySpeedValue").textContent = `${Math.round(flappyGame.speedPercent || 100)}%`);
   $("#flappySpeedSlider") && ($("#flappySpeedSlider").value = String(Math.round((games.flappyHorse.speedFactor || 1) * 100)));
@@ -1543,15 +1619,15 @@ function renderFlappyHorseSwatches() {
   const swatches = $("#flappySwatches");
   if (!swatches) return;
   const currentThemeId = state.games?.flappyHorse?.selectedColor || DEFAULT_GAMES.flappyHorse.selectedColor;
-  swatches.innerHTML = FLAPPY_HORSE_THEMES.map((theme) => `
+  swatches.innerHTML = FLAPPY_CHARACTERS.map((theme) => `
     <button
       class="game-swatch ${currentThemeId === theme.id ? "active" : ""}"
       type="button"
       data-flappy-theme="${theme.id}"
       title="${theme.name}"
-      aria-label="Color ${theme.name}"
-      style="--swatch:${theme.body};--swatch-dark:${theme.dark};"
-    ></button>
+      aria-label="Personaje ${theme.name}"
+      style="--swatch:${theme.body};--wing:${theme.wing};--beak:${theme.beak};"
+    ><span class="game-swatch-preview" aria-hidden="true"><span class="game-swatch-wing"></span></span></button>
   `).join("");
 }
 
@@ -1854,55 +1930,155 @@ function drawFlappyHorseBody(ctx) {
   ctx.translate(x, y + Math.sin(bob) * 4);
   ctx.rotate(angle);
 
-  ctx.fillStyle = theme.body;
-  ctx.strokeStyle = theme.dark;
-  ctx.lineWidth = 2;
+  const flap = Math.sin(flappyGame.frame * 0.28) * 0.38;
+  const scale = Math.max(0.9, width / 58);
+  ctx.scale(scale, scale);
 
-  drawRoundedRect(ctx, -24, -15, 38, 22, 10, true, true);
-  drawRoundedRect(ctx, 3, -30, 20, 22, 10, true, true);
-
+  ctx.save();
+  ctx.translate(-22, 2);
+  ctx.rotate(-0.42 + flap);
   ctx.beginPath();
-  ctx.moveTo(15, -21);
-  ctx.lineTo(26, -33);
-  ctx.lineTo(18, -14);
+  ctx.moveTo(0, -7);
+  ctx.bezierCurveTo(-26, -18, -28, 20, 0, 20);
+  ctx.bezierCurveTo(16, 19, 18, -3, 0, -7);
   ctx.closePath();
-  ctx.fillStyle = theme.accent;
+  ctx.fillStyle = theme.wing;
   ctx.fill();
+  ctx.restore();
 
+  ctx.fillStyle = theme.body;
+  ctx.strokeStyle = "rgba(32, 19, 10, 0.18)";
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(-20, -15);
-  ctx.quadraticCurveTo(-42, -28, -48, -4);
-  ctx.quadraticCurveTo(-36, -8, -23, 3);
-  ctx.lineWidth = 6.5;
-  ctx.strokeStyle = theme.mane;
+  ctx.ellipse(0, 0, 34, 29, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.stroke();
 
+  ctx.fillStyle = theme.belly;
   ctx.beginPath();
-  ctx.arc(17, -20, 2.1, 0, Math.PI * 2);
-  ctx.fillStyle = "#20130a";
+  ctx.ellipse(11, 12, 18, 13, 0.1, 0, Math.PI * 2);
   ctx.fill();
 
-  drawFlappyLeg(ctx, -9, 6, 0.9);
-  drawFlappyLeg(ctx, 2, 7, 1.1);
-  drawFlappyLeg(ctx, -17, 6, 1.15);
-  drawFlappyLeg(ctx, 10, 7, 0.85);
+  ctx.beginPath();
+  ctx.moveTo(29, -3);
+  ctx.lineTo(55, 7);
+  ctx.lineTo(29, 17);
+  ctx.closePath();
+  ctx.fillStyle = theme.beak;
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.36)";
+  ctx.beginPath();
+  ctx.moveTo(32, 4);
+  ctx.lineTo(52, 7);
+  ctx.lineTo(32, 10);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(14, -11, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#20130a";
+  ctx.beginPath();
+  ctx.arc(17, -10, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = theme.cheek;
+  ctx.globalAlpha = 0.72;
+  ctx.beginPath();
+  ctx.arc(-7, 14, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  drawFlappyCharacterDecal(ctx, theme);
+
+  ctx.strokeStyle = theme.feet;
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-10, 27);
+  ctx.quadraticCurveTo(0, 33, 12, 27);
+  ctx.stroke();
   ctx.restore();
 }
 
-function drawFlappyLeg(ctx, offsetX, offsetY, phase) {
-  const t = Math.sin(flappyGame.frame * 0.18 + phase) * 5;
-  const theme = flappyGame.horseTheme;
-  ctx.save();
-  ctx.translate(offsetX, offsetY);
-  ctx.strokeStyle = theme.dark;
-  ctx.lineWidth = 4.2;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(0 + t * 0.16, 14);
-  ctx.lineTo(-1.5 + t * 0.28, 27);
-  ctx.stroke();
-  ctx.restore();
+function drawFlappyCharacterDecal(ctx, theme) {
+  ctx.fillStyle = theme.accent;
+  ctx.strokeStyle = theme.accent;
+  ctx.lineWidth = 3;
+  if (theme.decal === "crest") {
+    ctx.beginPath();
+    ctx.moveTo(-10, -27);
+    ctx.quadraticCurveTo(-5, -42, 3, -28);
+    ctx.closePath();
+    ctx.fill();
+  } else if (theme.decal === "bubbles") {
+    ctx.fillStyle = "rgba(255,255,255,0.62)";
+    [[-16, -15, 4], [-7, -23, 3], [2, -18, 2.5]].forEach(([cx, cy, r]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else if (theme.decal === "seeds") {
+    ctx.fillStyle = "#222";
+    [[7, 12], [16, 15], [21, 7]].forEach(([cx, cy]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else if (theme.decal === "cloud") {
+    ctx.fillStyle = "#fff";
+    [[-16, -20, 8], [-4, -25, 10], [8, -20, 8]].forEach(([cx, cy, r]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else if (theme.decal === "visor") {
+    drawRoundedRect(ctx, 5, -20, 22, 15, 5, true, false);
+    ctx.fillStyle = "#111827";
+    ctx.beginPath();
+    ctx.arc(16, -12, 4, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (theme.decal === "patch") {
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(5, -17);
+    ctx.lineTo(29, -8);
+    ctx.stroke();
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(17, -10, 7, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (theme.decal === "horn") {
+    ctx.beginPath();
+    ctx.moveTo(-5, -25);
+    ctx.lineTo(4, -45);
+    ctx.lineTo(11, -25);
+    ctx.closePath();
+    ctx.fill();
+  } else if (theme.decal === "flame") {
+    ctx.fillStyle = "#ff3333";
+    ctx.beginPath();
+    ctx.moveTo(-18, -18);
+    ctx.bezierCurveTo(-18, -35, -4, -24, -7, -43);
+    ctx.bezierCurveTo(10, -25, 4, -14, -8, -9);
+    ctx.closePath();
+    ctx.fill();
+  } else if (theme.decal === "stars") {
+    ctx.fillStyle = "#fff";
+    [[-15, -13], [-4, -25], [15, 16], [27, 4]].forEach(([cx, cy]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else if (theme.decal === "clown") {
+    ctx.fillStyle = "#ff3b3b";
+    ctx.beginPath();
+    ctx.arc(23, -1, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function drawRoundedRect(ctx, x, y, width, height, radius, fill, stroke) {
