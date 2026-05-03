@@ -2402,6 +2402,8 @@ th {
 
 .horse-result {
   margin-top: 14px;
+  display: grid;
+  gap: 12px;
 }
 
 .horse-result-card {

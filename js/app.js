@@ -2164,6 +2164,19 @@ function findHorseByQuery(query) {
   }) || null;
 }
 
+function findHorseMatches(query) {
+  const clean = normalizeSearch(query);
+  if (!clean) return [];
+  const numberMatch = clean.match(/\b(\d+)\b/);
+  return visibleHorses()
+    .filter((horse) => {
+      const haystack = normalizeSearch(`${horse.number} ${horse.name} ${horse.stable} ${horse.paddock} caballo ${horse.number}`);
+      if (numberMatch && String(horse.number) === numberMatch[1]) return true;
+      return haystack.includes(clean);
+    })
+    .sort((a, b) => naturalHorseSort(a, b));
+}
+
 function normalizeSearch(value) {
   return String(value || "")
     .toLowerCase()
@@ -2200,6 +2213,48 @@ function showHorseResult(horse) {
       </div>
     </article>
   `;
+}
+
+function showHorseMatches(query) {
+  const result = $("#horseResult");
+  if (!result) return;
+  const clean = normalizeSearch(query);
+  if (!clean) {
+    result.innerHTML = emptyState("Empieza a escribir para ver las fichas que coinciden.");
+    return;
+  }
+
+  const matches = findHorseMatches(query);
+  if (!matches.length) {
+    result.innerHTML = emptyState("No he encontrado caballos que coincidan con esa busqueda.");
+    return;
+  }
+
+  result.innerHTML = matches.map((horse) => `
+    <article class="horse-result-card">
+      <div class="horse-title-block">
+        <span class="horse-code">${escapeHtml(horse.number ? `Caballo ${horse.number}` : "Ficha de caballo")}</span>
+        <h3>${escapeHtml(horse.name || horseLabel(horse))}</h3>
+        ${horse.shared ? `<span class="horse-shared-badge">Compartida por ${escapeHtml(horse.ownerName || horse.ownerEmail || "otro usuario")}</span>` : ""}
+      </div>
+      ${horse.photo ? `<div class="horse-photo-preview"><img src="${horse.photo}" alt=""></div>` : ""}
+      <div class="meta">
+        <span>${escapeHtml(horse.stable || "Sin cuadra")}</span>
+        <span class="location-status">${horseHasLocation(horse, "stable") ? "Cuadra guardada" : "Cuadra sin ubicacion"}</span>
+        ${horse.paddock ? `<span>${escapeHtml(horse.paddock)}</span>` : ""}
+        ${horse.paddock ? `<span class="location-status">${horseHasLocation(horse, "paddock") ? "Paddock guardado" : "Paddock sin ubicacion"}</span>` : ""}
+      </div>
+      ${horse.notes ? `<p class="muted">${escapeHtml(horse.notes)}</p>` : ""}
+      <div class="map-link-row">
+        ${horseHasLocation(horse, "stable") ? `<a class="map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener">Google Maps cuadra</a>` : ""}
+        ${horseHasLocation(horse, "paddock") ? `<a class="map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener">Google Maps paddock</a>` : ""}
+      </div>
+      <div class="card-actions">
+        <button class="small-button icon-text-button" data-find-horse="${horse.id}" type="button">${buttonIcon("eye")}Ver ficha</button>
+        <button class="small-button icon-text-button" data-open-horse-list="${horse.id}" type="button">${buttonIcon("horse")}Abrir en listado</button>
+      </div>
+    </article>
+  `).join("");
 }
 
 function horseHasLocation(horse, locationType = "stable") {
@@ -2293,7 +2348,8 @@ function useCurrentLocationForHorse(locationType) {
 }
 
 function findHorseFromInput() {
-  showHorseResult(findHorseByQuery($("#horseSearch").value));
+  const query = $("#horseSearch").value;
+  showHorseMatches(query);
 }
 
 function startHorseVoiceSearch() {
@@ -2311,7 +2367,7 @@ function startHorseVoiceSearch() {
   recognition.addEventListener("result", (event) => {
     const text = Array.from(event.results).map((result) => result[0]?.transcript || "").join(" ").trim();
     $("#horseSearch").value = text;
-    showHorseResult(findHorseByQuery(text));
+    showHorseMatches(text);
   });
   recognition.addEventListener("end", () => {
     if (activeRecognition === recognition) activeRecognition = null;
@@ -3080,6 +3136,9 @@ function bindEvents() {
   $("#resetHorseBtn").addEventListener("click", resetHorseForm);
   $("#findHorseBtn").addEventListener("click", findHorseFromInput);
   $("#voiceHorseBtn").addEventListener("click", startHorseVoiceSearch);
+  $("#horseSearch").addEventListener("input", (event) => {
+    showHorseMatches(event.target.value);
+  });
   $("#horsePhotoInput").addEventListener("change", handleHorsePhoto);
   $("#horseGalleryInput").addEventListener("change", handleHorsePhoto);
   $("#useStableLocationBtn").addEventListener("click", () => useCurrentLocationForHorse("stable"));
