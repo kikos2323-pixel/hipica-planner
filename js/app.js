@@ -6,9 +6,19 @@
 const CLOUDINARY_CLOUD = "dozjsexgz";
 const CLOUDINARY_PRESET = "Hipica_photos";
 
+function dataUrlToBlob(dataUrl) {
+  const [header, data] = dataUrl.split(",");
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(data);
+  const arr = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
 async function uploadHorsePhotoCloudinary(horseId, dataUrl) {
+  const blob = dataUrlToBlob(dataUrl);
   const formData = new FormData();
-  formData.append("file", dataUrl);
+  formData.append("file", blob, `${horseId}.jpg`);
   formData.append("upload_preset", CLOUDINARY_PRESET);
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
     method: "POST",
@@ -16,9 +26,9 @@ async function uploadHorsePhotoCloudinary(horseId, dataUrl) {
   });
   const json = await res.json();
   if (!res.ok || json.error) {
-    const msg = json.error?.message || res.status;
+    const msg = json.error?.message || ("HTTP " + res.status);
     console.error("Cloudinary error:", msg, json);
-    throw new Error("Cloudinary: " + msg);
+    throw new Error(msg);
   }
   return json.secure_url;
 }
@@ -3432,7 +3442,7 @@ async function migrateHorsePhotosToStorage(user) {
     } catch (err) {
       console.warn("Error migrando foto del caballo", horse.id, err);
       failed++;
-      updatePhotoMigrationPanel(i + 1, total, `Error: ${err.message}`, label, "error");
+      updatePhotoMigrationPanel(i + 1, total, `Subiendo ${i + 1} de ${total}…`, `${label}: ${err.message}`, "error");
     }
   }
 
