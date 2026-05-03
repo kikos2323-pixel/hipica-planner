@@ -222,8 +222,8 @@ function isSameMonth(dateString, date = new Date()) {
   return value.getMonth() === date.getMonth() && value.getFullYear() === date.getFullYear();
 }
 
-function saveData() {
-  const payload = {
+function buildPersistentPayload() {
+  return {
     workEntries: state.workEntries,
     tasks: state.tasks,
     horses: state.horses,
@@ -232,6 +232,18 @@ function saveData() {
     trash: state.trash,
     clock: state.clock
   };
+}
+
+function saveData() {
+  const payload = buildPersistentPayload();
+  try {
+    const existingLocalData = readLegacyLocalData();
+    if (dataHasContent(payload) || !existingLocalData) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+  } catch (error) {
+    console.warn("No se pudo guardar la copia local:", error);
+  }
   syncToFirestore(payload);
   queueRemoteMetadataSync();
 }
@@ -2465,6 +2477,9 @@ function createBackup() {
       workEntries: state.workEntries.map(normalizeWorkEntry),
       tasks: state.tasks.map(normalizeTask),
       horses: state.horses.map(normalizeHorse),
+      calendarNotes: state.calendarNotes,
+      generalNotes: state.generalNotes,
+      trash: state.trash,
       clock: normalizeClock(state.clock),
       theme: normalizeTheme(state.theme)
     }
@@ -2558,12 +2573,20 @@ function readBackupData(parsed) {
   return null;
 }
 
+function normalizeLooseRecord(item) {
+  if (!item || typeof item !== "object" || !item.id) return { id: "" };
+  return { ...item, id: String(item.id) };
+}
+
 function normalizeImportedData(data) {
   if (!data || !Array.isArray(data.workEntries) || !Array.isArray(data.tasks)) return null;
   return {
     workEntries: data.workEntries.map(normalizeWorkEntry).filter((entry) => entry.id && entry.date),
     tasks: data.tasks.map(normalizeTask).filter((task) => task.id && task.name && task.date),
     horses: Array.isArray(data.horses) ? data.horses.map(normalizeHorse).filter((horse) => horse.id && (horse.number || horse.name)) : [],
+    calendarNotes: Array.isArray(data.calendarNotes) ? data.calendarNotes.map(normalizeLooseRecord).filter((item) => item.id) : [],
+    generalNotes: Array.isArray(data.generalNotes) ? data.generalNotes.map(normalizeLooseRecord).filter((item) => item.id) : [],
+    trash: Array.isArray(data.trash) ? data.trash.map(normalizeLooseRecord).filter((item) => item.id) : [],
     clock: normalizeClock(data.clock),
     theme: normalizeTheme(data.theme)
   };
@@ -2579,25 +2602,26 @@ function mergeById(primaryItems = [], secondaryItems = [], normalizer, isValid) 
 }
 
 function mergeDataSets(localData, cloudData) {
-  const local = normalizeImportedData(localData) || {
+  const emptyData = {
     workEntries: [],
     tasks: [],
     horses: [],
+    calendarNotes: [],
+    generalNotes: [],
+    trash: [],
     clock: normalizeClock(),
     theme: normalizeTheme()
   };
-  const cloud = normalizeImportedData(cloudData) || {
-    workEntries: [],
-    tasks: [],
-    horses: [],
-    clock: normalizeClock(),
-    theme: normalizeTheme()
-  };
+  const local = normalizeImportedData(localData) || emptyData;
+  const cloud = normalizeImportedData(cloudData) || emptyData;
 
   return {
     workEntries: mergeById(local.workEntries, cloud.workEntries, normalizeWorkEntry, (entry) => entry.id && entry.date),
     tasks: mergeById(local.tasks, cloud.tasks, normalizeTask, (task) => task.id && task.name && task.date),
     horses: mergeById(local.horses, cloud.horses, normalizeHorse, (horse) => horse.id && (horse.number || horse.name)),
+    calendarNotes: mergeById(local.calendarNotes, cloud.calendarNotes, normalizeLooseRecord, (item) => item.id),
+    generalNotes: mergeById(local.generalNotes, cloud.generalNotes, normalizeLooseRecord, (item) => item.id),
+    trash: mergeById(local.trash, cloud.trash, normalizeLooseRecord, (item) => item.id),
     clock: local.clock?.segments?.length ? local.clock : cloud.clock,
     theme: local.theme?.mode ? local.theme : cloud.theme
   };
@@ -3237,58 +3261,60 @@ async function migrateOrLoadData(user) {
 
     if (hasCloudData) {
       const cloudData = snap.data();
-      if (legacyLocalData && !dataHasContent(cloudData)) {
-        showSyncBanner("Recuperando datos antiguos de este dispositivo...");
-        const mergedData = mergeDataSets(legacyLocalData, cloudData);
-        await setDoc(userDoc, {
-          ...cloudData,
-          workEntries: mergedData.workEntries,
-          tasks: mergedData.tasks,
-          horses: mergedData.horses,
-          clock: mergedData.clock,
-          theme: mergedData.theme
-        });
-        applyDataFromObject(mergedData);
-        localStorage.removeItem(STORAGE_KEY);
-        hideSyncBanner("Datos antiguos subidos a tu cuenta");
-      } else {
-        applyDataFromObject(cloudData);
+      const mergedData = legacyLocalData ? mergeDataSets(legacyLocalData, cloudData) : cloudData;
+      applyDataFromObject(mergedData);
+
+      if (legacyLocalData) {
+        const cloudHasAllData = JSON.stringify(normalizeImportedData(cloudData) || {}) === JSON.stringify(normalizeImportedData(mergedData) || {});
+        if (!cloudHasAllData) {
+          showSyncBanner("Recuperando datos guardados en este dispositivo...");
+          await setDoc(userDoc, {
+            ...cloudData,
+            workEntries: mergedData.workEntries,
+            tasks: mergedData.tasks,
+            horses: mergedData.horses,
+            calendarNotes: mergedData.calendarNotes,
+            generalNotes: mergedData.generalNotes,
+            trash: mergedData.trash,
+            clock: mergedData.clock,
+            theme: mergedData.theme
+          });
+          hideSyncBanner("Datos recuperados y sincronizados");
+        }
       }
     } else {
       const seedData = legacyLocalData ? mergeDataSets(legacyLocalData, {}) : {
         workEntries: [],
         tasks: [],
         horses: [],
+        calendarNotes: [],
+        generalNotes: [],
+        trash: [],
         clock: normalizeClock(),
         theme: normalizeTheme(state.theme)
       };
-      if (legacyLocalData) showSyncBanner("Subiendo datos antiguos a tu cuenta...");
+      if (legacyLocalData) showSyncBanner("Subiendo datos guardados en este dispositivo...");
       await setDoc(userDoc, {
         workEntries: seedData.workEntries,
         tasks: seedData.tasks,
         horses: seedData.horses,
-        calendarNotes: [],
-        generalNotes: [],
-        trash: [],
+        calendarNotes: seedData.calendarNotes,
+        generalNotes: seedData.generalNotes,
+        trash: seedData.trash,
         clock: seedData.clock,
         theme: seedData.theme
       });
-      applyDataFromObject({
-        workEntries: seedData.workEntries,
-        tasks: seedData.tasks,
-        horses: seedData.horses,
-        calendarNotes: [],
-        generalNotes: [],
-        trash: [],
-        clock: seedData.clock
-      });
-      if (legacyLocalData) {
-        localStorage.removeItem(STORAGE_KEY);
-        hideSyncBanner("Datos antiguos subidos a tu cuenta");
-      }
+      applyDataFromObject(seedData);
+      if (legacyLocalData) hideSyncBanner("Datos antiguos subidos a tu cuenta");
     }
   } catch (e) {
-    console.warn("Error en migración/carga:", e);
+    console.warn("Error en migracion/carga:", e);
+    const fallbackLocalData = readLegacyLocalData();
+    if (fallbackLocalData) {
+      applyDataFromObject(fallbackLocalData);
+      showSyncBanner("Mostrando la copia local del dispositivo");
+      return;
+    }
     loadData();
   }
 }
@@ -3409,6 +3435,12 @@ if ("serviceWorker" in navigator) {
 }
 
 init();
+
+
+
+
+
+
 
 
 
