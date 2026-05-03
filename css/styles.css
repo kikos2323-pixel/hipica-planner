@@ -1524,7 +1524,7 @@ th {
 }
 
 .cal-modal-box {
-  width: min(520px, 100%);
+  width: min(900px, 100%);
   max-height: 88vh;
   overflow-y: auto;
   background: var(--glass-strong);
@@ -1536,6 +1536,72 @@ th {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.calendar-modal-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.calendar-modal-tab {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--glass-soft);
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.calendar-modal-tab.active {
+  color: var(--text);
+  background: var(--glass-strong);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
+  box-shadow: var(--shadow);
+}
+
+.calendar-modal-panel { display: none; }
+.calendar-modal-panel.active { display: block; }
+
+.cal-modal-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cal-overview-card {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--glass-soft);
+  display: grid;
+  gap: 8px;
+}
+
+.cal-overview-card h3,
+.cal-overview-card p {
+  margin: 0;
+}
+
+.cal-overview-card h3 {
+  font-size: 0.92rem;
+}
+
+.cal-overview-card strong {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.cal-overview-card p {
+  color: var(--muted);
+}
+
+.cal-overview-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .cal-modal-header {
@@ -1584,6 +1650,12 @@ th {
   background: var(--glass-soft);
   border: 1px solid var(--line);
   font-size: 0.88rem;
+}
+
+.cal-note-dot.icon-slot {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
 }
 
 .cal-note-body { flex: 1; }
@@ -1662,6 +1734,11 @@ th {
 
 .cal-note-edit:hover { background: var(--glass-strong); }
 
+.cal-note-edit .button-icon,
+.cal-note-delete .button-icon {
+  margin: 0;
+}
+
 .note-alarm-tag {
   display: inline-flex;
   align-items: center;
@@ -1694,6 +1771,8 @@ th {
   .cal-note-input-row { grid-template-columns: 1fr; }
   .cal-note-alarm-row { grid-template-columns: 1fr 1fr; }
   .cal-note-alarm-row .primary-button { grid-column: 1 / -1; }
+  .cal-modal-overview { grid-template-columns: 1fr; }
+  .cal-overview-actions { flex-direction: column; }
 }
 
 /* Colores en el calendario */
@@ -2476,17 +2555,30 @@ th {
 .coord-map-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   margin-left: 6px;
-  font-size: 1rem;
   text-decoration: none;
   opacity: 0.7;
   transition: opacity 0.15s, transform 0.15s;
   vertical-align: middle;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--glass-soft);
+  color: var(--primary);
 }
 
 .coord-map-link:hover {
   opacity: 1;
-  transform: scale(1.2);
+  transform: scale(1.08);
+}
+
+.coord-map-link .icon-slot {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  background: transparent;
 }
 
 .map-link-row {
@@ -2858,11 +2950,16 @@ details[open] .schedule-chevron {
 }
 
 .calendar-day {
-  min-height: 116px;
-  padding: 9px;
+  min-height: 148px;
+  padding: 12px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--glass-strong);
+}
+
+.calendar-day:hover {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--line));
+  box-shadow: var(--shadow);
 }
 
 .calendar-day.empty {

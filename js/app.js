@@ -1372,6 +1372,8 @@ function openCalendarDayModal(iso) {
   if (!modal) return;
   $("#calNoteDate").value = iso;
   $("#calModalTitle").textContent = formatDate(iso);
+  switchCalendarModalTab("resumen");
+  renderCalendarModalOverview(iso);
   renderCalendarModalInfo(iso);
   renderCalendarModalNotes(iso);
   modal.classList.add("open");
@@ -1384,30 +1386,72 @@ function closeCalendarDayModal() {
   document.body.style.overflow = "";
 }
 
+function switchCalendarModalTab(tab) {
+  $$(".calendar-modal-tab").forEach((button) => {
+    button.classList.toggle("active", button.dataset.calTab === tab);
+  });
+  $$(".calendar-modal-panel").forEach((panel) => {
+    panel.classList.toggle("active", panel.id === `cal-panel-${tab}`);
+  });
+}
+
+function renderCalendarModalOverview(iso) {
+  const work = state.workEntries.filter((entry) => entry.date === iso);
+  const tasks = state.tasks.filter((task) => task.date === iso);
+  const notes = state.calendarNotes.filter((note) => note.date === iso);
+  const schedule = getScheduleForDate(iso);
+  const workedHours = roundHours(work.reduce((sum, entry) => sum + calculateWorkHours(entry), 0));
+  const overview = $("#calModalOverview");
+  if (!overview) return;
+
+  overview.innerHTML = `
+    <article class="cal-overview-card">
+      <h3>Horario previsto</h3>
+      <strong>${scheduleTotalHours(schedule)} h</strong>
+      <p>${escapeHtml(scheduleLabel(schedule))}</p>
+    </article>
+    <article class="cal-overview-card">
+      <h3>Jornada registrada</h3>
+      <strong>${workedHours} h</strong>
+      <p>${work.length ? `${work.length} registro${work.length > 1 ? "s" : ""}` : "Sin jornada cargada"}</p>
+    </article>
+    <article class="cal-overview-card">
+      <h3>Agenda del día</h3>
+      <strong>${tasks.length + notes.length}</strong>
+      <p>${tasks.length} tarea${tasks.length === 1 ? "" : "s"} y ${notes.length} nota${notes.length === 1 ? "" : "s"}</p>
+    </article>
+    <div class="cal-overview-actions">
+      <button class="primary-button" type="button" data-open-day="${iso}">Ver jornada del día</button>
+      <button class="ghost-button" type="button" data-switch-cal-tab="agenda">Ver agenda</button>
+      <button class="ghost-button" type="button" data-switch-cal-tab="nota">Añadir nota</button>
+    </div>
+  `;
+}
+
 function renderCalendarModalInfo(iso) {
   const work = state.workEntries.filter((e) => e.date === iso);
   const tasks = state.tasks.filter((t) => t.date === iso);
   const schedule = getScheduleForDate(iso);
   const info = [
-    `<div class="cal-info-chip schedule">?? ${escapeHtml(scheduleLabel(schedule))} — ${scheduleTotalHours(schedule)} h previstas</div>`,
-    ...work.map((e) => `<div class="cal-info-chip work">? ${escapeHtml(e.dayType)}: ${calculateWorkHours(e)} h trabajadas</div>`),
-    ...tasks.map((t) => `<div class="cal-info-chip task">?? ${escapeHtml(t.name)} — ${labelStatus(t.status)}</div>`)
+    `<div class="cal-info-chip schedule">${buttonIcon("schedule")} ${escapeHtml(scheduleLabel(schedule))} — ${scheduleTotalHours(schedule)} h previstas</div>`,
+    ...work.map((e) => `<div class="cal-info-chip work">${buttonIcon("timer")} ${escapeHtml(e.dayType)}: ${calculateWorkHours(e)} h trabajadas</div>`),
+    ...tasks.map((t) => `<div class="cal-info-chip task">${buttonIcon("tasks")} ${escapeHtml(t.name)} — ${labelStatus(t.status)}</div>`)
   ].join("");
   $("#calModalInfo").innerHTML = info || `<p class="muted">Sin jornada ni tareas este día.</p>`;
 }
 
 function renderCalendarModalNotes(iso) {
   const notes = state.calendarNotes.filter((n) => n.date === iso).sort((a, b) => (a.alarmTime || "99:99").localeCompare(b.alarmTime || "99:99") || a.createdAt.localeCompare(b.createdAt));
-  const colors = { green: "??", blue: "??", amber: "??", red: "??" };
+  const colors = { green: "notes", blue: "days", amber: "bell", red: "trash" };
   $("#calModalNotes").innerHTML = notes.map((note) => `
     <div class="cal-note-item cal-note-${note.color}">
-      <span class="cal-note-dot">${colors[note.color] || "??"}</span>
+      <span class="cal-note-dot icon-slot" data-icon="${colors[note.color] || "notes"}"></span>
       <div class="cal-note-body">
         <span>${escapeHtml(note.text)}</span>
         ${noteCountdown(note)}
       </div>
-      <button class="cal-note-edit" data-edit-note="${note.id}" type="button" aria-label="Editar nota">??</button>
-      <button class="cal-note-delete" data-delete-note="${note.id}" type="button" aria-label="Borrar nota">?</button>
+      <button class="cal-note-edit" data-edit-note="${note.id}" type="button" aria-label="Editar nota">${buttonIcon("edit")}</button>
+      <button class="cal-note-delete" data-delete-note="${note.id}" type="button" aria-label="Borrar nota">${buttonIcon("trash")}</button>
     </div>
   `).join("") || `<p class="muted" style="font-size:0.85rem">Sin notas para este día. Añade una abajo.</p>`;
 }
@@ -1445,6 +1489,7 @@ function saveCalendarNote(event) {
   $("#calNoteText").value = "";
   $("#calNoteAlarm").value = "";
   saveData();
+  renderCalendarModalOverview(date);
   renderCalendarModalNotes(date);
   renderCalendar();
 }
@@ -1457,6 +1502,7 @@ function editCalendarNote(id) {
   $("#calNoteColor").value = note.color;
   $("#calNoteAlarm").value = note.alarmTime || "";
   $("#calNoteSaveBtn").textContent = "Guardar";
+  switchCalendarModalTab("nota");
   $("#calNoteText").focus();
 }
 
@@ -1464,6 +1510,7 @@ function deleteCalendarNote(id) {
   state.calendarNotes = state.calendarNotes.filter((n) => n.id !== id);
   const date = $("#calNoteDate").value;
   saveData();
+  renderCalendarModalOverview(date);
   renderCalendarModalNotes(date);
   renderCalendar();
 }
@@ -1619,7 +1666,7 @@ function showHorseDetail(id) {
         <label><span class="inline-label-icon"><span class="icon-slot" data-icon="stable"></span>Cuadra</span></label>
         <p>
           ${escapeHtml(horse.stable || "—")}
-          ${horseHasLocation(horse, "stable") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener" title="Ver en Maps">???</a>` : ""}
+          ${horseHasLocation(horse, "stable") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "stable")}" target="_blank" rel="noopener" title="Ver en Maps">${buttonIcon("map")}</a>` : ""}
         </p>
       </div>
       ${horse.paddock ? `
@@ -1627,7 +1674,7 @@ function showHorseDetail(id) {
         <label><span class="inline-label-icon"><span class="icon-slot" data-icon="map"></span>Paddock</span></label>
         <p>
           ${escapeHtml(horse.paddock)}
-          ${horseHasLocation(horse, "paddock") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener" title="Ver en Maps">???</a>` : ""}
+          ${horseHasLocation(horse, "paddock") ? `<a class="coord-map-link" href="${googleMapsUrl(horse, "paddock")}" target="_blank" rel="noopener" title="Ver en Maps">${buttonIcon("map")}</a>` : ""}
         </p>
       </div>` : ""}
     </div>
@@ -3155,6 +3202,9 @@ function bindEvents() {
   $("#generalNoteCancelBtn").addEventListener("click", resetGeneralNoteForm);
   $("#calModalClose").addEventListener("click", closeCalendarDayModal);
   $("#calendarDayModal").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeCalendarDayModal(); });
+  $$(".calendar-modal-tab").forEach((button) => {
+    button.addEventListener("click", () => switchCalendarModalTab(button.dataset.calTab));
+  });
   $("#notifPermBtn").addEventListener("click", requestNotificationPermission);
   $("#generalNoteNotifBtn").addEventListener("click", requestNotificationPermission);
 
@@ -3307,8 +3357,10 @@ function bindEvents() {
     if (goToTrashBtn) { switchView("historial"); switchHistorialTab("papelera"); }
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
     const openDayBtn = event.target.closest("[data-open-day]");
+    const switchCalTabBtn = event.target.closest("[data-switch-cal-tab]");
     const editNoteBtn = event.target.closest("[data-edit-note]");
     const deleteNoteBtn = event.target.closest("[data-delete-note]");
+    if (switchCalTabBtn) switchCalendarModalTab(switchCalTabBtn.dataset.switchCalTab);
     if (editNoteBtn) { event.stopPropagation(); editCalendarNote(editNoteBtn.dataset.editNote); }
     else if (deleteNoteBtn) { event.stopPropagation(); deleteCalendarNote(deleteNoteBtn.dataset.deleteNote); }
     else if (openDayBtn) openCalendarDayModal(openDayBtn.dataset.openDay);
