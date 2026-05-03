@@ -208,8 +208,9 @@
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </button>
-            <img id="userAvatar" class="user-avatar topbar-avatar" src="" alt="" style="display:none" title="">
             <button class="topbar-icon-btn auth-btn" id="authBtn" type="button" aria-label="Iniciar sesion" title="Iniciar sesion">
+              <span class="auth-btn-fallback" id="authBtnFallback">G</span>
+              <img class="auth-btn-photo" id="authBtnPhoto" src="" alt="" style="display:none">
               <svg class="auth-icon-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
               </svg>
@@ -230,6 +231,7 @@
                 </div>
               </div>
               <div class="auth-admin-badge" id="authAdminBadge" style="display:none">Administrador principal</div>
+              <button class="ghost-button auth-card-action" id="authCardActionBtn" type="button">Iniciar sesion con Google</button>
             </div>
           </div>
         </header>

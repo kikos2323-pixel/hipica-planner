@@ -453,6 +453,40 @@ label,
 .auth-btn.auth-logged-in { color: #dc2626; border-color: rgba(239, 68, 68, 0.42); }
 .auth-btn.auth-logged-in:hover { background: rgba(239, 68, 68, 0.12); }
 
+.auth-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-btn-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.auth-btn-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.auth-btn.auth-logged-in {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 12px;
+  background: var(--glass-strong);
+}
+
+.auth-btn.auth-logged-in .auth-icon-enter,
+.auth-btn.auth-logged-in .auth-icon-exit {
+  display: none !important;
+}
+
 .topbar-actions {
   position: relative;
 }
@@ -536,6 +570,11 @@ label,
 
 .topbar-actions.auth-hover-open .auth-hover-card {
   display: flex;
+}
+
+.auth-card-action {
+  width: 100%;
+  margin-top: 6px;
 }
 
 .topbar-avatar,

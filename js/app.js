@@ -2754,19 +2754,25 @@ function bindEvents() {
   const authBtn = $("#authBtn");
   const authHoverCard = $("#authHoverCard");
   const topbarActions = document.querySelector(".topbar-actions");
+  const authCardActionBtn = $("#authCardActionBtn");
   if (authBtn && authHoverCard && topbarActions) {
     const openAuthHover = () => topbarActions.classList.add("auth-hover-open");
     const closeAuthHover = () => topbarActions.classList.remove("auth-hover-open");
-    authBtn.addEventListener("mouseenter", openAuthHover);
-    authBtn.addEventListener("mouseleave", () => setTimeout(() => {
-      if (!authHoverCard.matches(":hover")) closeAuthHover();
-    }, 40));
-    authBtn.addEventListener("focus", openAuthHover);
-    authHoverCard.addEventListener("mouseenter", openAuthHover);
-    authHoverCard.addEventListener("mouseleave", closeAuthHover);
-    authBtn.addEventListener("blur", () => setTimeout(() => {
-      if (!authHoverCard.matches(":hover")) closeAuthHover();
-    }, 40));
+    authBtn.addEventListener("click", (event) => {
+      if (!currentUser()) {
+        loginWithGoogle();
+        return;
+      }
+      event.stopPropagation();
+      topbarActions.classList.toggle("auth-hover-open");
+    });
+    authCardActionBtn?.addEventListener("click", () => {
+      closeAuthHover();
+      currentUser() ? logout() : loginWithGoogle();
+    });
+    document.addEventListener("click", (event) => {
+      if (!topbarActions.contains(event.target)) closeAuthHover();
+    });
   }
   $("#adminBtn").addEventListener("click", openAdminModal);
   $("#adminModalClose").addEventListener("click", closeAdminModal);
@@ -2909,26 +2915,31 @@ function hideLoginScreen() {
 }
 
 function updateUserChip(user) {
-  const avatar = $("#userAvatar");
   const authBtn = $("#authBtn");
   const syncBtn = $("#syncBtn");
   const iconEnter = authBtn?.querySelector(".auth-icon-enter");
   const iconExit = authBtn?.querySelector(".auth-icon-exit");
+  const authBtnPhoto = $("#authBtnPhoto");
+  const authBtnFallback = $("#authBtnFallback");
   const hoverTitle = $("#authHoverTitle");
   const hoverEmail = $("#authHoverEmail");
   const hoverAction = $("#authHoverAction");
   const hoverPhoto = $("#authHoverPhoto");
   const hoverInitial = $("#authHoverInitial");
   const adminBadge = $("#authAdminBadge");
-
-  if (avatar) {
-    avatar.style.display = "none";
-    avatar.title = user ? (user.displayName || user.email || "") : "";
-  }
+  const authCardActionBtn = $("#authCardActionBtn");
 
   if (hoverPhoto) {
     hoverPhoto.style.display = "none";
     hoverPhoto.src = "";
+  }
+  if (authBtnPhoto) {
+    authBtnPhoto.style.display = "none";
+    authBtnPhoto.src = "";
+  }
+  if (authBtnFallback) {
+    authBtnFallback.style.display = "";
+    authBtnFallback.textContent = user?.displayName?.[0] || user?.email?.[0] || "G";
   }
   if (hoverInitial) {
     hoverInitial.style.display = "";
@@ -2939,20 +2950,26 @@ function updateUserChip(user) {
   if (user) {
     if (authBtn) {
       authBtn.classList.add("auth-logged-in");
-      authBtn.setAttribute("title", "Cerrar sesion");
-      authBtn.setAttribute("aria-label", "Cerrar sesion");
+      authBtn.setAttribute("title", user.displayName || user.email || "Cuenta conectada");
+      authBtn.setAttribute("aria-label", "Cuenta conectada");
     }
     if (iconEnter) iconEnter.style.display = "none";
-    if (iconExit) iconExit.style.display = "";
+    if (iconExit) iconExit.style.display = "none";
     if (hoverTitle) hoverTitle.textContent = user.displayName || "Cuenta conectada";
     if (hoverEmail) hoverEmail.textContent = user.email || user.displayName || "Sesion iniciada";
-    if (hoverAction) hoverAction.textContent = "Pulsa para cerrar sesion";
+    if (hoverAction) hoverAction.textContent = "Gestiona tu sesion";
     if (hoverPhoto && user.photoURL) {
       hoverPhoto.src = user.photoURL;
       hoverPhoto.style.display = "";
       if (hoverInitial) hoverInitial.style.display = "none";
     }
+    if (authBtnPhoto && user.photoURL) {
+      authBtnPhoto.src = user.photoURL;
+      authBtnPhoto.style.display = "";
+      if (authBtnFallback) authBtnFallback.style.display = "none";
+    }
     if (adminBadge && isPrimaryAdmin(user)) adminBadge.style.display = "";
+    if (authCardActionBtn) authCardActionBtn.textContent = "Cerrar sesion";
   } else {
     if (authBtn) {
       authBtn.classList.remove("auth-logged-in");
@@ -2964,6 +2981,7 @@ function updateUserChip(user) {
     if (hoverTitle) hoverTitle.textContent = "Sesion no iniciada";
     if (hoverEmail) hoverEmail.textContent = "No conectado";
     if (hoverAction) hoverAction.textContent = "Pulsa para iniciar sesion con Google";
+    if (authCardActionBtn) authCardActionBtn.textContent = "Iniciar sesion con Google";
   }
 
   if (syncBtn) syncBtn.style.display = "none";
@@ -3122,9 +3140,6 @@ function closeAdminModal() {
 
 // â”€â”€ BotÃ³n auth unificado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.getElementById("googleLoginBtn")?.addEventListener("click", loginWithGoogle);
-document.getElementById("authBtn")?.addEventListener("click", () => {
-  auth.currentUser ? logout() : loginWithGoogle();
-});
 
 // â”€â”€ BotÃ³n sincronizar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.getElementById("syncBtn")?.addEventListener("click", manualSync);
