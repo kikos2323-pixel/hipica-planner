@@ -194,14 +194,17 @@ const flappyGame = {
   score: 0,
   level: 1,
   speedPercent: 100,
+  isCompactMode: false,
   gravityBase: 0.27,
   gravity: 0.27,
   flap: -6.6,
   groundHeight: 82,
   baseSpeed: 2.15,
+  desktopBaseSpeed: 2.15,
   speed: 2.15,
   spawnTimer: 0,
   spawnEvery: 132,
+  desktopSpawnEvery: 132,
   currentGap: 248,
   frame: 0,
   horseTheme: FLAPPY_HORSE_THEMES[0],
@@ -1375,6 +1378,13 @@ function renderGames() {
   renderFlappyHorseSwatches();
 }
 
+function updateFlappyHorseDeviceProfile() {
+  const compact = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+  flappyGame.isCompactMode = compact;
+  flappyGame.baseSpeed = compact ? 2.95 : flappyGame.desktopBaseSpeed;
+  flappyGame.spawnEvery = compact ? 118 : flappyGame.desktopSpawnEvery;
+}
+
 function persistGames() {
   state.games = normalizeGamesData(state.games);
   saveData();
@@ -1391,6 +1401,7 @@ function initFlappyHorse() {
   flappyGame.ctx = flappyGame.canvas?.getContext("2d");
   if (!flappyGame.canvas || !flappyGame.ctx) return;
   flappyGame.initialized = true;
+  updateFlappyHorseDeviceProfile();
   flappyGame.horseTheme = flappyThemeById(state.games?.flappyHorse?.selectedColor);
 
   $("#flappyStartBtn")?.addEventListener("click", () => startFlappyHorse());
@@ -1405,6 +1416,7 @@ function initFlappyHorse() {
       flapFlappyHorse();
     }
   });
+  window.addEventListener("resize", updateFlappyHorseDeviceProfile);
   $("#flappySwatches")?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-flappy-theme]");
     if (!button) return;
@@ -1452,6 +1464,7 @@ function renderFlappyHorseSwatches() {
 }
 
 function resetFlappyHorse(start = false) {
+  updateFlappyHorseDeviceProfile();
   flappyGame.running = start;
   flappyGame.gameOver = false;
   flappyGame.countdown = 0;
@@ -1567,7 +1580,7 @@ function updateFlappyHorse() {
   const levelBoost = Math.floor(flappyGame.score / 25);
   flappyGame.level = levelBoost + 1;
   flappyGame.speed = flappyGame.baseSpeed * Math.pow(1.01, levelBoost);
-  flappyGame.speedPercent = 100 * Math.pow(1.01, levelBoost);
+  flappyGame.speedPercent = (flappyGame.baseSpeed / flappyGame.desktopBaseSpeed) * 100 * Math.pow(1.01, levelBoost);
   flappyGame.gravity = flappyGame.gravityBase * Math.pow(1.01, levelBoost);
   flappyGame.currentGap = Math.max(132, 248 - levelBoost * 6);
 
