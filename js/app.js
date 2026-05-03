@@ -194,7 +194,6 @@ function saveData() {
     trash: state.trash,
     clock: state.clock
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   syncToFirestore(payload);
   queueRemoteMetadataSync();
 }
@@ -348,36 +347,18 @@ function updateAdminAccess() {
 }
 
 function loadData() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return;
-  try {
-    const data = JSON.parse(raw);
-    state.workEntries = Array.isArray(data.workEntries) ? data.workEntries : [];
-    state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
-    state.horses = Array.isArray(data.horses) ? data.horses.map(normalizeHorse) : [];
-    state.calendarNotes = Array.isArray(data.calendarNotes) ? data.calendarNotes : [];
-    state.generalNotes = Array.isArray(data.generalNotes) ? data.generalNotes : [];
-    state.trash = Array.isArray(data.trash) ? data.trash : [];
-    if (data.clock && Array.isArray(data.clock.segments)) {
-      state.clock = {
-        date: data.clock.date || todayISO(),
-        isRunning: Boolean(data.clock.isRunning),
-        segments: data.clock.segments
-      };
-    } else {
-      const todayEntry = state.workEntries.find((entry) => entry.date === todayISO() && Array.isArray(entry.segments));
-      if (todayEntry) {
-        state.clock = {
-          date: todayISO(),
-          isRunning: todayEntry.segments.some((segment) => !segment.end),
-          segments: todayEntry.segments
-        };
-      }
-    }
-  } catch {
-    state.workEntries = [];
-    state.tasks = [];
-  }
+  state.workEntries = [];
+  state.tasks = [];
+  state.horses = [];
+  state.sharedHorses = [];
+  state.calendarNotes = [];
+  state.generalNotes = [];
+  state.trash = [];
+  state.clock = {
+    date: todayISO(),
+    isRunning: false,
+    segments: []
+  };
 }
 
 function loadTheme() {
@@ -2292,10 +2273,14 @@ function deleteTask(id) {
 }
 
 function clearData() {
-  if (!confirm("Esto borrara todas las jornadas y tareas guardadas en este navegador. Continuar?")) return;
+  if (!confirm("Esto borrara todos los datos de tu cuenta sincronizada. Continuar?")) return;
   state.workEntries = [];
   state.tasks = [];
   state.horses = [];
+  state.calendarNotes = [];
+  state.generalNotes = [];
+  state.trash = [];
+  state.sharedHorses = [];
   state.clock = { date: todayISO(), isRunning: false, segments: [] };
   render();
 }
@@ -2410,6 +2395,40 @@ function normalizeImportedData(data) {
     horses: Array.isArray(data.horses) ? data.horses.map(normalizeHorse).filter((horse) => horse.id && (horse.number || horse.name)) : [],
     clock: normalizeClock(data.clock),
     theme: normalizeTheme(data.theme)
+  };
+}
+
+function mergeById(primaryItems = [], secondaryItems = [], normalizer, isValid) {
+  const merged = new Map();
+  [...secondaryItems, ...primaryItems].forEach((item) => {
+    const normalized = normalizer(item);
+    if (isValid(normalized)) merged.set(normalized.id, normalized);
+  });
+  return [...merged.values()];
+}
+
+function mergeDataSets(localData, cloudData) {
+  const local = normalizeImportedData(localData) || {
+    workEntries: [],
+    tasks: [],
+    horses: [],
+    clock: normalizeClock(),
+    theme: normalizeTheme()
+  };
+  const cloud = normalizeImportedData(cloudData) || {
+    workEntries: [],
+    tasks: [],
+    horses: [],
+    clock: normalizeClock(),
+    theme: normalizeTheme()
+  };
+
+  return {
+    workEntries: mergeById(local.workEntries, cloud.workEntries, normalizeWorkEntry, (entry) => entry.id && entry.date),
+    tasks: mergeById(local.tasks, cloud.tasks, normalizeTask, (task) => task.id && task.name && task.date),
+    horses: mergeById(local.horses, cloud.horses, normalizeHorse, (horse) => horse.id && (horse.number || horse.name)),
+    clock: local.clock?.segments?.length ? local.clock : cloud.clock,
+    theme: local.theme?.mode ? local.theme : cloud.theme
   };
 }
 
@@ -2832,7 +2851,6 @@ async function loadFromFirestore(user) {
       state.generalNotes  = Array.isArray(data.generalNotes)  ? data.generalNotes  : [];
       state.trash         = Array.isArray(data.trash)         ? data.trash         : [];
       if (data.clock && Array.isArray(data.clock.segments)) state.clock = data.clock;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
   } catch (e) {
     console.warn("No se pudo cargar desde Firestore:", e);
@@ -2914,6 +2932,7 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     currentSessionStartedAt = null;
     showLoginScreen();
+    loadData();
     state.isAdmin = false;
     state.sharedHorses = [];
     state.adminProfiles = [];
@@ -2929,27 +2948,32 @@ async function migrateOrLoadData(user) {
   try {
     const snap = await getDoc(userDoc);
     const hasCloudData = snap.exists();
-    const localRaw = localStorage.getItem(STORAGE_KEY);
-    const hasLocalData = localRaw && localRaw.length > 10;
 
-    if (!hasCloudData && hasLocalData) {
-      // Primera vez con esta cuenta: subir datos locales a Firestore
-      showSyncBanner("Subiendo tus datos a la nubeâ€¦");
-      const local = JSON.parse(localRaw);
-      await setDoc(userDoc, local);
-      applyDataFromObject(local);
-      localStorage.removeItem(STORAGE_KEY);
-      hideSyncBanner("âœ… Datos migrados a tu cuenta correctamente");
-    } else if (hasCloudData) {
-      // Ya hay datos en la nube: cargarlos y descartar el local
-      const data = snap.data();
-      applyDataFromObject(data);
-      localStorage.removeItem(STORAGE_KEY);
+    if (hasCloudData) {
+      applyDataFromObject(snap.data());
+    } else {
+      await setDoc(userDoc, {
+        workEntries: [],
+        tasks: [],
+        horses: [],
+        calendarNotes: [],
+        generalNotes: [],
+        trash: [],
+        clock: normalizeClock(),
+        theme: normalizeTheme(state.theme)
+      });
+      applyDataFromObject({
+        workEntries: [],
+        tasks: [],
+        horses: [],
+        calendarNotes: [],
+        generalNotes: [],
+        trash: [],
+        clock: normalizeClock()
+      });
     }
-    // Si no hay datos en ningÃºn lado: app vacÃ­a, sin hacer nada
   } catch (e) {
     console.warn("Error en migraciÃ³n/carga:", e);
-    // Fallback: cargar desde local si existe
     loadData();
   }
 }
