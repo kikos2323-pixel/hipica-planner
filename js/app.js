@@ -49,6 +49,7 @@ async function recoverCloudinaryPhotos(user) {
   }
 
   try {
+    persistLocalSnapshot();
     await setDoc(doc(db, "users", user.uid, "data", "main"), buildCloudPayload());
   } catch (e) {
     console.warn("Error guardando fotos recuperadas:", e);
@@ -331,6 +332,14 @@ function buildPersistentPayload() {
     trash: state.trash,
     clock: state.clock
   };
+}
+
+function persistLocalSnapshot() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildPersistentPayload()));
+  } catch (error) {
+    console.warn("No se pudo actualizar la copia local:", error);
+  }
 }
 
 function saveData() {
@@ -2739,6 +2748,38 @@ function mergeById(primaryItems = [], secondaryItems = [], normalizer, isValid) 
   return [...merged.values()];
 }
 
+function mergeHorseRecords(primaryHorse, secondaryHorse) {
+  const primary = normalizeHorse(primaryHorse);
+  const secondary = normalizeHorse(secondaryHorse);
+  const primaryUpdatedAt = Date.parse(primary.updatedAt || "") || 0;
+  const secondaryUpdatedAt = Date.parse(secondary.updatedAt || "") || 0;
+  const preferred = primaryUpdatedAt >= secondaryUpdatedAt ? primary : secondary;
+  const fallback = preferred === primary ? secondary : primary;
+  return normalizeHorse({
+    ...fallback,
+    ...preferred,
+    photo: preferred.photo || fallback.photo || "",
+    notes: preferred.notes || fallback.notes || "",
+    feedMorning: preferred.feedMorning || fallback.feedMorning || "",
+    feedNoon: preferred.feedNoon || fallback.feedNoon || "",
+    feedEvening: preferred.feedEvening || fallback.feedEvening || "",
+    stable: preferred.stable || fallback.stable || "",
+    paddock: preferred.paddock || fallback.paddock || "",
+    updatedAt: primaryUpdatedAt >= secondaryUpdatedAt ? primary.updatedAt : secondary.updatedAt
+  });
+}
+
+function mergeHorses(localHorses = [], cloudHorses = []) {
+  const merged = new Map();
+  [...cloudHorses, ...localHorses].forEach((horse) => {
+    const normalized = normalizeHorse(horse);
+    if (!normalized.id || (!normalized.number && !normalized.name)) return;
+    const existing = merged.get(normalized.id);
+    merged.set(normalized.id, existing ? mergeHorseRecords(normalized, existing) : normalized);
+  });
+  return [...merged.values()];
+}
+
 function mergeDataSets(localData, cloudData) {
   const emptyData = {
     workEntries: [],
@@ -2756,7 +2797,7 @@ function mergeDataSets(localData, cloudData) {
   return {
     workEntries: mergeById(local.workEntries, cloud.workEntries, normalizeWorkEntry, (entry) => entry.id && entry.date),
     tasks: mergeById(local.tasks, cloud.tasks, normalizeTask, (task) => task.id && task.name && task.date),
-    horses: mergeById(local.horses, cloud.horses, normalizeHorse, (horse) => horse.id && (horse.number || horse.name)),
+    horses: mergeHorses(local.horses, cloud.horses),
     calendarNotes: mergeById(local.calendarNotes, cloud.calendarNotes, normalizeLooseRecord, (item) => item.id),
     generalNotes: mergeById(local.generalNotes, cloud.generalNotes, normalizeLooseRecord, (item) => item.id),
     trash: mergeById(local.trash, cloud.trash, normalizeLooseRecord, (item) => item.id),
@@ -3578,6 +3619,7 @@ function applyDataFromObject(data) {
   state.generalNotes  = Array.isArray(data.generalNotes)  ? data.generalNotes  : [];
   state.trash         = Array.isArray(data.trash)         ? data.trash         : [];
   if (data.clock && Array.isArray(data.clock.segments)) state.clock = data.clock;
+  persistLocalSnapshot();
 }
 
 function showSyncBanner(msg) {

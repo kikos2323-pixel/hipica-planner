@@ -1,20 +1,20 @@
-# Hípica App — Registro del Proyecto
+﻿# HÃ­pica App â€” Registro del Proyecto
 
-Aplicación web progresiva (PWA) para gestión de una finca hípica.
-URL pública: `https://kikos2323-pixel.github.io/hipica-planner/`
+AplicaciÃ³n web progresiva (PWA) para gestiÃ³n de una finca hÃ­pica.
+URL pÃºblica: `https://kikos2323-pixel.github.io/hipica-planner/`
 Repositorio: `https://github.com/kikos2323-pixel/hipica-planner`
 
 ---
 
-## Tecnologías utilizadas
+## TecnologÃ­as utilizadas
 
-| Tecnología | Uso |
+| TecnologÃ­a | Uso |
 |---|---|
-| HTML / CSS / JavaScript vanilla | Base de la aplicación |
-| Firebase Auth (Google) | Inicio de sesión |
-| Cloud Firestore | Sincronización de datos entre dispositivos |
+| HTML / CSS / JavaScript vanilla | Base de la aplicaciÃ³n |
+| Firebase Auth (Google) | Inicio de sesiÃ³n |
+| Cloud Firestore | SincronizaciÃ³n de datos entre dispositivos |
 | Cloudinary | Almacenamiento de fotos de caballos |
-| JSZip | Exportación de fotos en ZIP |
+| JSZip | ExportaciÃ³n de fotos en ZIP |
 | Service Worker | Funcionamiento offline (PWA) |
 | GitHub Pages | Hosting gratuito |
 
@@ -24,47 +24,47 @@ Repositorio: `https://github.com/kikos2323-pixel/hipica-planner`
 
 ```
 /
-├── index.html          — Estructura HTML de toda la app
-├── manifest.json       — Configuración PWA (iconos, nombre, colores)
-├── sw.js               — Service Worker (caché offline)
-├── PROYECTO.md         — Este archivo
-├── css/
-│   └── styles.css      — Todos los estilos y animaciones
-├── js/
-│   ├── app.js          — Lógica principal de la aplicación
-│   └── firebase.js     — Configuración e importaciones de Firebase
-└── icons/
-    ├── icon-app.jpg    — Logo original de la app
-    ├── icon-192.png    — Icono PWA 192x192
-    ├── icon-512.png    — Icono PWA 512x512
-    ├── icon-180.png    — Icono Apple Touch
-    └── ui/             — Iconos SVG de la interfaz
+â”œâ”€â”€ index.html          â€” Estructura HTML de toda la app
+â”œâ”€â”€ manifest.json       â€” ConfiguraciÃ³n PWA (iconos, nombre, colores)
+â”œâ”€â”€ sw.js               â€” Service Worker (cachÃ© offline)
+â”œâ”€â”€ PROYECTO.md         â€” Este archivo
+â”œâ”€â”€ css/
+â”‚   â””â”€â”€ styles.css      â€” Todos los estilos y animaciones
+â”œâ”€â”€ js/
+â”‚   â”œâ”€â”€ app.js          â€” LÃ³gica principal de la aplicaciÃ³n
+â”‚   â””â”€â”€ firebase.js     â€” ConfiguraciÃ³n e importaciones de Firebase
+â””â”€â”€ icons/
+    â”œâ”€â”€ icon-app.jpg    â€” Logo original de la app
+    â”œâ”€â”€ icon-192.png    â€” Icono PWA 192x192
+    â”œâ”€â”€ icon-512.png    â€” Icono PWA 512x512
+    â”œâ”€â”€ icon-180.png    â€” Icono Apple Touch
+    â””â”€â”€ ui/             â€” Iconos SVG de la interfaz
 ```
 
 ---
 
-## Firebase — Configuración
+## Firebase â€” ConfiguraciÃ³n
 
 **Proyecto:** `app-adrian-hipica`
 **Consola:** https://console.firebase.google.com
 
 ### Servicios activos
-- **Authentication** — Google Sign-In
-- **Firestore** — Base de datos principal
+- **Authentication** â€” Google Sign-In
+- **Firestore** â€” Base de datos principal
 
 ### Servicios NO activos
-- **Storage** — No se pudo activar (proyecto supera cuota del plan Spark). Se usa Cloudinary en su lugar.
+- **Storage** â€” No se pudo activar (proyecto supera cuota del plan Spark). Se usa Cloudinary en su lugar.
 
 ### Estructura de datos en Firestore
 
 ```
-users/{uid}/data/main          — Datos principales del usuario
-userProfiles/{uid}             — Perfil público del usuario
-sharedHorses/{horseId}         — Fichas de caballos compartidas
-appSettings/main               — Configuración global (admin)
+users/{uid}/data/main          â€” Datos principales del usuario
+userProfiles/{uid}             â€” Perfil pÃºblico del usuario
+sharedHorses/{horseId}         â€” Fichas de caballos compartidas
+appSettings/main               â€” ConfiguraciÃ³n global (admin)
 ```
 
-### Reglas de Firestore (Firestore → Rules)
+### Reglas de Firestore (Firestore â†’ Rules)
 ```
 rules_version = '2';
 service cloud.firestore {
@@ -103,35 +103,35 @@ service cloud.firestore {
 
 ---
 
-## Cloudinary — Configuración de fotos
+## Cloudinary â€” ConfiguraciÃ³n de fotos
 
 **Cloud Name:** `dozjsexgz`
 **Upload Preset:** `Hipica_photos` (modo Unsigned)
 **Consola:** https://cloudinary.com
 
-### Cómo funciona
+### CÃ³mo funciona
 - Las fotos de caballos se suben a Cloudinary al guardar una ficha
 - Se guarda solo la URL (`https://res.cloudinary.com/...`) en Firestore
 - Las fotos son accesibles desde cualquier dispositivo
 - El `public_id` de cada foto sigue el formato: `hipica_horse_{horseId}`
 - Esto permite reconstruir la URL si se pierde: `https://res.cloudinary.com/dozjsexgz/image/upload/hipica_horse_{horseId}`
 
-### Migración automática al iniciar sesión
+### MigraciÃ³n automÃ¡tica al iniciar sesiÃ³n
 Al conectarse, la app ejecuta en orden:
-1. `migrateOrLoadData` — carga datos desde Firestore
-2. `migrateHorsePhotosToStorage` — sube fotos Base64 pendientes a Cloudinary
-3. `recoverCloudinaryPhotos` — recupera URLs de caballos sin foto buscando en Cloudinary por ID
+1. `migrateOrLoadData` â€” carga datos desde Firestore
+2. `migrateHorsePhotosToStorage` â€” sube fotos Base64 pendientes a Cloudinary
+3. `recoverCloudinaryPhotos` â€” recupera URLs de caballos sin foto buscando en Cloudinary por ID
 
 ---
 
 ## Funcionalidades implementadas
 
-### Gestión de jornadas
+### GestiÃ³n de jornadas
 - Reloj de fichaje con inicio/pausa/fin
 - Registro manual de horas
-- Corrección del día actual
+- CorrecciÃ³n del dÃ­a actual
 - Historial completo de jornadas
-- Métricas: horas del mes, semana, promedio diario, días trabajados
+- MÃ©tricas: horas del mes, semana, promedio diario, dÃ­as trabajados
 
 ### Tareas
 - Crear, editar y eliminar tareas
@@ -140,13 +140,13 @@ Al conectarse, la app ejecuta en orden:
 - Estado: pendiente / completada
 
 ### Fichas de caballos
-- Nombre, número, cuadra, paddock
+- Nombre, nÃºmero, cuadra, paddock
 - Foto sincronizada en la nube (Cloudinary)
 - Coordenadas GPS de cuadra y paddock
-- Notas, raciones de comida (mañana/mediodía/tarde)
+- Notas, raciones de comida (maÃ±ana/mediodÃ­a/tarde)
 - Observaciones pendientes por caballo
 - Compartir ficha con otros usuarios
-- Exportar información del caballo
+- Exportar informaciÃ³n del caballo
 
 ### Observaciones
 - **Obs. pendientes:** observaciones por caballo con estado completado
@@ -155,37 +155,37 @@ Al conectarse, la app ejecuta en orden:
 
 ### Historial
 - Registro de jornadas pasadas
-- Papelera de elementos eliminados con opción de restaurar o borrar definitivamente
+- Papelera de elementos eliminados con opciÃ³n de restaurar o borrar definitivamente
 
 ### Calendario
-- Vista mensual con notas por día
-- Navegación entre meses
+- Vista mensual con notas por dÃ­a
+- NavegaciÃ³n entre meses
 
-### Sincronización entre dispositivos
+### SincronizaciÃ³n entre dispositivos
 - Login con Google
 - Datos en Firestore, fotos en Cloudinary
-- Migración automática de datos locales al primer login
-- Botón de sincronización manual en la barra superior
-- Banner de estado durante sincronización
+- MigraciÃ³n automÃ¡tica de datos locales al primer login
+- BotÃ³n de sincronizaciÃ³n manual en la barra superior
+- Banner de estado durante sincronizaciÃ³n
 
-### PWA (Aplicación instalable)
+### PWA (AplicaciÃ³n instalable)
 - Funciona offline (Service Worker)
-- Instalable en móvil y escritorio
+- Instalable en mÃ³vil y escritorio
 - Iconos PNG generados desde la foto del logo
-- Banner de instalación en dispositivos compatibles
+- Banner de instalaciÃ³n en dispositivos compatibles
 
 ### Apariencia y temas
 - Modo claro / oscuro
-- 8 temas de color: Hípica, Bosque, Arena, Noche, Océano, Atardecer, Lavanda, Carbono
-- Personalización de color primario, acento, transparencia y fondo
+- 8 temas de color: HÃ­pica, Bosque, Arena, Noche, OcÃ©ano, Atardecer, Lavanda, Carbono
+- PersonalizaciÃ³n de color primario, acento, transparencia y fondo
 - Preferencias guardadas por usuario
 
-### Micro-interacciones (rediseño UI)
+### Micro-interacciones (rediseÃ±o UI)
 - Efecto ripple en todos los botones
-- Hover con elevación en cards y métricas
-- Animación escalonada al cargar listas
+- Hover con elevaciÃ³n en cards y mÃ©tricas
+- AnimaciÃ³n escalonada al cargar listas
 - Glow en inputs al hacer foco
-- Indicador animado en pestañas activas
+- Indicador animado en pestaÃ±as activas
 - Scrollbar personalizada
 - Badge "urgente" con pulso continuo
 - Animaciones de entrada en modales y toasts
@@ -197,38 +197,45 @@ Al conectarse, la app ejecuta en orden:
 
 | Funcionalidad | Estado | Motivo |
 |---|---|---|
-| Firebase Storage | ❌ No disponible | El proyecto superó la cuota del plan Spark y no se pudo activar |
-| Exportación ZIP de fotos | ✅ Implementado | Usa JSZip + Cloudinary URLs |
-| Notificaciones push en background | ⚠️ Parcial | Solo funciona con la app abierta |
-| Sincronización offline de fotos | ❌ No implementado | Requeriría IndexedDB adicional |
+| Firebase Storage | âŒ No disponible | El proyecto superÃ³ la cuota del plan Spark y no se pudo activar |
+| ExportaciÃ³n ZIP de fotos | âœ… Implementado | Usa JSZip + Cloudinary URLs |
+| Notificaciones push en background | âš ï¸ Parcial | Solo funciona con la app abierta |
+| SincronizaciÃ³n offline de fotos | âŒ No implementado | RequerirÃ­a IndexedDB adicional |
 
 ---
 
 ## Historial de cambios
 
 ### 2026-05-03
-- Integración completa con Cloudinary para fotos de caballos
-- Panel de progreso con barra animada durante la migración de fotos
-- Recuperación automática de URLs de fotos perdidas (`recoverCloudinaryPhotos`)
-- Escritura inmediata a Firestore tras migración (sin depender del debounce)
-- Rediseño UI: micro-interacciones, ripple, hover animations
-- 8 temas de color (añadidos Océano, Atardecer, Lavanda, Carbono)
-- Mejora del sistema de errores en la migración de fotos
+- IntegraciÃ³n completa con Cloudinary para fotos de caballos
+- Panel de progreso con barra animada durante la migraciÃ³n de fotos
+- RecuperaciÃ³n automÃ¡tica de URLs de fotos perdidas (`recoverCloudinaryPhotos`)
+- Escritura inmediata a Firestore tras migraciÃ³n (sin depender del debounce)
+- RediseÃ±o UI: micro-interacciones, ripple, hover animations
+- 8 temas de color (aÃ±adidos OcÃ©ano, Atardecer, Lavanda, Carbono)
+- Mejora del sistema de errores en la migraciÃ³n de fotos
 
 ### Antes de 2026-05-03
-- Estructura base de la aplicación (jornadas, tareas, caballos)
-- Sistema de observaciones con dos sub-pestañas
+- Estructura base de la aplicaciÃ³n (jornadas, tareas, caballos)
+- Sistema de observaciones con dos sub-pestaÃ±as
 - Papelera de reciclaje
-- Integración Firebase Auth + Firestore
-- Sistema de sincronización con debounce
+- IntegraciÃ³n Firebase Auth + Firestore
+- Sistema de sincronizaciÃ³n con debounce
 - PWA: manifest, service worker, iconos PNG
-- Login con Google, migración de datos locales a la nube
+- Login con Google, migraciÃ³n de datos locales a la nube
 - Barra de botones superior: modo, instalar, sincronizar, usuario
 - Logo de la app como icono PWA y marca en la barra lateral
 - Sistema de temas con 4 presets iniciales
 - Compartir fichas de caballos entre usuarios
-- Panel de administración
+- Panel de administraciÃ³n
 
 ---
 
-*Este archivo se actualiza manualmente con cada sesión de cambios.*
+*Este archivo se actualiza manualmente con cada sesiÃ³n de cambios.*
+
+### 2026-05-04
+- Corregida la recuperacion de fotos de caballos entre dispositivos
+- La fusion nube + copia local ya no pisa una foto valida de Cloudinary con una ficha local antigua sin foto
+- recoverCloudinaryPhotos ahora guarda tambien la copia local actualizada tras reconstruir URLs deterministas
+- applyDataFromObject refresca la copia local para evitar volver a cargar versiones obsoletas en el siguiente inicio
+
