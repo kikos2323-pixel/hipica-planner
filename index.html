@@ -172,6 +172,15 @@
             </span>
             <span class="nav-label">Calendario</span>
           </button>
+          <button class="nav-link" data-view="juegos" data-color="rose">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 12h4"/><path d="M8 10v4"/><path d="M15 13h.01"/><path d="M18 11h.01"/>
+                <rect x="2" y="6" width="20" height="12" rx="4"/>
+              </svg>
+            </span>
+            <span class="nav-label">Juegos</span>
+          </button>
           <button class="nav-link" data-view="cuadras" data-color="brown">
             <span class="nav-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -534,6 +543,79 @@
             </div>
             <div id="calendarGrid" class="calendar-grid"></div>
           </section>
+        </section>
+
+        <section class="view" id="juegos">
+          <div class="games-shell">
+            <section class="panel game-panel-main">
+              <div class="panel-heading game-panel-heading">
+                <div>
+                  <p class="eyebrow">Mini juego hípico</p>
+                  <h2 class="game-panel-title">Flappy Horse</h2>
+                </div>
+                <div class="game-scoreboard">
+                  <article class="game-score-pill">
+                    <span>Puntuación</span>
+                    <strong id="flappyScoreValue">0</strong>
+                  </article>
+                  <article class="game-score-pill">
+                    <span>Récord</span>
+                    <strong id="flappyBestValue">0</strong>
+                  </article>
+                  <article class="game-score-pill">
+                    <span>Nivel</span>
+                    <strong id="flappyLevelValue">1</strong>
+                  </article>
+                </div>
+              </div>
+
+              <div class="flappy-wrap" id="flappyWrap">
+                <canvas id="flappyCanvas" width="960" height="540" aria-label="Juego Flappy Horse"></canvas>
+                <div class="flappy-overlay" id="flappyOverlay">
+                  <div class="flappy-overlay-card" id="flappyOverlayCard">
+                    <h3 id="flappyOverlayTitle">3</h3>
+                    <p id="flappyOverlayText">Pulsa jugar para empezar.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="game-actions-bar">
+                <button class="primary-button" id="flappyStartBtn" type="button"><span class="button-icon icon-slot" data-icon="horse" aria-hidden="true"></span><span>Jugar</span></button>
+                <button class="ghost-button" id="flappyRestartBtn" type="button"><span class="button-icon icon-slot" data-icon="history" aria-hidden="true"></span><span>Reiniciar</span></button>
+                <div class="game-tip"><span class="icon-slot" data-icon="horse"></span><span>Toca la pantalla, haz clic o usa espacio para saltar.</span></div>
+              </div>
+            </section>
+
+            <aside class="games-side">
+              <section class="panel">
+                <div class="panel-heading">
+                  <h2><span class="icon-slot" data-icon="sparkle"></span>Caballo</h2>
+                </div>
+                <p class="muted">Elige el color del caballo. Se guarda en tu cuenta.</p>
+                <div class="game-swatches" id="flappySwatches"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-heading">
+                  <h2><span class="icon-slot" data-icon="top"></span>Tu progreso</h2>
+                </div>
+                <div class="game-progress-grid">
+                  <article class="game-progress-card">
+                    <span>Última partida</span>
+                    <strong id="flappyLastScoreValue">0</strong>
+                  </article>
+                  <article class="game-progress-card">
+                    <span>Vallas al récord</span>
+                    <strong id="flappyBestObstaclesValue">0</strong>
+                  </article>
+                  <article class="game-progress-card">
+                    <span>Dificultad actual</span>
+                    <strong id="flappySpeedValue">100%</strong>
+                  </article>
+                </div>
+              </section>
+            </aside>
+          </div>
         </section>
 
         <section class="view" id="cuadras">

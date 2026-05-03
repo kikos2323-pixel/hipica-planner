@@ -238,4 +238,9 @@ Al conectarse, la app ejecuta en orden:
 - La fusion nube + copia local ya no pisa una foto valida de Cloudinary con una ficha local antigua sin foto
 - recoverCloudinaryPhotos ahora guarda tambien la copia local actualizada tras reconstruir URLs deterministas
 - applyDataFromObject refresca la copia local para evitar volver a cargar versiones obsoletas en el siguiente inicio
+- Integrada la nueva pestaña Juegos dentro de la app principal
+- Añadido Flappy Horse como minijuego interno con soporte para movil y ordenador
+- El color del caballo, la ultima puntuacion y el record ya se guardan en la app y se sincronizan con Firebase
+- El juego mantiene cuenta atras de 3 segundos, dificultad progresiva y UI propia dentro de la seccion Juegos
+
 

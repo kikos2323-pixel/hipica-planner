@@ -218,6 +218,7 @@ label,
 .nav-link[data-color="blue"]   { --nav-c: #2f6fa8; --nav-bg: rgba(47,111,168,0.12); }
 .nav-link[data-color="amber"]  { --nav-c: #c07b1a; --nav-bg: rgba(192,123,26,0.12); }
 .nav-link[data-color="purple"] { --nav-c: #7054c8; --nav-bg: rgba(112,84,200,0.12); }
+.nav-link[data-color="rose"]   { --nav-c: #c85b7c; --nav-bg: rgba(200,91,124,0.12); }
 .nav-link[data-color="brown"]  { --nav-c: #a66f3f; --nav-bg: rgba(166,111,63,0.12); }
 .nav-link[data-color="teal"]   { --nav-c: #2a8a87; --nav-bg: rgba(42,138,135,0.12); }
 .nav-link[data-color="slate"]  { --nav-c: #5a7a8a; --nav-bg: rgba(90,122,138,0.12); }
@@ -940,6 +941,177 @@ h2 {
 .panel {
   padding: 18px;
   margin-bottom: 16px;
+}
+
+.games-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.games-side {
+  display: grid;
+  gap: 16px;
+}
+
+.game-panel-main {
+  overflow: hidden;
+}
+
+.game-panel-heading {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.game-panel-title {
+  margin: 4px 0 0;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1;
+}
+
+.game-scoreboard {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.game-score-pill,
+.game-progress-card {
+  min-width: 108px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--glass-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+.game-score-pill span,
+.game-progress-card span {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.game-score-pill strong,
+.game-progress-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.flappy-wrap {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #bdeeff, #f9eec5 78%);
+  aspect-ratio: 16 / 9;
+}
+
+#flappyCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.flappy-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.flappy-overlay-card {
+  width: min(420px, calc(100% - 24px));
+  padding: 24px;
+  text-align: center;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 18px 50px rgba(18, 43, 31, 0.14);
+  backdrop-filter: blur(16px);
+}
+
+.flappy-overlay-card h3 {
+  margin: 0 0 10px;
+  font-size: clamp(1.3rem, 3vw, 2rem);
+}
+
+.flappy-overlay-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.flappy-overlay-card.countdown {
+  width: auto;
+  min-width: 180px;
+  padding: 26px 34px;
+}
+
+.flappy-overlay-card.countdown h3 {
+  margin: 0;
+  font-size: clamp(4rem, 14vw, 7rem);
+  line-height: 0.95;
+}
+
+.flappy-overlay-card.countdown p {
+  display: none;
+}
+
+.game-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.game-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--glass-soft);
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.game-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.game-swatch {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  min-height: 42px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: radial-gradient(circle at 32% 30%, rgba(255,255,255,0.8), transparent 35%), var(--swatch);
+  box-shadow: 0 4px 14px rgba(28, 51, 39, 0.14);
+}
+
+.game-swatch.active {
+  outline: 3px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  transform: scale(1.06);
+}
+
+.game-progress-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .metric {
@@ -3815,6 +3987,16 @@ table tbody tr:hover {
   background: linear-gradient(90deg, var(--danger), #f87171);
 }
 
+@media (max-width: 1100px) {
+  .games-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .game-scoreboard {
+    justify-content: flex-start;
+  }
+}
+
 .pmp-close {
   margin-left: auto;
   flex-shrink: 0;
@@ -3856,6 +4038,27 @@ table tbody tr:hover {
     left: 12px;
     width: auto;
     bottom: 16px;
+  }
+
+  .game-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .game-tip {
+    justify-content: center;
+    text-align: center;
+    padding: 12px 14px;
+    border-radius: 18px;
+  }
+
+  .game-scoreboard {
+    width: 100%;
+  }
+
+  .game-score-pill {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 0;
   }
 }
 
