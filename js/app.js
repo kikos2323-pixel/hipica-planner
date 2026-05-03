@@ -1,4 +1,4 @@
-import { auth, db, provider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
+import { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
   from "./firebase.js";
 
 const STORAGE_KEY = "fincaPlanner.v1";
@@ -2706,13 +2706,6 @@ function normalizeClock(clock) {
   };
 }
 
-function normalizeTheme(theme) {
-  const source = theme && typeof theme === "object" ? theme : {};
-  return {
-    mode: source.mode === "dark" ? "dark" : "light"
-  };
-}
-
 function importData(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -3192,29 +3185,9 @@ async function loginWithGoogle() {
   try {
     await signInWithPopup(auth, provider);
   } catch (e) {
-    if (e.code === "auth/popup-closed-by-user") return;
-    if (e.code === "auth/unauthorized-domain") {
-      alert("Tu dominio de GitHub Pages no esta autorizado en Firebase Authentication. Anade tu dominio github.io en Authorized domains.");
-      return;
-    }
-    if ([
-      "auth/popup-blocked",
-      "auth/cancelled-popup-request",
-      "auth/operation-not-supported-in-this-environment",
-      "auth/internal-error"
-    ].includes(e.code)) {
-      try {
-        await signInWithRedirect(auth, provider);
-        return;
-      } catch (redirectError) {
-        alert("No se pudo iniciar sesion con Google: " + (redirectError.message || redirectError.code || "error desconocido"));
-        return;
-      }
-    }
-    alert("Error al iniciar sesion: " + (e.message || e.code || "error desconocido"));
+    if (e.code !== "auth/popup-closed-by-user") alert("Error al iniciar sesion: " + e.message);
   }
 }
-
 
 async function logout() {
   if (!confirm("Cerrar sesion?")) return;
@@ -3248,15 +3221,6 @@ onAuthStateChanged(auth, async (user) => {
     updateUserChip(null);
     updateAdminAccess();
   }
-});
-
-getRedirectResult(auth).catch((error) => {
-  if (!error) return;
-  if (error.code === "auth/unauthorized-domain") {
-    alert("Tu dominio de GitHub Pages no esta autorizado en Firebase Authentication. Anade tu dominio github.io en Authorized domains.");
-    return;
-  }
-  console.warn("Error tras volver de Google:", error);
 });
 
 async function migrateOrLoadData(user) {
@@ -3441,6 +3405,7 @@ if ("serviceWorker" in navigator) {
 }
 
 init();
+
 
 
 

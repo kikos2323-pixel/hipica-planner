@@ -1,4 +1,4 @@
-const CACHE = "finca-planner-v2";
+const CACHE = "finca-planner-v3";
 const BASE = "/hipica-planner";
 const ASSETS = [
   BASE + "/",
@@ -35,3 +35,4 @@ self.addEventListener("fetch", (e) => {
       .catch(() => caches.match(e.request))
   );
 });
+
