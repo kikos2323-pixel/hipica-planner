@@ -784,11 +784,25 @@ label,
     var(--glass-strong);
 }
 
-.appearance-preset[data-preset="cyberpunk"] {
+.appearance-preset[data-preset="cyberpunk-hud"] {
   background:
     linear-gradient(135deg, rgba(0, 229, 255, 0.22), rgba(255, 61, 184, 0.2)),
     linear-gradient(180deg, rgba(15, 19, 34, 0.92), rgba(22, 14, 34, 0.88));
   color: #f6f7ff;
+}
+
+.appearance-preset[data-preset="cyberpunk-grid"] {
+  background:
+    linear-gradient(135deg, rgba(89, 243, 255, 0.22), rgba(124, 140, 255, 0.18)),
+    linear-gradient(180deg, rgba(8, 16, 34, 0.94), rgba(10, 18, 38, 0.88));
+  color: #eef9ff;
+}
+
+.appearance-preset[data-preset="cyberpunk-sunset"] {
+  background:
+    linear-gradient(135deg, rgba(65, 224, 255, 0.2), rgba(255, 154, 61, 0.22)),
+    linear-gradient(180deg, rgba(16, 14, 31, 0.92), rgba(30, 13, 24, 0.9));
+  color: #fff7f0;
 }
 
 .appearance-controls {
@@ -825,12 +839,37 @@ label,
   padding-top: 6px;
 }
 
-body[data-theme-preset="cyberpunk"] {
+body[data-theme-preset^="cyberpunk-"] {
   --shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
   --shadow-strong: 0 24px 56px rgba(0, 0, 0, 0.46);
 }
 
-body[data-theme-preset="cyberpunk"]::before {
+body[data-theme-preset="cyberpunk-hud"] {
+  --shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+  --shadow-strong: 0 24px 56px rgba(0, 0, 0, 0.46);
+  --bg-pattern:
+    radial-gradient(circle at 50% 14%, rgba(0, 229, 255, 0.16), transparent 14rem),
+    radial-gradient(circle at 82% 18%, rgba(0, 229, 255, 0.10), transparent 22rem),
+    radial-gradient(circle at 18% 76%, rgba(255, 61, 184, 0.09), transparent 20rem),
+    linear-gradient(180deg, #07101d 0%, #0a1524 42%, #0b1120 100%);
+}
+
+body[data-theme-preset="cyberpunk-grid"] {
+  --bg-pattern:
+    radial-gradient(circle at 50% 14%, rgba(89, 243, 255, 0.12), transparent 12rem),
+    radial-gradient(circle at 80% 22%, rgba(124, 140, 255, 0.10), transparent 20rem),
+    linear-gradient(180deg, #060d1b 0%, #0a1224 46%, #0b1328 100%);
+}
+
+body[data-theme-preset="cyberpunk-sunset"] {
+  --bg-pattern:
+    radial-gradient(circle at 22% 18%, rgba(255, 154, 61, 0.14), transparent 16rem),
+    radial-gradient(circle at 82% 12%, rgba(65, 224, 255, 0.12), transparent 18rem),
+    radial-gradient(circle at 50% 88%, rgba(255, 61, 184, 0.09), transparent 20rem),
+    linear-gradient(180deg, #120b1c 0%, #171227 44%, #160d1d 100%);
+}
+
+body[data-theme-preset^="cyberpunk-"]::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -843,51 +882,189 @@ body[data-theme-preset="cyberpunk"]::before {
   mask-image: linear-gradient(180deg, rgba(0,0,0,0.62), transparent 92%);
 }
 
-body[data-theme-preset="cyberpunk"] .sidebar,
-body[data-theme-preset="cyberpunk"] .topbar,
-body[data-theme-preset="cyberpunk"] .panel,
-body[data-theme-preset="cyberpunk"] .section-tabs,
-body[data-theme-preset="cyberpunk"] .appearance-grid section,
-body[data-theme-preset="cyberpunk"] .auth-hover-card,
-body[data-theme-preset="cyberpunk"] .calendar-day,
-body[data-theme-preset="cyberpunk"] .game-list-item,
-body[data-theme-preset="cyberpunk"] .horse-list-row,
-body[data-theme-preset="cyberpunk"] .task-card,
-body[data-theme-preset="cyberpunk"] .history-item,
-body[data-theme-preset="cyberpunk"] .cal-modal-box {
+body[data-theme-preset^="cyberpunk-"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,0.024) 0 1px,
+      transparent 1px 4px
+    );
+  opacity: 0.42;
+}
+
+body[data-theme-preset^="cyberpunk-"] {
+  background:
+    radial-gradient(circle at 50% 14%, rgba(0, 229, 255, 0.13), transparent 12rem),
+    linear-gradient(180deg, #07101d 0%, #0a1524 42%, #0b1120 100%);
+}
+
+body[data-theme-preset^="cyberpunk-"] .sidebar,
+body[data-theme-preset^="cyberpunk-"] .topbar,
+body[data-theme-preset^="cyberpunk-"] .panel,
+body[data-theme-preset^="cyberpunk-"] .section-tabs,
+body[data-theme-preset^="cyberpunk-"] .appearance-grid section,
+body[data-theme-preset^="cyberpunk-"] .auth-hover-card,
+body[data-theme-preset^="cyberpunk-"] .calendar-day,
+body[data-theme-preset^="cyberpunk-"] .game-list-item,
+body[data-theme-preset^="cyberpunk-"] .horse-list-row,
+body[data-theme-preset^="cyberpunk-"] .task-card,
+body[data-theme-preset^="cyberpunk-"] .history-item,
+body[data-theme-preset^="cyberpunk-"] .cal-modal-box {
+  position: relative;
+  overflow: hidden;
   border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
+  background:
+    linear-gradient(180deg, rgba(7, 17, 31, 0.92), rgba(10, 20, 37, 0.88)),
+    var(--glass);
   box-shadow:
     0 0 0 1px rgba(0, 229, 255, 0.08),
     0 18px 42px rgba(0, 0, 0, 0.28);
 }
 
-body[data-theme-preset="cyberpunk"] .brand-mark,
-body[data-theme-preset="cyberpunk"] .nav-link.active .nav-icon,
-body[data-theme-preset="cyberpunk"] .primary-button,
-body[data-theme-preset="cyberpunk"] .game-list-score strong {
+body[data-theme-preset^="cyberpunk-"] .sidebar::before,
+body[data-theme-preset^="cyberpunk-"] .topbar::before,
+body[data-theme-preset^="cyberpunk-"] .panel::before,
+body[data-theme-preset^="cyberpunk-"] .section-tabs::before,
+body[data-theme-preset^="cyberpunk-"] .calendar-day::before,
+body[data-theme-preset^="cyberpunk-"] .game-list-item::before,
+body[data-theme-preset^="cyberpunk-"] .horse-list-row::before,
+body[data-theme-preset^="cyberpunk-"] .task-card::before,
+body[data-theme-preset^="cyberpunk-"] .history-item::before,
+body[data-theme-preset^="cyberpunk-"] .cal-modal-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0.18)) left 12px top 0 / 44px 1px no-repeat,
+    linear-gradient(90deg, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0.18)) right 12px bottom 0 / 44px 1px no-repeat,
+    linear-gradient(180deg, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0.18)) left 0 top 12px / 1px 44px no-repeat,
+    linear-gradient(180deg, rgba(255, 61, 184, 0.18), rgba(255, 61, 184, 0.18)) right 0 bottom 12px / 1px 44px no-repeat;
+  opacity: 0.92;
+}
+
+body[data-theme-preset^="cyberpunk-"] .panel-heading,
+body[data-theme-preset^="cyberpunk-"] .cal-modal-header,
+body[data-theme-preset^="cyberpunk-"] .topbar {
+  border-bottom: 1px solid rgba(0, 229, 255, 0.12);
+}
+
+body[data-theme-preset^="cyberpunk-"] .brand-mark,
+body[data-theme-preset^="cyberpunk-"] .nav-link.active .nav-icon,
+body[data-theme-preset^="cyberpunk-"] .primary-button,
+body[data-theme-preset^="cyberpunk-"] .game-list-score strong {
   box-shadow:
     0 0 12px rgba(0, 229, 255, 0.18),
     0 0 22px rgba(255, 61, 184, 0.14);
 }
 
-body[data-theme-preset="cyberpunk"] .primary-button {
+body[data-theme-preset^="cyberpunk-"] .primary-button {
   background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 66%, #08111f), color-mix(in srgb, var(--accent) 60%, #140816));
   border-color: rgba(255, 255, 255, 0.10);
+  color: #f7fbff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-body[data-theme-preset="cyberpunk"] .ghost-button,
-body[data-theme-preset="cyberpunk"] .topbar-icon-btn,
-body[data-theme-preset="cyberpunk"] .appearance-preset,
-body[data-theme-preset="cyberpunk"] .section-tab,
-body[data-theme-preset="cyberpunk"] .nav-link {
+body[data-theme-preset^="cyberpunk-"] .ghost-button,
+body[data-theme-preset^="cyberpunk-"] .topbar-icon-btn,
+body[data-theme-preset^="cyberpunk-"] .appearance-preset,
+body[data-theme-preset^="cyberpunk-"] .section-tab,
+body[data-theme-preset^="cyberpunk-"] .nav-link {
   border-color: color-mix(in srgb, var(--primary) 24%, var(--line));
 }
 
-body[data-theme-preset="cyberpunk"] .eyebrow,
-body[data-theme-preset="cyberpunk"] .panel-heading h2,
-body[data-theme-preset="cyberpunk"] .game-panel-title {
+body[data-theme-preset^="cyberpunk-"] .ghost-button,
+body[data-theme-preset^="cyberpunk-"] .topbar-icon-btn,
+body[data-theme-preset^="cyberpunk-"] .section-tab,
+body[data-theme-preset^="cyberpunk-"] .appearance-preset {
+  background:
+    linear-gradient(180deg, rgba(7, 18, 33, 0.84), rgba(10, 17, 29, 0.92)),
+    var(--glass-strong);
+}
+
+body[data-theme-preset^="cyberpunk-"] .topbar-icon-btn:hover,
+body[data-theme-preset^="cyberpunk-"] .ghost-button:hover,
+body[data-theme-preset^="cyberpunk-"] .section-tab:hover,
+body[data-theme-preset^="cyberpunk-"] .appearance-preset:hover {
+  box-shadow:
+    0 0 0 1px rgba(0, 229, 255, 0.14),
+    0 0 16px rgba(0, 229, 255, 0.12);
+}
+
+body[data-theme-preset^="cyberpunk-"] .nav-link {
+  background:
+    linear-gradient(180deg, rgba(8, 16, 29, 0.86), rgba(8, 14, 24, 0.98)),
+    var(--glass);
+}
+
+body[data-theme-preset^="cyberpunk-"] .nav-link.active {
+  background:
+    linear-gradient(135deg, rgba(0, 229, 255, 0.10), rgba(255, 61, 184, 0.10)),
+    linear-gradient(180deg, rgba(10, 19, 35, 0.96), rgba(8, 14, 24, 0.98));
+}
+
+body[data-theme-preset^="cyberpunk-"] .nav-link.active .nav-label,
+body[data-theme-preset^="cyberpunk-"] .panel-heading h2,
+body[data-theme-preset^="cyberpunk-"] .game-panel-title,
+body[data-theme-preset^="cyberpunk-"] #viewTitle {
+  color: #eafcff;
+  text-transform: uppercase;
+}
+
+body[data-theme-preset^="cyberpunk-"] .eyebrow,
+body[data-theme-preset^="cyberpunk-"] .panel-heading h2,
+body[data-theme-preset^="cyberpunk-"] .game-panel-title {
   letter-spacing: 0.04em;
   text-shadow: 0 0 14px rgba(0, 229, 255, 0.16);
+}
+
+body[data-theme-preset^="cyberpunk-"] .eyebrow,
+body[data-theme-preset^="cyberpunk-"] .muted,
+body[data-theme-preset^="cyberpunk-"] .calendar-weekdays,
+body[data-theme-preset^="cyberpunk-"] .stat-label,
+body[data-theme-preset^="cyberpunk-"] .game-list-main span {
+  color: color-mix(in srgb, var(--primary) 38%, #cde6ef);
+}
+
+body[data-theme-preset^="cyberpunk-"] .brand-mark {
+  background:
+    linear-gradient(135deg, rgba(0, 229, 255, 0.32), rgba(255, 61, 184, 0.26)),
+    #0c1628;
+}
+
+body[data-theme-preset^="cyberpunk-"] .calendar-day.today,
+body[data-theme-preset^="cyberpunk-"] .appearance-preset.active,
+body[data-theme-preset^="cyberpunk-"] .section-tab.active {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 229, 255, 0.22),
+    0 0 18px rgba(0, 229, 255, 0.10);
+}
+
+body[data-theme-preset^="cyberpunk-"] .calendar-badge.task {
+  background: rgba(255, 61, 184, 0.12);
+  border-color: rgba(255, 61, 184, 0.24);
+}
+
+body[data-theme-preset^="cyberpunk-"] .calendar-badge.note {
+  background: rgba(0, 229, 255, 0.11);
+  border-color: rgba(0, 229, 255, 0.24);
+}
+
+body[data-theme-preset^="cyberpunk-"] .cal-work-dot,
+body[data-theme-preset^="cyberpunk-"] .calendar-badge,
+body[data-theme-preset^="cyberpunk-"] .icon-slot {
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.12);
+}
+
+body[data-theme-preset^="cyberpunk-"] canvas,
+body[data-theme-preset^="cyberpunk-"] iframe {
+  filter: saturate(1.02) contrast(1.03);
 }
 
 .topbar-avatar,
