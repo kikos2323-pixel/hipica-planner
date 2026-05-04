@@ -140,7 +140,7 @@ const DEFAULT_GAMES = {
   pixelRunner: {
     bestScore: 0,
     lastScore: 0,
-    selectedHorse: "horse-caramelo"
+    selectedHorse: "castano"
   }
 };
 const state = {
@@ -588,6 +588,7 @@ function normalizeTheme(theme) {
 function normalizeGamesData(games) {
   const source = games && typeof games === "object" ? games : {};
   const flappyHorse = source.flappyHorse && typeof source.flappyHorse === "object" ? source.flappyHorse : {};
+  const pixelRunner = source.pixelRunner && typeof source.pixelRunner === "object" ? source.pixelRunner : {};
   const validFlappyColors = ["castano","negro","blanco","alazan","gris","palomino","pinto","appaloosa","isabela","tordo","moro","rosillo"];
   const legacyBirdMap = {
     "bird-tropical": "castano",
@@ -596,9 +597,24 @@ function normalizeGamesData(games) {
     "bird-fuego": "alazan",
     "bird-cielo": "gris"
   };
+  const legacyHorseMap = {
+    "horse-caramelo": "castano",
+    "horse-arcoiris": "palomino",
+    "horse-deportivo": "negro",
+    "horse-princesa": "blanco",
+    "horse-vaquero": "alazan",
+    "horse-fantasia-azul": "gris",
+    "horse-fuego": "alazan",
+    "horse-bosque": "pinto",
+    "horse-nieve": "blanco",
+    "horse-neon": "moro"
+  };
   let selectedColor = flappyHorse.selectedColor;
   if (legacyBirdMap[selectedColor]) selectedColor = legacyBirdMap[selectedColor];
   if (!validFlappyColors.includes(selectedColor)) selectedColor = DEFAULT_GAMES.flappyHorse.selectedColor;
+  let selectedHorse = pixelRunner.selectedHorse;
+  if (legacyHorseMap[selectedHorse]) selectedHorse = legacyHorseMap[selectedHorse];
+  if (!validFlappyColors.includes(selectedHorse)) selectedHorse = DEFAULT_GAMES.pixelRunner.selectedHorse;
   return {
     flappyHorse: {
       bestScore: Math.max(0, Number(flappyHorse.bestScore) || 0),
@@ -607,11 +623,9 @@ function normalizeGamesData(games) {
       speedFactor: Math.min(1.7, Math.max(0.7, Number(flappyHorse.speedFactor) || 1))
     },
     pixelRunner: {
-      bestScore: Math.max(0, Number(source.pixelRunner?.bestScore) || 0),
-      lastScore: Math.max(0, Number(source.pixelRunner?.lastScore) || 0),
-      selectedHorse: window.GAME_CHARACTERS?.horses?.some((horse) => horse.id === source.pixelRunner?.selectedHorse)
-        ? source.pixelRunner.selectedHorse
-        : DEFAULT_GAMES.pixelRunner.selectedHorse
+      bestScore: Math.max(0, Number(pixelRunner.bestScore) || 0),
+      lastScore: Math.max(0, Number(pixelRunner.lastScore) || 0),
+      selectedHorse
     }
   };
 }
@@ -1180,6 +1194,7 @@ function switchView(view, track = true) {
     historial: "Historial"
   }[view];
   renderStats();
+  if (view === "juegos") renderGames();
   updateBackButton();
 }
 
@@ -1351,6 +1366,31 @@ function renderHorses() {
 
 function renderGames() {
   renderGameRecords();
+  drawGameIcons();
+}
+
+function drawGameIcons() {
+  const GC = window.GAME_CHARACTERS;
+  if (!GC?.drawPixelHorse || !GC?.PIXEL_HORSE_THEMES) return;
+  const themes = GC.PIXEL_HORSE_THEMES;
+  const flappyCanvas = $("#flappyIconCanvas");
+  const runnerCanvas = $("#runnerIconCanvas");
+  if (flappyCanvas) {
+    flappyCanvas.width = 96; flappyCanvas.height = 72;
+    const ctx = flappyCanvas.getContext("2d");
+    ctx.clearRect(0, 0, 96, 72);
+    const games = normalizeGamesData(state.games);
+    const theme = themes.find((item) => item.id === games.flappyHorse.selectedColor) || themes[0];
+    GC.drawPixelHorse(ctx, 0, 0, 6, theme);
+  }
+  if (runnerCanvas) {
+    runnerCanvas.width = 96; runnerCanvas.height = 72;
+    const ctx = runnerCanvas.getContext("2d");
+    ctx.clearRect(0, 0, 96, 72);
+    const games = normalizeGamesData(state.games);
+    const theme = themes.find((item) => item.id === games.pixelRunner.selectedHorse) || themes[3] || themes[0];
+    GC.drawPixelHorse(ctx, 0, 0, 6, theme);
+  }
 }
 
 function renderGameRecords() {
@@ -1365,6 +1405,7 @@ function persistGames() {
   state.games = normalizeGamesData(state.games);
   saveData();
   renderGameRecords();
+  drawGameIcons();
 }
 
 let gamesInitialized = false;
@@ -3059,7 +3100,13 @@ function mergeDataSets(localData, cloudData) {
       flappyHorse: {
         bestScore: Math.max(Number(local.games?.flappyHorse?.bestScore) || 0, Number(cloud.games?.flappyHorse?.bestScore) || 0),
         lastScore: Math.max(Number(local.games?.flappyHorse?.lastScore) || 0, Number(cloud.games?.flappyHorse?.lastScore) || 0),
-        selectedColor: local.games?.flappyHorse?.selectedColor || cloud.games?.flappyHorse?.selectedColor || DEFAULT_GAMES.flappyHorse.selectedColor
+        selectedColor: local.games?.flappyHorse?.selectedColor || cloud.games?.flappyHorse?.selectedColor || DEFAULT_GAMES.flappyHorse.selectedColor,
+        speedFactor: local.games?.flappyHorse?.speedFactor || cloud.games?.flappyHorse?.speedFactor || DEFAULT_GAMES.flappyHorse.speedFactor
+      },
+      pixelRunner: {
+        bestScore: Math.max(Number(local.games?.pixelRunner?.bestScore) || 0, Number(cloud.games?.pixelRunner?.bestScore) || 0),
+        lastScore: Math.max(Number(local.games?.pixelRunner?.lastScore) || 0, Number(cloud.games?.pixelRunner?.lastScore) || 0),
+        selectedHorse: local.games?.pixelRunner?.selectedHorse || cloud.games?.pixelRunner?.selectedHorse || DEFAULT_GAMES.pixelRunner.selectedHorse
       }
     }),
     theme: local.theme?.mode ? local.theme : cloud.theme
@@ -3546,6 +3593,7 @@ function init() {
   setupVoiceInputs();
   bindEvents();
   initFlappyHorse();
+  setTimeout(drawGameIcons, 200);
   loadManualSegmentsForDate(todayISO());
   applyTheme();
   render();
@@ -4097,9 +4145,6 @@ document.addEventListener("click", (e) => {
 });
 
 init();
-
-
-
 
 
 

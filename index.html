@@ -557,7 +557,9 @@
 
               <div class="games-list" aria-label="Lista de juegos">
                 <button class="game-list-item" id="flappyStartBtn" type="button">
-                  <span class="game-list-icon game-list-icon-flappy" aria-hidden="true"><span class="icon-slot" data-icon="horse"></span></span>
+                  <span class="game-list-icon game-list-icon-flappy" aria-hidden="true">
+                    <canvas id="flappyIconCanvas" width="96" height="72"></canvas>
+                  </span>
                   <span class="game-list-main">
                     <strong>Flappy Horse</strong>
                     <span>Salta entre vallas y aguanta el ritmo.</span>
@@ -566,9 +568,11 @@
                 </button>
 
                 <button class="game-list-item" id="pixelRunnerStartBtn" type="button">
-                  <span class="game-list-icon game-list-icon-runner" aria-hidden="true"><span class="icon-slot" data-icon="top"></span></span>
+                  <span class="game-list-icon game-list-icon-runner" aria-hidden="true">
+                    <canvas id="runnerIconCanvas" width="96" height="72"></canvas>
+                  </span>
                   <span class="game-list-main">
-                    <strong>Caballo Pixel Runner</strong>
+                    <strong>Pixel Runner</strong>
                     <span>Vallas, barras altas y reflejos rápidos.</span>
                   </span>
                   <span class="game-list-score">Récord <strong id="pixelRunnerBestValue">0</strong></span>

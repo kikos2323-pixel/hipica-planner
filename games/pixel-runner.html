@@ -33,7 +33,7 @@
     .character-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
     .char-btn { height: 70px; border: 2px solid #ddd; border-radius: 12px; background: #fff; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: border-color .15s, background .15s, transform .15s; }
     .char-btn.active { border-color: #222; background: #fff3c4; transform: scale(1.05); }
-    .char-btn svg { width: 76px; height: 60px; overflow: visible; }
+    .char-btn svg { width: 76px; height: 58px; overflow: visible; image-rendering: pixelated; }
 
     .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .diff-btn { padding: 14px 8px; border: 2px solid #ddd; border-radius: 12px; background: #fff; cursor: pointer; text-align: center; font-family: monospace; font-weight: 900; font-size: 0.9rem; color: #444; transition: border-color .15s, background .15s, transform .15s; }
@@ -73,7 +73,7 @@
     .horse.duck { height: 48px; }
     .horse.duck .pixel-horse { transform: translateY(20px) scaleY(.72); transform-origin: bottom left; }
     .pixel-horse { position: absolute; left: 0; bottom: 0; width: 84px; height: 72px; }
-    .horse-runner-svg { position: absolute; left: -14px; bottom: -10px; width: 112px; height: 88px; overflow: visible; }
+    .horse-runner-svg { position: absolute; left: -6px; bottom: 2px; width: 96px; height: 72px; overflow: visible; image-rendering: pixelated; }
     .px { position: absolute; width: 6px; height: 6px; background: #555; }
     .mane, .hoof, .eye { background: #333; }
     .tail-anim-a, .tail-anim-b, .leg-a, .leg-b { animation-duration: 260ms; animation-iteration-count: infinite; animation-timing-function: steps(1, end); }
@@ -160,7 +160,24 @@
     const DIFF_SPEEDS = { easy: 3.2, normal: 4.2, hard: 5.6 };
     const urlParams = new URLSearchParams(window.location.search);
     const initialHorseParam = urlParams.get("horse");
-    let selectedHorse = initialHorseParam || localStorage.getItem("horsePixelCharacter") || "horse-caramelo";
+    const pixelThemes = window.GAME_CHARACTERS?.PIXEL_HORSE_THEMES || [];
+    const legacyHorseMap = {
+      "horse-caramelo": "castano",
+      "horse-arcoiris": "palomino",
+      "horse-deportivo": "negro",
+      "horse-princesa": "blanco",
+      "horse-vaquero": "alazan",
+      "horse-fantasia-azul": "gris",
+      "horse-fuego": "alazan",
+      "horse-bosque": "pinto",
+      "horse-nieve": "blanco",
+      "horse-neon": "moro"
+    };
+    function normalizeHorseId(id) {
+      const migrated = legacyHorseMap[id] || id;
+      return pixelThemes.some((theme) => theme.id === migrated) ? migrated : "castano";
+    }
+    let selectedHorse = normalizeHorseId(initialHorseParam || localStorage.getItem("horsePixelCharacter") || "castano");
     let selectedDiff = localStorage.getItem("horsePixelDiff") || "easy";
     let best = Number(localStorage.getItem("horsePixelBest") || 0);
 
@@ -211,10 +228,10 @@
       lobbyBest.textContent = format(best);
       bestEl.textContent = format(best);
 
-      const chars = window.GAME_CHARACTERS?.horses || [];
+      const chars = pixelThemes;
       lobbyCharGrid.innerHTML = chars.map((c) => `
-        <button class="char-btn ${c.id === selectedHorse ? "active" : ""}" data-char="${c.id}" title="${c.name}">
-          ${window.GAME_CHARACTERS.horseSvg(c.id)}
+        <button class="char-btn ${c.id === selectedHorse ? "active" : ""}" data-char="${c.id}" title="${c.label}">
+          ${window.GAME_CHARACTERS.pixelHorseSvg(4, c)}
         </button>
       `).join("");
 
@@ -259,7 +276,8 @@
     function applyCharacter() {
       const pixelHorse = horse.querySelector(".pixel-horse");
       if (pixelHorse && window.GAME_CHARACTERS) {
-        pixelHorse.innerHTML = window.GAME_CHARACTERS.horseSvg(selectedHorse, "horse-run horse-runner-svg");
+        const theme = pixelThemes.find((item) => item.id === selectedHorse) || pixelThemes[0];
+        pixelHorse.innerHTML = window.GAME_CHARACTERS.pixelHorseSvg(6, theme).replace("<svg ", '<svg class="horse-runner-svg" ');
       }
     }
 

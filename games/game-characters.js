@@ -66,5 +66,72 @@
     return `<svg viewBox="0 0 140 110" class="${className}" aria-hidden="true"><use href="#${id}"></use></svg>`;
   }
 
-  window.GAME_CHARACTERS = { horses, birds, injectHorseSprite, horseSvg };
+  // ── Pixel Art Horse System ──────────────────────────────────
+  const PIXEL_SPRITE = [
+    "................",
+    "...........MM...",
+    "..........MMMM..",
+    ".........MBBBB..",
+    "........MMEBBB..",
+    "....MMMMMBBBBBB.",
+    "....MBBBBBBBBB..",
+    "....MBBBSSBBBB..",
+    ".....BBBBBBBBD..",
+    "TT...DBBBBBBD...",
+    ".T...DD...DD....",
+    ".....HH...HH....",
+  ];
+
+  const PIXEL_HORSE_THEMES = [
+    { id: "castano",   label: "Castaño",   coat: "#9b5f33", mane: "#4d2c1a", dark: "#6b3f22", saddle: "#5590d4", hoof: "#2a1810" },
+    { id: "negro",     label: "Negro",     coat: "#34363c", mane: "#101114", dark: "#1e2024", saddle: "#cc2244", hoof: "#08090c" },
+    { id: "blanco",    label: "Blanco",    coat: "#f0ede3", mane: "#c0b8a8", dark: "#b8b0a0", saddle: "#55aaff", hoof: "#807870" },
+    { id: "alazan",    label: "Alazán",    coat: "#c47030", mane: "#6a3818", dark: "#8a4e20", saddle: "#2d9a4a", hoof: "#3a1c0e" },
+    { id: "gris",      label: "Gris",      coat: "#a8b0b8", mane: "#6a7278", dark: "#606870", saddle: "#ff8833", hoof: "#3a4048" },
+    { id: "palomino",  label: "Palomino",  coat: "#e8c870", mane: "#fff5d0", dark: "#b89840", saddle: "#dd4488", hoof: "#6a4820" },
+    { id: "pinto",     label: "Pinto",     coat: "#f0ede3", mane: "#3a2010", dark: "#9a9080", saddle: "#dd3344", hoof: "#2a1810" },
+    { id: "appaloosa", label: "Appaloosa", coat: "#d0c0a8", mane: "#3a2818", dark: "#907060", saddle: "#3388cc", hoof: "#2a1e14" },
+    { id: "isabela",   label: "Isabela",   coat: "#f0d8a0", mane: "#7a4820", dark: "#b09060", saddle: "#9944cc", hoof: "#5a3818" },
+    { id: "tordo",     label: "Tordo",     coat: "#b8b8b4", mane: "#2a2a28", dark: "#787874", saddle: "#22bb66", hoof: "#383838" },
+    { id: "moro",      label: "Moro",      coat: "#382818", mane: "#0c0a06", dark: "#201810", saddle: "#ddaa00", hoof: "#100a04" },
+    { id: "rosillo",   label: "Rosillo",   coat: "#c09888", mane: "#8a6050", dark: "#907060", saddle: "#cc8822", hoof: "#4a3020" },
+  ];
+
+  function drawPixelHorse(ctx, ox, oy, px, theme) {
+    const map = {
+      B: theme.coat, M: theme.mane, T: theme.mane,
+      S: theme.saddle, D: theme.dark, H: theme.hoof, E: "#111"
+    };
+    ctx.imageSmoothingEnabled = false;
+    PIXEL_SPRITE.forEach((row, ry) => {
+      for (let cx = 0; cx < row.length; cx++) {
+        const c = row[cx];
+        if (c === "." || !map[c]) continue;
+        ctx.fillStyle = map[c];
+        ctx.fillRect(ox + cx * px, oy + ry * px, px, px);
+      }
+    });
+  }
+
+  function pixelHorseSvg(px, theme) {
+    const map = {
+      B: theme.coat, M: theme.mane, T: theme.mane,
+      S: theme.saddle, D: theme.dark, H: theme.hoof, E: "#111"
+    };
+    const W = 16 * px, H = 12 * px;
+    let rects = "";
+    PIXEL_SPRITE.forEach((row, ry) => {
+      for (let cx = 0; cx < row.length; cx++) {
+        const c = row[cx];
+        if (c === "." || !map[c]) continue;
+        rects += `<rect x="${cx * px}" y="${ry * px}" width="${px}" height="${px}" fill="${map[c]}"/>`;
+      }
+    });
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" shape-rendering="crispEdges">${rects}</svg>`;
+  }
+
+  window.GAME_CHARACTERS = {
+    horses, birds, injectHorseSprite, horseSvg,
+    PIXEL_HORSE_THEMES, PIXEL_SPRITE, drawPixelHorse, pixelHorseSvg
+  };
 })();

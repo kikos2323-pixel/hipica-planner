@@ -980,43 +980,49 @@ h2 {
 
 .game-list-item {
   width: 100%;
-  min-height: 72px;
+  min-height: 96px;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) auto;
+  grid-template-columns: 100px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 16px;
+  padding: 12px 16px 12px 12px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 18px;
   background: var(--glass-soft);
   color: var(--text);
   text-align: left;
   box-shadow: var(--shadow-soft);
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
 
 .game-list-item:hover {
-  border-color: color-mix(in srgb, var(--primary) 34%, var(--line));
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--line));
   background: var(--glass-strong);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 
 .game-list-icon {
-  width: 48px;
-  height: 48px;
+  width: 100px;
+  height: 80px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  overflow: hidden;
+  image-rendering: pixelated;
 }
 
-.game-list-icon .icon-slot {
-  width: 26px;
-  height: 26px;
+.game-list-icon canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: 96px;
+  height: 72px;
 }
 
 .game-list-icon-runner {
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .game-list-main {
@@ -2564,12 +2570,18 @@ th {
 
 @media (max-width: 620px) {
   .game-list-item {
-    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-columns: 82px minmax(0, 1fr);
+    min-height: 92px;
   }
 
   .game-list-icon {
-    width: 44px;
-    height: 44px;
+    width: 82px;
+    height: 66px;
+  }
+
+  .game-list-icon canvas {
+    width: 78px;
+    height: 58px;
   }
 
   .game-list-score {

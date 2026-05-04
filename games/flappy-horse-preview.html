@@ -113,17 +113,18 @@
       }
 
       .horse-preview {
-        width: 52px;
-        height: 52px;
-        position: relative;
+        width: 80px;
+        height: 60px;
         display: flex;
         align-items: center;
         justify-content: center;
       }
 
       .horse-preview canvas {
-        width: 52px;
-        height: 52px;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        width: 80px;
+        height: 60px;
       }
 
       .horse-option-name {
@@ -360,26 +361,14 @@
       </div>
     </div>
 
-    <script>
+    <script src="game-characters.js"></script>
+  <script>
     (() => {
       /* ── CONSTANTS ─────────────────────────────────── */
       const BEST_KEY = "hipica.flappyHorse.best";
       const COLOR_KEY = "hipica.flappyHorse.color";
-
-      const horseThemes = [
-        { id: "castano",   label: "Castaño",   body: "#9b5f33", dark: "#5a3218", mane: "#4d2c1a", accent: "#744222", pattern: "blaze",     socks: true  },
-        { id: "negro",     label: "Negro",     body: "#34363c", dark: "#17181c", mane: "#101114", accent: "#24262b", pattern: "none",      socks: false },
-        { id: "blanco",    label: "Blanco",    body: "#f2ede3", dark: "#8f867b", mane: "#c9c0b3", accent: "#d8d0c3", pattern: "none",      socks: false },
-        { id: "alazan",    label: "Alazán",    body: "#ba6a36", dark: "#6a381c", mane: "#82411e", accent: "#99532a", pattern: "blaze",     socks: false },
-        { id: "gris",      label: "Gris",      body: "#adb4bb", dark: "#5f6870", mane: "#7f8891", accent: "#929aa3", pattern: "none",      socks: false },
-        { id: "palomino",  label: "Palomino",  body: "#e6c275", dark: "#9d7c33", mane: "#fff5d6", accent: "#cda44a", pattern: "blaze",     socks: true  },
-        { id: "pinto",     label: "Pinto",     body: "#f2ede3", dark: "#5a3218", mane: "#3a2415", accent: "#7a4225", pattern: "pinto",     socks: false },
-        { id: "appaloosa", label: "Appaloosa", body: "#d8c9b4", dark: "#5a4530", mane: "#3a2c1d", accent: "#7a5a3a", pattern: "appaloosa", socks: false },
-        { id: "isabela",   label: "Isabela",   body: "#f0d8a8", dark: "#a08055", mane: "#7a4c20", accent: "#c8a070", pattern: "blaze",     socks: true  },
-        { id: "tordo",     label: "Tordo",     body: "#c4c4c0", dark: "#5a5a55", mane: "#2d2d2a", accent: "#8a8a85", pattern: "dapple",    socks: false },
-        { id: "moro",      label: "Moro",      body: "#3d2d1a", dark: "#1f1208", mane: "#0a0604", accent: "#2a1d0e", pattern: "blaze",     socks: true  },
-        { id: "rosillo",   label: "Rosillo",   body: "#c89e8a", dark: "#7a5848", mane: "#9d6f55", accent: "#a07060", pattern: "appaloosa", socks: false }
-      ];
+      const GC = window.GAME_CHARACTERS;
+      const horseThemes = GC?.PIXEL_HORSE_THEMES || [];
 
       /* ── STATE ─────────────────────────────────────── */
       const urlParams = new URLSearchParams(window.location.search);
@@ -444,83 +433,10 @@
       }
 
       function drawPreviewHorse(cvs, theme) {
+        cvs.width = 80; cvs.height = 60;
         const c = cvs.getContext("2d");
-        c.clearRect(0, 0, 52, 52);
-        c.save();
-        c.translate(26, 30);
-
-        c.fillStyle = theme.body;
-        c.strokeStyle = theme.dark;
-        c.lineWidth = 1.5;
-        roundedRectCtx(c, -18, -12, 28, 16, 7, true, true);
-        roundedRectCtx(c, 2, -24, 14, 16, 7, true, true);
-
-        c.beginPath();
-        c.moveTo(10, -17);
-        c.lineTo(20, -27);
-        c.lineTo(13, -10);
-        c.closePath();
-        c.fillStyle = theme.accent;
-        c.fill();
-
-        c.beginPath();
-        c.moveTo(-16, -12);
-        c.quadraticCurveTo(-30, -22, -34, -3);
-        c.quadraticCurveTo(-26, -6, -16, 2);
-        c.lineWidth = 4.5;
-        c.strokeStyle = theme.mane;
-        c.stroke();
-
-        // pattern overlay (preview)
-        if (theme.pattern === "pinto") {
-          c.fillStyle = theme.dark;
-          c.beginPath();
-          c.ellipse(-12, -8, 7, 5, 0.3, 0, Math.PI*2); c.fill();
-          c.beginPath();
-          c.ellipse(-2, 0, 5, 4, -0.2, 0, Math.PI*2); c.fill();
-        } else if (theme.pattern === "appaloosa") {
-          c.fillStyle = theme.dark;
-          [[-10,-6],[-4,-2],[2,-6],[-12,2],[-2,2]].forEach(([px,py]) => {
-            c.beginPath(); c.arc(px,py,1.4,0,Math.PI*2); c.fill();
-          });
-        } else if (theme.pattern === "dapple") {
-          c.fillStyle = "rgba(255,255,255,0.35)";
-          [[-12,-7],[-4,-3],[-10,2],[0,-1]].forEach(([px,py]) => {
-            c.beginPath(); c.arc(px,py,2,0,Math.PI*2); c.fill();
-          });
-        }
-        if (theme.pattern === "blaze") {
-          c.fillStyle = "#ffffff";
-          c.beginPath();
-          c.moveTo(8,-22); c.lineTo(11,-22); c.lineTo(10,-12); c.lineTo(7,-12);
-          c.closePath(); c.fill();
-        }
-
-        c.beginPath();
-        c.arc(12, -16, 1.6, 0, Math.PI * 2);
-        c.fillStyle = "#20130a";
-        c.fill();
-
-        [[-6,4],[-1,5],[-12,4],[7,5]].forEach(([ox,oy], i) => {
-          c.save();
-          c.translate(ox, oy);
-          c.strokeStyle = theme.dark;
-          c.lineWidth = 2.5;
-          c.lineCap = "round";
-          c.beginPath();
-          c.moveTo(0,0); c.lineTo(0,8); c.lineTo(0,16);
-          c.stroke();
-          if (theme.socks) {
-            c.strokeStyle = "#ffffff";
-            c.lineWidth = 2.2;
-            c.beginPath();
-            c.moveTo(0,12); c.lineTo(0,16);
-            c.stroke();
-          }
-          c.restore();
-        });
-
-        c.restore();
+        c.clearRect(0, 0, 80, 60);
+        GC.drawPixelHorse(c, 0, 0, 5, theme);
       }
 
       horseGrid.addEventListener("click", e => {
@@ -832,92 +748,12 @@
       function drawHorse() {
         const { x, y, velocity, bob } = gameState.horse;
         const angle = Math.max(-0.55, Math.min(0.65, velocity * 0.045));
-        const theme = selectedTheme;
         ctx.save();
         ctx.translate(x, y + Math.sin(bob) * 4);
         ctx.rotate(angle);
-        ctx.fillStyle = theme.body;
-        ctx.strokeStyle = theme.dark;
-        ctx.lineWidth = 2;
-        roundedRectCtx(ctx, -24, -15, 38, 22, 10, true, true);
-        roundedRectCtx(ctx, 3, -30, 20, 22, 10, true, true);
-        ctx.beginPath();
-        ctx.moveTo(15, -21); ctx.lineTo(26, -33); ctx.lineTo(18, -14);
-        ctx.closePath();
-        ctx.fillStyle = theme.accent;
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(-20, -15);
-        ctx.quadraticCurveTo(-42, -28, -48, -4);
-        ctx.quadraticCurveTo(-36, -8, -23, 3);
-        ctx.lineWidth = 6.5;
-        ctx.strokeStyle = theme.mane;
-        ctx.stroke();
-
-        // pattern overlay on body
-        if (theme.pattern === "pinto") {
-          ctx.fillStyle = theme.dark;
-          ctx.beginPath(); ctx.ellipse(-15, -6, 9, 6, 0.3, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(-2, 1, 7, 5, -0.2, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(8, -22, 5, 4, 0.4, 0, Math.PI*2); ctx.fill();
-        } else if (theme.pattern === "appaloosa") {
-          ctx.fillStyle = theme.dark;
-          [[-15,-8],[-8,-3],[-2,-9],[4,-4],[-18,2],[-10,3],[-3,5]].forEach(([px,py]) => {
-            ctx.beginPath(); ctx.arc(px,py,1.8,0,Math.PI*2); ctx.fill();
-          });
-        } else if (theme.pattern === "dapple") {
-          ctx.fillStyle = "rgba(255,255,255,0.32)";
-          [[-15,-8],[-6,-3],[-12,3],[-2,1],[-18,0],[3,-5]].forEach(([px,py]) => {
-            ctx.beginPath(); ctx.arc(px,py,2.6,0,Math.PI*2); ctx.fill();
-          });
-        }
-        if (theme.pattern === "blaze") {
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.moveTo(11,-28); ctx.lineTo(15,-28); ctx.lineTo(13,-12); ctx.lineTo(9,-12);
-          ctx.closePath(); ctx.fill();
-        }
-
-        ctx.beginPath();
-        ctx.arc(17, -20, 2.1, 0, Math.PI * 2);
-        ctx.fillStyle = "#20130a";
-        ctx.fill();
-        [[-9,6,0.9],[2,7,1.1],[-17,6,1.15],[10,7,0.85]].forEach(([ox,oy,ph]) => {
-          const t = Math.sin(gameState.frame * 0.18 + ph) * 5;
-          ctx.save();
-          ctx.translate(ox, oy);
-          ctx.strokeStyle = theme.dark;
-          ctx.lineWidth = 4.2;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(0,0); ctx.lineTo(t*0.16, 14); ctx.lineTo(-1.5+t*0.28, 27);
-          ctx.stroke();
-          if (theme.socks) {
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 3.6;
-            ctx.beginPath();
-            ctx.moveTo(-1+t*0.24, 22); ctx.lineTo(-1.5+t*0.28, 27);
-            ctx.stroke();
-          }
-          ctx.restore();
-        });
+        ctx.translate(-48, -36);
+        GC.drawPixelHorse(ctx, 0, 0, 6, selectedTheme);
         ctx.restore();
-      }
-
-      function roundedRectCtx(c, x, y, w, h, r, fill, stroke) {
-        c.beginPath();
-        c.moveTo(x+r, y);
-        c.lineTo(x+w-r, y);
-        c.quadraticCurveTo(x+w, y, x+w, y+r);
-        c.lineTo(x+w, y+h-r);
-        c.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-        c.lineTo(x+r, y+h);
-        c.quadraticCurveTo(x, y+h, x, y+h-r);
-        c.lineTo(x, y+r);
-        c.quadraticCurveTo(x, y, x+r, y);
-        c.closePath();
-        if (fill)   c.fill();
-        if (stroke) c.stroke();
       }
 
       function draw() {
