@@ -680,21 +680,22 @@ function normalizeGamesData(games) {
   const source = games && typeof games === "object" ? games : {};
   const flappyHorse = source.flappyHorse && typeof source.flappyHorse === "object" ? source.flappyHorse : {};
   const pixelRunner = source.pixelRunner && typeof source.pixelRunner === "object" ? source.pixelRunner : {};
-  const validThemeIds = (window.GAME_CHARACTERS?.PIXEL_HORSE_THEMES || []).map((theme) => theme.id);
+  const validRunnerIds = (window.GAME_CHARACTERS?.RUNNER_HORSE_THEMES || window.GAME_CHARACTERS?.PIXEL_HORSE_THEMES || []).map((theme) => theme.id);
+  const validFlappyIds = (window.GAME_CHARACTERS?.FLAPPY_HORSE_THEMES || window.GAME_CHARACTERS?.PIXEL_HORSE_THEMES || []).map((theme) => theme.id);
   const legacyBirdMap = {
     "bird-tropical": "castano",
     "bird-pirata": "negro",
-    "bird-nube": "crema",
+    "bird-nube": "palomino",
     "bird-fuego": "alazan",
     "bird-cielo": "gris"
   };
   const legacyHorseMap = window.GAME_CHARACTERS?.LEGACY_HORSE_MAP || {};
   let selectedColor = flappyHorse.selectedColor;
   if (legacyBirdMap[selectedColor]) selectedColor = legacyBirdMap[selectedColor];
-  if (!validThemeIds.includes(selectedColor)) selectedColor = DEFAULT_GAMES.flappyHorse.selectedColor;
+  if (!validFlappyIds.includes(selectedColor)) selectedColor = DEFAULT_GAMES.flappyHorse.selectedColor;
   let selectedHorse = pixelRunner.selectedHorse;
   if (legacyHorseMap[selectedHorse]) selectedHorse = legacyHorseMap[selectedHorse];
-  if (!validThemeIds.includes(selectedHorse)) selectedHorse = DEFAULT_GAMES.pixelRunner.selectedHorse;
+  if (!validRunnerIds.includes(selectedHorse)) selectedHorse = DEFAULT_GAMES.pixelRunner.selectedHorse;
   return {
     flappyHorse: {
       bestScore: Math.max(0, Number(flappyHorse.bestScore) || 0),
@@ -1459,21 +1460,22 @@ function renderGames() {
 
 function drawGameIcons() {
   const GC = window.GAME_CHARACTERS;
-  if (!GC?.drawHorseGameIcon || !GC?.PIXEL_HORSE_THEMES) return;
-  const themes = GC.PIXEL_HORSE_THEMES;
+  if (!GC?.drawHorseGameIcon) return;
+  const flappyThemes = GC.FLAPPY_HORSE_THEMES || GC.PIXEL_HORSE_THEMES || [];
+  const runnerThemes = GC.RUNNER_HORSE_THEMES || GC.PIXEL_HORSE_THEMES || [];
   const games = normalizeGamesData(state.games);
   const flappyCanvas = $("#flappyIconCanvas");
   const runnerCanvas = $("#runnerIconCanvas");
   if (flappyCanvas) {
     flappyCanvas.width = 96; flappyCanvas.height = 72;
     const ctx = flappyCanvas.getContext("2d");
-    const theme = themes.find((item) => item.id === games.flappyHorse.selectedColor) || themes[0];
+    const theme = flappyThemes.find((item) => item.id === games.flappyHorse.selectedColor) || flappyThemes[0];
     GC.drawHorseGameIcon(ctx, "flappy", theme);
   }
   if (runnerCanvas) {
     runnerCanvas.width = 96; runnerCanvas.height = 72;
     const ctx = runnerCanvas.getContext("2d");
-    const theme = themes.find((item) => item.id === games.pixelRunner.selectedHorse) || themes[3] || themes[0];
+    const theme = runnerThemes.find((item) => item.id === games.pixelRunner.selectedHorse) || runnerThemes[3] || runnerThemes[0];
     GC.drawHorseGameIcon(ctx, "runner", theme);
   }
 }
@@ -4262,8 +4264,6 @@ document.addEventListener("click", (e) => {
 });
 
 init();
-
-
 
 
 

@@ -123,16 +123,17 @@
       }
 
       .horse-option {
-        min-height: 84px;
+        min-height: 100px;
         padding: 8px;
         display: grid;
         place-items: center;
+        align-content: center;
+        gap: 6px;
       }
 
       .horse-option canvas {
         width: 72px;
         height: 52px;
-        image-rendering: pixelated;
       }
 
       .horse-option span {
@@ -357,7 +358,7 @@
             </article>
             <article class="stat-pill">
               <span>Velocidad</span>
-              <strong id="speedValue">100%</strong>
+              <strong id="speedHeroValue">100%</strong>
             </article>
           </div>
         </section>
@@ -424,7 +425,7 @@
 
         const state = {
           bestScore: Number(localStorage.getItem(BEST_KEY) || 0),
-          selectedTheme: GC.themeById(query.get("horse") || localStorage.getItem(HORSE_KEY) || "castano"),
+          selectedTheme: GC.flappyThemeById(query.get("horse") || localStorage.getItem(HORSE_KEY) || "castano"),
           difficulty: ["easy", "normal", "hard"].includes(query.get("difficulty")) ? query.get("difficulty") : (localStorage.getItem(DIFF_KEY) || "normal"),
           speedFactor: Math.min(1.5, Math.max(0.7, Number(query.get("speed")) || Number(localStorage.getItem(SPEED_KEY)) || 1)),
           running: false,
@@ -457,6 +458,7 @@
         const backBtn = document.getElementById("backBtn");
         const jumpBtn = document.getElementById("jumpBtn");
         const speedSlider = document.getElementById("speedSlider");
+        const speedHeroValue = document.getElementById("speedHeroValue");
         const speedValue = document.getElementById("speedValue");
         const speedMeta = document.getElementById("speedMeta");
 
@@ -485,6 +487,7 @@
           localStorage.setItem(DIFF_KEY, state.difficulty);
           localStorage.setItem(SPEED_KEY, String(state.speedFactor));
           speedSlider.value = String(Math.round(state.speedFactor * 100));
+          speedHeroValue.textContent = `${Math.round(state.speedFactor * 100)}%`;
           speedValue.textContent = `${Math.round(state.speedFactor * 100)}%`;
           speedMeta.textContent = speedDescription(state.speedFactor);
           document.querySelectorAll("[data-difficulty]").forEach((button) => {
@@ -503,18 +506,17 @@
 
         function renderLobby() {
           lobbyRecord.textContent = String(state.bestScore);
-          horseGrid.innerHTML = GC.PIXEL_HORSE_THEMES.map((theme) => `
+          horseGrid.innerHTML = GC.FLAPPY_HORSE_THEMES.map((theme) => `
             <button class="horse-option ${theme.id === state.selectedTheme.id ? "selected" : ""}" data-theme="${theme.id}" type="button" title="${theme.label}">
               <canvas width="84" height="60" data-preview="${theme.id}"></canvas>
               <span>${theme.label}</span>
             </button>
           `).join("");
 
-          GC.PIXEL_HORSE_THEMES.forEach((theme) => {
+          GC.FLAPPY_HORSE_THEMES.forEach((theme) => {
             const canvasEl = horseGrid.querySelector(`[data-preview="${theme.id}"]`);
             const c = canvasEl.getContext("2d");
-            c.clearRect(0, 0, canvasEl.width, canvasEl.height);
-            GC.drawPixelHorse(c, 2, 4, 4, theme);
+            GC.drawFlappyHorsePreview(c, theme);
           });
 
           syncSettings();
@@ -787,8 +789,9 @@
           ctx.save();
           ctx.translate(x, y + Math.sin(bob) * 4);
           ctx.rotate(angle);
-          ctx.translate(-50, -36);
-          GC.drawPixelHorse(ctx, 0, 0, 5, state.selectedTheme);
+          GC.drawFlappyHorse(ctx, -6, -2, 1.18, state.selectedTheme, {
+            wingLift: Math.sin(state.frame * 0.28) * 0.95 - velocity * 0.03
+          });
           ctx.restore();
         }
 
@@ -808,7 +811,7 @@
         horseGrid.addEventListener("click", (event) => {
           const option = event.target.closest("[data-theme]");
           if (!option) return;
-          state.selectedTheme = GC.themeById(option.dataset.theme);
+          state.selectedTheme = GC.flappyThemeById(option.dataset.theme);
           renderLobby();
         });
 

@@ -118,16 +118,25 @@
     }
 
     .char-btn {
-      min-height: 82px;
+      min-height: 102px;
       display: grid;
       place-items: center;
       padding: 8px;
+      gap: 6px;
+      align-content: center;
     }
 
+    .char-btn canvas,
     .char-btn svg {
       width: 72px;
       height: 52px;
       image-rendering: pixelated;
+    }
+
+    .char-btn span {
+      font-size: 0.7rem;
+      color: #6c5646;
+      font-weight: 700;
     }
 
     .char-btn.active,
@@ -453,7 +462,7 @@
           </article>
           <article class="record-pill">
             <span>Velocidad</span>
-            <strong id="speedValue">100%</strong>
+            <strong id="speedHeroValue">100%</strong>
           </article>
         </div>
       </section>
@@ -550,6 +559,7 @@
     const lobbyBest = document.getElementById("lobbyBest");
     const charGrid = document.getElementById("charGrid");
     const speedSlider = document.getElementById("speedSlider");
+    const speedHeroValue = document.getElementById("speedHeroValue");
     const speedValue = document.getElementById("speedValue");
     const speedMeta = document.getElementById("speedMeta");
     const playBtn = document.getElementById("playBtn");
@@ -588,6 +598,7 @@
       localStorage.setItem("horsePixelDifficulty", state.difficulty);
       localStorage.setItem("horsePixelSpeedFactor", String(state.speedFactor));
       speedSlider.value = String(Math.round(state.speedFactor * 100));
+      speedHeroValue.textContent = `${Math.round(state.speedFactor * 100)}%`;
       speedValue.textContent = `${Math.round(state.speedFactor * 100)}%`;
       speedMeta.textContent = speedDescription(state.speedFactor);
       document.querySelectorAll("[data-difficulty]").forEach((button) => {
@@ -607,11 +618,19 @@
     function renderLobby() {
       lobbyBest.textContent = format(state.best);
       bestEl.textContent = format(state.best);
-      charGrid.innerHTML = GC.PIXEL_HORSE_THEMES.map((theme) => `
+      charGrid.innerHTML = GC.RUNNER_HORSE_THEMES.map((theme) => `
         <button class="char-btn ${theme.id === state.selectedHorse ? "active" : ""}" data-horse="${theme.id}" type="button" title="${theme.label}">
-          ${GC.pixelHorseSvg(4, theme)}
+          <canvas width="84" height="60" data-preview="${theme.id}"></canvas>
+          <span>${theme.label}</span>
         </button>
       `).join("");
+      GC.RUNNER_HORSE_THEMES.forEach((theme) => {
+        const preview = charGrid.querySelector(`[data-preview="${theme.id}"]`);
+        if (!preview) return;
+        const c = preview.getContext("2d");
+        c.clearRect(0, 0, preview.width, preview.height);
+        GC.drawRunnerHorse(c, 4, 5, 3, theme);
+      });
       syncSettings();
     }
 
