@@ -1,5 +1,5 @@
-const CACHE = "finca-planner-v8";
-const BASE = "/hipica-planner";
+const CACHE = "finca-planner-v9";
+const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 const ASSETS = [
   BASE + "/",
   BASE + "/index.html",

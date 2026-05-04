@@ -6,282 +6,300 @@
     <title>Flappy Horse</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-
+      html, body { width: 100%; height: 100%; overflow: hidden; }
       body {
-        font-family: Inter, system-ui, sans-serif;
-        background: linear-gradient(160deg, #bdeeff 0%, #ecf9ff 45%, #f3ddb0 100%);
-        min-height: 100dvh;
-        overflow: hidden;
+        font-family: monospace;
+        background: linear-gradient(160deg, #dff4ff 0%, #eefafc 46%, #f2debc 100%);
+        color: #173126;
         touch-action: none;
         user-select: none;
       }
+      .hidden { display: none !important; }
 
-      /* ── LOBBY ───────────────────────────────────── */
       #lobby {
         position: fixed;
         inset: 0;
-        z-index: 50;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 0;
-        background: linear-gradient(160deg, #bdeeff 0%, #ecf9ff 45%, #f3ddb0 100%);
-        padding: 24px 16px 32px;
+        z-index: 30;
         overflow-y: auto;
+        padding: 22px 14px 28px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08)),
+          linear-gradient(160deg, #dff4ff 0%, #eefafc 48%, #f3ddb0 100%);
       }
 
-      #lobby.hidden { display: none; }
+      .lobby-shell {
+        width: min(100%, 560px);
+        margin: 0 auto;
+        display: grid;
+        gap: 16px;
+      }
 
-      .lobby-title {
+      .hero,
+      .card {
+        background: rgba(255,255,255,0.78);
+        border-radius: 18px;
+        border: 2px solid rgba(23,49,38,0.09);
+        box-shadow: 0 12px 28px rgba(18,43,31,0.10);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero {
+        padding: 18px;
         text-align: center;
-        margin-bottom: 28px;
       }
 
-      .lobby-title .eyebrow {
-        font-size: 0.78rem;
-        font-weight: 800;
-        letter-spacing: 0.1em;
+      .hero p {
+        font-size: 0.74rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #6a7d72;
+        color: #5e7c6f;
         margin-bottom: 6px;
       }
 
-      .lobby-title h1 {
-        font-size: clamp(2rem, 8vw, 3.2rem);
-        line-height: 1;
-        color: #173126;
+      .hero h1 {
+        font-size: clamp(2rem, 8vw, 3rem);
+        line-height: 0.95;
       }
 
-      .record-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 10px;
-        padding: 8px 16px;
-        border-radius: 999px;
-        background: rgba(40, 114, 87, 0.12);
-        border: 1px solid rgba(40, 114, 87, 0.2);
-        color: #287257;
-        font-weight: 800;
-        font-size: 0.92rem;
+      .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 14px;
+        flex-wrap: wrap;
       }
 
-      /* horse picker */
-      .section-label {
-        font-size: 0.78rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
+      .stat-pill {
+        min-width: 110px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: #f5fcf9;
+        border: 2px solid rgba(23,49,38,0.08);
+      }
+
+      .stat-pill span {
+        display: block;
+        font-size: 0.7rem;
+        color: #5e7c6f;
+        font-weight: 700;
+      }
+
+      .stat-pill strong {
+        display: block;
+        margin-top: 2px;
+        font-size: 1.25rem;
+      }
+
+      .card {
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .card h2 {
+        font-size: 0.8rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: #6a7d72;
-        margin-bottom: 12px;
-        text-align: center;
+        color: #5e7c6f;
       }
 
       .horse-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: center;
-        margin-bottom: 28px;
-        max-width: 360px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+        gap: 8px;
+      }
+
+      .horse-option,
+      .diff-btn {
+        border: 2px solid rgba(23,49,38,0.10);
+        border-radius: 14px;
+        background: #fff;
+        cursor: pointer;
+        font-family: monospace;
+        transition: transform 0.15s, border-color 0.15s, background 0.15s;
+        color: #173126;
       }
 
       .horse-option {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        padding: 10px 14px;
-        border-radius: 18px;
-        border: 2px solid transparent;
-        background: rgba(255,255,255,0.55);
-        transition: all 0.18s;
-        min-width: 80px;
+        min-height: 84px;
+        padding: 8px;
+        display: grid;
+        place-items: center;
       }
 
-      .horse-option:hover {
-        background: rgba(255,255,255,0.8);
-        transform: translateY(-2px);
-      }
-
-      .horse-option.selected {
-        border-color: #287257;
-        background: rgba(40,114,87,0.1);
-        box-shadow: 0 0 0 3px rgba(40,114,87,0.18);
-      }
-
-      .horse-preview {
-        width: 80px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .horse-preview canvas {
+      .horse-option canvas {
+        width: 72px;
+        height: 52px;
         image-rendering: pixelated;
-        image-rendering: crisp-edges;
-        width: 80px;
-        height: 60px;
       }
 
-      .horse-option-name {
-        font-size: 0.75rem;
+      .horse-option span {
+        font-size: 0.7rem;
+        color: #5f756a;
         font-weight: 700;
-        color: #3a5248;
-        text-align: center;
       }
 
-      /* play button */
-      .play-btn {
+      .horse-option.selected,
+      .diff-btn.active {
+        border-color: #287257;
+        background: #edf9f2;
+        transform: translateY(-1px);
+      }
+
+      .diff-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .diff-btn {
+        min-height: 66px;
+        padding: 10px 8px;
+        font-weight: 900;
+      }
+
+      .diff-btn span {
+        display: block;
+        font-size: 0.68rem;
+        margin-top: 4px;
+        color: #6a8479;
+        font-weight: 700;
+      }
+
+      .slider-row {
+        display: grid;
+        gap: 8px;
+      }
+
+      .slider-readout {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        color: #3a5f50;
+        font-weight: 900;
+      }
+
+      .slider-readout strong {
+        font-size: 1.12rem;
+      }
+
+      .slider-readout span {
+        font-size: 0.78rem;
+        color: #6a8479;
+      }
+
+      .slider-meta {
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 10px;
-        width: min(300px, 100%);
-        height: 58px;
-        border-radius: 18px;
-        border: none;
-        font: inherit;
-        font-size: 1.1rem;
-        font-weight: 800;
-        cursor: pointer;
+        justify-content: space-between;
+        font-size: 0.82rem;
+        color: #637a70;
+        font-weight: 700;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: #287257;
+      }
+
+      .play-btn {
+        width: 100%;
+        height: 60px;
+        border: 0;
+        border-radius: 16px;
         background: linear-gradient(135deg, #287257, #3ba97d);
-        color: white;
-        box-shadow: 0 8px 24px rgba(40,114,87,0.35);
-        transition: transform 0.15s, box-shadow 0.15s;
-        touch-action: manipulation;
+        color: #fff;
+        font-family: monospace;
+        font-size: 1.15rem;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(40,114,87,0.26);
       }
 
-      .play-btn:active {
-        transform: scale(0.97);
-        box-shadow: 0 4px 12px rgba(40,114,87,0.3);
-      }
-
-      /* ── GAME WRAP ──────────────────────────────── */
       #gameWrap {
         position: fixed;
         inset: 0;
-        z-index: 40;
         display: flex;
         flex-direction: column;
         background: #000;
       }
-
-      #gameWrap.hidden { display: none; }
 
       #gameCanvas {
         flex: 1;
         width: 100%;
         height: 100%;
         display: block;
-        touch-action: none;
       }
 
       .controls-bar {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 8px 12px;
-        background: rgba(0,0,0,0.65);
         gap: 10px;
-        flex-shrink: 0;
+        padding: 10px;
+        background: rgba(8, 22, 17, 0.74);
+      }
+
+      .back-btn,
+      .jump-btn {
+        min-height: 50px;
+        border-radius: 14px;
+        border: 0;
+        font-family: monospace;
+        font-weight: 900;
+        cursor: pointer;
       }
 
       .back-btn {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0 14px;
-        height: 44px;
-        border-radius: 14px;
-        border: none;
+        flex: 0 0 74px;
         background: rgba(255,255,255,0.14);
-        color: rgba(255,255,255,0.9);
-        font: inherit;
-        font-size: 0.85rem;
-        font-weight: 700;
-        cursor: pointer;
-        touch-action: manipulation;
+        color: rgba(255,255,255,0.92);
       }
 
       .jump-btn {
         flex: 1;
-        height: 52px;
-        border-radius: 16px;
-        border: none;
         background: rgba(40,200,120,0.22);
-        border: 1px solid rgba(40,200,120,0.4);
-        color: rgba(255,255,255,0.95);
-        font: inherit;
-        font-size: 1rem;
-        font-weight: 800;
-        cursor: pointer;
-        touch-action: manipulation;
-        letter-spacing: 0.04em;
+        color: rgba(255,255,255,0.96);
+        border: 1px solid rgba(40,200,120,0.42);
       }
 
-      .jump-btn:active {
-        background: rgba(40,200,120,0.4);
-      }
-
-      /* in-game overlay */
       #gameOverlay {
         position: absolute;
         inset: 0;
-        bottom: 0;
         display: grid;
         place-items: center;
-        pointer-events: none;
         z-index: 10;
+        pointer-events: none;
       }
 
-      #gameOverlay.hidden { display: none; }
-
       .overlay-card {
-        width: min(360px, calc(100% - 32px));
-        padding: 28px 24px;
+        width: min(360px, calc(100% - 28px));
+        padding: 26px 22px;
         text-align: center;
-        border-radius: 24px;
-        border: 1px solid rgba(255,255,255,0.45);
-        background: rgba(255,255,255,0.78);
-        box-shadow: 0 18px 50px rgba(18, 43, 31, 0.18);
-        backdrop-filter: blur(18px);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.82);
+        border: 1px solid rgba(255,255,255,0.52);
+        box-shadow: 0 18px 46px rgba(18, 43, 31, 0.18);
+        backdrop-filter: blur(14px);
         pointer-events: all;
       }
 
       .overlay-card h2 {
-        font-size: clamp(1.4rem, 4vw, 2rem);
-        color: #173126;
+        font-size: clamp(1.4rem, 4vw, 1.9rem);
         margin-bottom: 8px;
       }
 
       .overlay-card p {
-        color: #617468;
-        line-height: 1.5;
-        margin-bottom: 0;
-      }
-
-      .hint-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 16px;
-        padding: 10px 16px;
-        border-radius: 999px;
-        background: rgba(40, 114, 87, 0.12);
-        color: #287257;
-        font-weight: 800;
-        font-size: 0.9rem;
+        color: #5e7469;
+        line-height: 1.45;
       }
 
       .countdown-num {
-        font-size: clamp(5rem, 18vw, 9rem);
-        font-weight: 900;
+        font-size: clamp(5rem, 18vw, 8rem);
         line-height: 1;
-        color: #173126;
+        font-weight: 900;
       }
 
       .gameover-score {
@@ -293,9 +311,9 @@
 
       .gameover-record {
         font-size: 0.88rem;
-        color: #6a7d72;
         font-weight: 700;
-        margin-bottom: 20px;
+        color: #62786d;
+        margin-bottom: 18px;
       }
 
       .gameover-btns {
@@ -304,476 +322,538 @@
         gap: 10px;
       }
 
-      .btn-retry {
-        height: 50px;
-        border-radius: 16px;
-        border: none;
-        background: linear-gradient(135deg, #287257, #3ba97d);
-        color: white;
-        font: inherit;
-        font-size: 1rem;
-        font-weight: 800;
+      .btn-retry,
+      .btn-lobby {
+        min-height: 46px;
+        border-radius: 14px;
+        border: 0;
+        font-family: monospace;
+        font-weight: 900;
         cursor: pointer;
-        touch-action: manipulation;
+      }
+
+      .btn-retry {
+        background: linear-gradient(135deg, #287257, #3ba97d);
+        color: #fff;
       }
 
       .btn-lobby {
-        height: 44px;
-        border-radius: 16px;
-        border: 1px solid rgba(27,58,44,0.2);
-        background: rgba(255,255,255,0.6);
-        color: #3a5248;
-        font: inherit;
-        font-size: 0.9rem;
-        font-weight: 700;
-        cursor: pointer;
-        touch-action: manipulation;
+        background: #fff;
+        color: #2d4b3f;
+        border: 1px solid rgba(23,49,38,0.12);
       }
     </style>
   </head>
   <body>
-
-    <!-- ── LOBBY ───────────────────────────────────────── -->
     <div id="lobby">
-      <div class="lobby-title">
-        <div class="eyebrow">Minijuego</div>
-        <h1>🐴 Flappy Horse</h1>
-        <div class="record-badge">🏆 Récord: <span id="lobbyRecord">0</span></div>
+      <div class="lobby-shell">
+        <section class="hero">
+          <p>Minijuego</p>
+          <h1>Flappy Horse</h1>
+          <div class="hero-stats">
+            <article class="stat-pill">
+              <span>Record</span>
+              <strong id="lobbyRecord">0</strong>
+            </article>
+            <article class="stat-pill">
+              <span>Velocidad</span>
+              <strong id="speedValue">100%</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Caballo</h2>
+          <div class="horse-grid" id="horseGrid"></div>
+        </section>
+
+        <section class="card">
+          <h2>Dificultad</h2>
+          <div class="diff-grid">
+            <button class="diff-btn" data-difficulty="easy" type="button">Facil<span>Mas hueco</span></button>
+            <button class="diff-btn" data-difficulty="normal" type="button">Normal<span>Equilibrado</span></button>
+            <button class="diff-btn" data-difficulty="hard" type="button">Dificil<span>Menos margen</span></button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Velocidad fina</h2>
+          <div class="slider-row">
+            <div class="slider-readout">
+              <strong id="speedValue">100%</strong>
+              <span id="speedMeta">Equilibrado</span>
+            </div>
+            <input id="speedSlider" type="range" min="70" max="150" step="5" value="100">
+            <div class="slider-meta">
+              <span>Suave</span>
+              <span>Rapido</span>
+            </div>
+          </div>
+        </section>
+
+        <button class="play-btn" id="playBtn" type="button">Jugar</button>
       </div>
-
-      <p class="section-label">Elige tu caballo</p>
-      <div class="horse-grid" id="horseGrid"></div>
-
-      <button class="play-btn" id="playBtn" type="button">
-        ▶ &nbsp;¡Jugar!
-      </button>
     </div>
 
-    <!-- ── GAME WRAP ──────────────────────────────────── -->
     <div id="gameWrap" class="hidden">
       <div id="gameOverlay">
         <div class="overlay-card" id="overlayCard"></div>
       </div>
       <canvas id="gameCanvas"></canvas>
       <div class="controls-bar">
-        <button class="back-btn" id="backBtn" type="button">← Lobby</button>
-        <button class="jump-btn" id="jumpBtn" type="button">🐴 SALTAR</button>
+        <button class="back-btn" id="backBtn" type="button"><</button>
+        <button class="jump-btn" id="jumpBtn" type="button">SALTAR</button>
       </div>
     </div>
 
     <script src="game-characters.js"></script>
-  <script>
-    (() => {
-      /* ── CONSTANTS ─────────────────────────────────── */
-      const BEST_KEY = "hipica.flappyHorse.best";
-      const COLOR_KEY = "hipica.flappyHorse.color";
-      const GC = window.GAME_CHARACTERS;
-      const horseThemes = GC?.PIXEL_HORSE_THEMES || [];
-
-      /* ── STATE ─────────────────────────────────────── */
-      const urlParams = new URLSearchParams(window.location.search);
-      const initialHorse = urlParams.get("horse");
-      let bestScore = Number(localStorage.getItem(BEST_KEY) || 0);
-      let selectedTheme = horseThemes.find(t => t.id === initialHorse)
-        || horseThemes.find(t => t.id === localStorage.getItem(COLOR_KEY))
-        || horseThemes[0];
-
-      function postToParent(payload) {
-        try { window.parent && window.parent !== window && window.parent.postMessage(payload, window.location.origin); }
-        catch (_) {}
-      }
-
-      const gameState = {
-        running: false,
-        gameOver: false,
-        countdown: 0,
-        countdownTimer: null,
-        score: 0,
-        gravity: 0.27,
-        flap: -6.6,
-        groundHeight: 82,
-        baseSpeed: 2.15,
-        speed: 2.15,
-        spawnTimer: 0,
-        spawnEvery: 132,
-        currentGap: 248,
-        frame: 0,
-        horse: { x: 0, y: 0, width: 74, height: 46, velocity: 0, bob: 0 },
-        fences: []
-      };
-
-      /* ── DOM ───────────────────────────────────────── */
-      const lobby      = document.getElementById("lobby");
-      const gameWrap   = document.getElementById("gameWrap");
-      const canvas     = document.getElementById("gameCanvas");
-      const ctx        = canvas.getContext("2d");
-      const gameOverlay = document.getElementById("gameOverlay");
-      const overlayCard = document.getElementById("overlayCard");
-      const lobbyRecord = document.getElementById("lobbyRecord");
-      const horseGrid  = document.getElementById("horseGrid");
-      const playBtn    = document.getElementById("playBtn");
-      const backBtn    = document.getElementById("backBtn");
-      const jumpBtn    = document.getElementById("jumpBtn");
-
-      /* ── LOBBY ─────────────────────────────────────── */
-      function renderLobby() {
-        lobbyRecord.textContent = bestScore;
-        horseGrid.innerHTML = horseThemes.map(t => `
-          <div class="horse-option ${t.id === selectedTheme.id ? 'selected' : ''}"
-               data-theme="${t.id}" role="button" tabindex="0">
-            <canvas class="horse-preview" width="52" height="52" data-preview="${t.id}"></canvas>
-            <span class="horse-option-name">${t.label}</span>
-          </div>
-        `).join("");
-
-        horseThemes.forEach(t => {
-          const cvs = horseGrid.querySelector(`[data-preview="${t.id}"]`);
-          drawPreviewHorse(cvs, t);
-        });
-      }
-
-      function drawPreviewHorse(cvs, theme) {
-        cvs.width = 80; cvs.height = 60;
-        const c = cvs.getContext("2d");
-        c.clearRect(0, 0, 80, 60);
-        GC.drawPixelHorse(c, 0, 0, 5, theme);
-      }
-
-      horseGrid.addEventListener("click", e => {
-        const opt = e.target.closest("[data-theme]");
-        if (!opt) return;
-        selectedTheme = horseThemes.find(t => t.id === opt.dataset.theme);
-        localStorage.setItem(COLOR_KEY, selectedTheme.id);
-        postToParent({ type: "flappy-horse-character", characterId: selectedTheme.id });
-        renderLobby();
-      });
-
-      playBtn.addEventListener("click", () => {
-        lobby.classList.add("hidden");
-        gameWrap.classList.remove("hidden");
-        resizeCanvas();
-        startCountdown();
-      });
-
-      backBtn.addEventListener("click", goToLobby);
-
-      function goToLobby() {
-        stopGame();
-        gameWrap.classList.add("hidden");
-        lobby.classList.remove("hidden");
-        renderLobby();
-      }
-
-      /* ── CANVAS RESIZE ─────────────────────────────── */
-      function resizeCanvas() {
-        const bar = gameWrap.querySelector(".controls-bar");
-        const barH = bar ? bar.offsetHeight : 70;
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight - barH;
-        gameState.horse.x = Math.round(canvas.width * 0.22);
-        if (!gameState.running && !gameState.gameOver) {
-          gameState.horse.y = Math.round(canvas.height * 0.45);
-        }
-      }
-
-      window.addEventListener("resize", () => {
-        resizeCanvas();
-      });
-
-      /* ── GAME CONTROL ──────────────────────────────── */
-      function stopGame() {
-        gameState.running = false;
-        gameState.gameOver = false;
-        if (gameState.countdownTimer) {
-          clearInterval(gameState.countdownTimer);
-          gameState.countdownTimer = null;
-        }
-        gameState.countdown = 0;
-      }
-
-      function resetGameState(startRunning) {
-        stopGame();
-        gameState.running  = startRunning;
-        gameState.score    = 0;
-        gameState.speed    = gameState.baseSpeed;
-        gameState.spawnTimer = 0;
-        gameState.currentGap = 248;
-        gameState.frame    = 0;
-        gameState.fences   = [];
-        gameState.horse.y  = Math.round(canvas.height * 0.45);
-        gameState.horse.velocity = 0;
-        gameState.horse.bob = 0;
-        gameState.gravity  = 0.27;
-      }
-
-      function startCountdown() {
-        resetGameState(false);
-        gameState.countdown = 3;
-        showCountdown(3);
-
-        gameState.countdownTimer = setInterval(() => {
-          gameState.countdown -= 1;
-          if (gameState.countdown > 0) {
-            showCountdown(gameState.countdown);
-          } else {
-            clearInterval(gameState.countdownTimer);
-            gameState.countdownTimer = null;
-            gameState.countdown = 0;
-            gameState.running = true;
-            hideOverlay();
-          }
-        }, 1000);
-      }
-
-      function flapHorse() {
-        if (gameState.countdown > 0) return;
-        if (gameState.gameOver) return;
-        if (!gameState.running) return;
-        gameState.horse.velocity = gameState.flap;
-      }
-
-      function endGame() {
-        gameState.running = false;
-        gameState.gameOver = true;
-        if (gameState.score > bestScore) {
-          bestScore = gameState.score;
-          localStorage.setItem(BEST_KEY, String(bestScore));
-        }
-        postToParent({ type: "flappy-horse-score", score: gameState.score, best: bestScore });
-        showGameOver();
-      }
-
-      /* ── OVERLAY HELPERS ───────────────────────────── */
-      function hideOverlay() {
-        gameOverlay.classList.add("hidden");
-        overlayCard.innerHTML = "";
-      }
-
-      function showCountdown(n) {
-        gameOverlay.classList.remove("hidden");
-        overlayCard.innerHTML = `<div class="countdown-num">${n}</div>`;
-      }
-
-      function showStartScreen() {
-        gameOverlay.classList.remove("hidden");
-        overlayCard.innerHTML = `
-          <h2>¡Listo!</h2>
-          <p>Salta para no tocar las vallas ni el suelo.</p>
-          <div class="hint-pill">Espacio · clic · toque</div>
-        `;
-      }
-
-      function showGameOver() {
-        const isNew = gameState.score >= bestScore;
-        gameOverlay.classList.remove("hidden");
-        overlayCard.innerHTML = `
-          <h2>¡Has chocado!</h2>
-          <div class="gameover-score">${gameState.score}</div>
-          <div class="gameover-record">${isNew ? "🏆 ¡Nuevo récord!" : `Récord: ${bestScore}`}</div>
-          <div class="gameover-btns">
-            <button class="btn-retry" id="retryBtn">🔄 Volver a jugar</button>
-            <button class="btn-lobby" id="toLobbyBtn">← Cambiar caballo</button>
-          </div>
-        `;
-        document.getElementById("retryBtn").addEventListener("click", startCountdown);
-        document.getElementById("toLobbyBtn").addEventListener("click", goToLobby);
-      }
-
-      /* ── INPUT ─────────────────────────────────────── */
-      canvas.addEventListener("pointerdown", e => {
-        e.preventDefault();
-        flapHorse();
-      });
-
-      jumpBtn.addEventListener("pointerdown", e => {
-        e.preventDefault();
-        flapHorse();
-      });
-
-      window.addEventListener("keydown", e => {
-        if (e.code === "Space" || e.code === "ArrowUp") {
-          e.preventDefault();
-          flapHorse();
-        }
-      });
-
-      /* ── UPDATE ────────────────────────────────────── */
-      function update() {
-        gameState.frame += 1;
-        gameState.horse.bob += 0.08;
-
-        if (!gameState.running || gameState.gameOver) return;
-
-        const lvl = Math.floor(gameState.score / 25);
-        gameState.speed    = gameState.baseSpeed * Math.pow(1.01, lvl);
-        gameState.gravity  = 0.27 * Math.pow(1.01, lvl);
-        gameState.currentGap = Math.max(132, 248 - lvl * 6);
-
-        gameState.spawnTimer += 1;
-        if (gameState.spawnTimer >= gameState.spawnEvery) {
-          gameState.spawnTimer = 0;
-          spawnFence();
-        }
-
-        gameState.horse.velocity += gameState.gravity;
-        gameState.horse.y += gameState.horse.velocity;
-
-        gameState.fences.forEach(f => {
-          f.x -= gameState.speed;
-          if (!f.scored && f.x + f.width < gameState.horse.x) {
-            f.scored = true;
-            gameState.score += 1;
-          }
-        });
-        gameState.fences = gameState.fences.filter(f => f.x + f.width > -140);
-
-        const hb = {
-          x: gameState.horse.x - gameState.horse.width  * 0.34,
-          y: gameState.horse.y - gameState.horse.height * 0.35,
-          width:  gameState.horse.width  * 0.72,
-          height: gameState.horse.height * 0.7
+    <script>
+      (() => {
+        const GC = window.GAME_CHARACTERS;
+        const query = new URLSearchParams(window.location.search);
+        const difficultyMap = {
+          easy: { baseSpeed: 1.95, gravity: 0.245, flap: -6.8, spawnEvery: 146, gap: 272 },
+          normal: { baseSpeed: 2.15, gravity: 0.27, flap: -6.6, spawnEvery: 132, gap: 248 },
+          hard: { baseSpeed: 2.4, gravity: 0.3, flap: -6.4, spawnEvery: 118, gap: 222 }
         };
 
-        const hitGround = gameState.horse.y + gameState.horse.height / 2 >= canvas.height - gameState.groundHeight;
-        const hitSky    = gameState.horse.y - gameState.horse.height / 2 <= 0;
-        const hitFence  = gameState.fences.some(f => {
-          const top = { x: f.x, y: 0, width: f.width, height: f.gapY };
-          const bot = { x: f.x, y: f.gapY + f.gapHeight, width: f.width,
-                        height: canvas.height - gameState.groundHeight - (f.gapY + f.gapHeight) };
-          return intersects(hb, top) || intersects(hb, bot);
-        });
+        const BEST_KEY = "hipica.flappyHorse.best";
+        const HORSE_KEY = "hipica.flappyHorse.color";
+        const DIFF_KEY = "hipica.flappyHorse.difficulty";
+        const SPEED_KEY = "hipica.flappyHorse.speed";
 
-        if (hitGround || hitSky || hitFence) endGame();
-      }
+        const state = {
+          bestScore: Number(localStorage.getItem(BEST_KEY) || 0),
+          selectedTheme: GC.themeById(query.get("horse") || localStorage.getItem(HORSE_KEY) || "castano"),
+          difficulty: ["easy", "normal", "hard"].includes(query.get("difficulty")) ? query.get("difficulty") : (localStorage.getItem(DIFF_KEY) || "normal"),
+          speedFactor: Math.min(1.5, Math.max(0.7, Number(query.get("speed")) || Number(localStorage.getItem(SPEED_KEY)) || 1)),
+          running: false,
+          gameOver: false,
+          countdown: 0,
+          countdownTimer: null,
+          score: 0,
+          gravity: 0.27,
+          flap: -6.6,
+          groundHeight: 82,
+          baseSpeed: 2.15,
+          speed: 2.15,
+          spawnTimer: 0,
+          spawnEvery: 132,
+          currentGap: 248,
+          frame: 0,
+          horse: { x: 0, y: 0, width: 74, height: 46, velocity: 0, bob: 0 },
+          fences: []
+        };
 
-      function spawnFence() {
-        const gap    = gameState.currentGap;
-        const minTop = 62;
-        const maxTop = canvas.height - gameState.groundHeight - gap - 62;
-        const topH   = minTop + Math.random() * (maxTop - minTop);
-        gameState.fences.push({
-          x: canvas.width + 40,
-          width: 92,
-          gapY: topH,
-          gapHeight: gap,
-          scored: false,
-          colorA: Math.random() > 0.5 ? "#f3c969" : "#f2a94c",
-          colorB: Math.random() > 0.5 ? "#2f8f6b" : "#367dc0"
-        });
-      }
+        const lobby = document.getElementById("lobby");
+        const gameWrap = document.getElementById("gameWrap");
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const gameOverlay = document.getElementById("gameOverlay");
+        const overlayCard = document.getElementById("overlayCard");
+        const lobbyRecord = document.getElementById("lobbyRecord");
+        const horseGrid = document.getElementById("horseGrid");
+        const playBtn = document.getElementById("playBtn");
+        const backBtn = document.getElementById("backBtn");
+        const jumpBtn = document.getElementById("jumpBtn");
+        const speedSlider = document.getElementById("speedSlider");
+        const speedValue = document.getElementById("speedValue");
+        const speedMeta = document.getElementById("speedMeta");
 
-      function intersects(a, b) {
-        return a.x < b.x + b.width && a.x + a.width > b.x &&
-               a.y < b.y + b.height && a.y + a.height > b.y;
-      }
-
-      /* ── DRAW ──────────────────────────────────────── */
-      function drawBackground() {
-        const W = canvas.width, H = canvas.height;
-        const sky = ctx.createLinearGradient(0, 0, 0, H);
-        sky.addColorStop(0,    "#bdeeff");
-        sky.addColorStop(0.68, "#ecf9ff");
-        sky.addColorStop(0.68, "#f3ddb0");
-        sky.addColorStop(1,    "#d2b57b");
-        ctx.fillStyle = sky;
-        ctx.fillRect(0, 0, W, H);
-
-        [[W*0.1, 80, 1.1],[W*0.35, 110, 0.9],[W*0.65, 75, 1.25],[W*0.88, 130, 0.95]].forEach(([x,y,s]) => drawCloud(x,y,s));
-
-        ctx.fillStyle = "#7fb96d";
-        ctx.beginPath();
-        ctx.moveTo(0, H - gameState.groundHeight - 24);
-        for (let x = 0; x <= W; x += 42) {
-          ctx.lineTo(x, H - gameState.groundHeight - 18 - Math.sin((x + gameState.frame * 2) * 0.01) * 8);
-        }
-        ctx.lineTo(W, H - gameState.groundHeight + 18);
-        ctx.lineTo(0,  H - gameState.groundHeight + 18);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#9a7b4e";
-        ctx.fillRect(0, H - gameState.groundHeight, W, gameState.groundHeight);
-        ctx.fillStyle = "#b8925d";
-        for (let i = 0; i < W; i += 28) {
-          ctx.fillRect(i + (gameState.frame * 2 % 28), H - gameState.groundHeight + 8, 12, 8);
+        function config() {
+          return difficultyMap[state.difficulty] || difficultyMap.normal;
         }
 
-        if (gameState.running) {
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          ctx.font = "bold 28px Inter, system-ui, sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText(String(gameState.score), canvas.width / 2, 48);
+        function speedDescription(factor) {
+          if (factor <= 0.85) return "Muy suave";
+          if (factor < 0.97) return "Suave";
+          if (factor <= 1.08) return "Equilibrado";
+          if (factor <= 1.22) return "Rapido";
+          return "Muy rapido";
         }
-      }
 
-      function drawCloud(x, y, s) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(s, s);
-        ctx.fillStyle = "rgba(255,255,255,0.78)";
-        ctx.beginPath();
-        ctx.arc(0, 0, 20, 0, Math.PI * 2);
-        ctx.arc(24, -10, 26, 0, Math.PI * 2);
-        ctx.arc(56, 0, 20, 0, Math.PI * 2);
-        ctx.arc(28, 10, 26, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
+        function postToParent(payload) {
+          try {
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage(payload, window.location.origin);
+            }
+          } catch (_) {}
+        }
 
-      function drawFence(f) {
-        const botStart = f.gapY + f.gapHeight;
-        drawFenceSection(f.x, 0, f.width, f.gapY, f);
-        drawFenceSection(f.x, botStart, f.width, canvas.height - gameState.groundHeight - botStart, f);
-      }
+        function syncSettings() {
+          localStorage.setItem(HORSE_KEY, state.selectedTheme.id);
+          localStorage.setItem(DIFF_KEY, state.difficulty);
+          localStorage.setItem(SPEED_KEY, String(state.speedFactor));
+          speedSlider.value = String(Math.round(state.speedFactor * 100));
+          speedValue.textContent = `${Math.round(state.speedFactor * 100)}%`;
+          speedMeta.textContent = speedDescription(state.speedFactor);
+          document.querySelectorAll("[data-difficulty]").forEach((button) => {
+            button.classList.toggle("active", button.dataset.difficulty === state.difficulty);
+          });
+          document.querySelectorAll("[data-theme]").forEach((button) => {
+            button.classList.toggle("selected", button.dataset.theme === state.selectedTheme.id);
+          });
+          postToParent({
+            type: "flappy-horse-settings",
+            characterId: state.selectedTheme.id,
+            difficulty: state.difficulty,
+            speedFactor: state.speedFactor
+          });
+        }
 
-      function drawFenceSection(x, y, width, height, f) {
-        const pw = 12;
-        ctx.fillStyle = "#6b4f2f";
-        ctx.fillRect(x, y, pw, height);
-        ctx.fillRect(x + width - pw, y, pw, height);
-        const rails = Math.max(2, Math.floor(height / 70));
-        for (let i = 0; i < rails; i++) {
-          const ry = y + 18 + i * ((height - 36) / Math.max(1, rails - 1));
-          const sw = (width - pw * 2) / 6;
-          for (let j = 0; j < 6; j++) {
-            ctx.fillStyle = [f.colorA, "#ffffff", f.colorB][j % 3];
-            ctx.fillRect(x + pw + j * sw, ry, sw + 1, 16);
+        function renderLobby() {
+          lobbyRecord.textContent = String(state.bestScore);
+          horseGrid.innerHTML = GC.PIXEL_HORSE_THEMES.map((theme) => `
+            <button class="horse-option ${theme.id === state.selectedTheme.id ? "selected" : ""}" data-theme="${theme.id}" type="button" title="${theme.label}">
+              <canvas width="84" height="60" data-preview="${theme.id}"></canvas>
+              <span>${theme.label}</span>
+            </button>
+          `).join("");
+
+          GC.PIXEL_HORSE_THEMES.forEach((theme) => {
+            const canvasEl = horseGrid.querySelector(`[data-preview="${theme.id}"]`);
+            const c = canvasEl.getContext("2d");
+            c.clearRect(0, 0, canvasEl.width, canvasEl.height);
+            GC.drawPixelHorse(c, 2, 4, 4, theme);
+          });
+
+          syncSettings();
+        }
+
+        function applyGameConfig() {
+          const cfg = config();
+          state.baseSpeed = cfg.baseSpeed * state.speedFactor;
+          state.speed = state.baseSpeed;
+          state.gravity = cfg.gravity;
+          state.flap = cfg.flap;
+          state.spawnEvery = Math.max(90, Math.round(cfg.spawnEvery / state.speedFactor));
+          state.currentGap = Math.max(160, Math.round(cfg.gap - ((state.speedFactor - 1) * 40)));
+        }
+
+        function resizeCanvas() {
+          const controls = gameWrap.querySelector(".controls-bar");
+          const controlsHeight = controls ? controls.offsetHeight : 64;
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight - controlsHeight;
+          state.groundHeight = Math.round(canvas.height * 0.15);
+          state.horse.x = Math.round(canvas.width * 0.22);
+          if (!state.running && !state.gameOver) {
+            state.horse.y = Math.round(canvas.height * 0.45);
           }
-          ctx.strokeStyle = "rgba(58,44,26,0.22)";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x + pw, ry, width - pw * 2, 16);
         }
-      }
 
-      function drawHorse() {
-        const { x, y, velocity, bob } = gameState.horse;
-        const angle = Math.max(-0.55, Math.min(0.65, velocity * 0.045));
-        ctx.save();
-        ctx.translate(x, y + Math.sin(bob) * 4);
-        ctx.rotate(angle);
-        ctx.translate(-48, -36);
-        GC.drawPixelHorse(ctx, 0, 0, 6, selectedTheme);
-        ctx.restore();
-      }
+        function stopGame() {
+          state.running = false;
+          state.gameOver = false;
+          if (state.countdownTimer) {
+            clearInterval(state.countdownTimer);
+            state.countdownTimer = null;
+          }
+          state.countdown = 0;
+        }
 
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawBackground();
-        gameState.fences.forEach(drawFence);
-        drawHorse();
-      }
+        function resetGameState(startRunning) {
+          stopGame();
+          applyGameConfig();
+          state.running = startRunning;
+          state.score = 0;
+          state.spawnTimer = 0;
+          state.frame = 0;
+          state.fences = [];
+          state.horse.y = Math.round(canvas.height * 0.45);
+          state.horse.velocity = 0;
+          state.horse.bob = 0;
+        }
 
-      /* ── LOOP ──────────────────────────────────────── */
-      function loop() {
-        update();
-        if (!gameWrap.classList.contains("hidden")) draw();
-        requestAnimationFrame(loop);
-      }
+        function hideOverlay() {
+          gameOverlay.classList.add("hidden");
+          overlayCard.innerHTML = "";
+        }
 
-      /* ── INIT ──────────────────────────────────────── */
-      renderLobby();
-      loop();
-    })();
+        function showCountdown(n) {
+          gameOverlay.classList.remove("hidden");
+          overlayCard.innerHTML = `<div class="countdown-num">${n}</div>`;
+        }
+
+        function showGameOver() {
+          const isNewBest = state.score >= state.bestScore;
+          gameOverlay.classList.remove("hidden");
+          overlayCard.innerHTML = `
+            <h2>Has chocado</h2>
+            <div class="gameover-score">${state.score}</div>
+            <div class="gameover-record">${isNewBest ? "Nuevo record" : `Record: ${state.bestScore}`}</div>
+            <div class="gameover-btns">
+              <button class="btn-retry" id="retryBtn" type="button">Repetir</button>
+              <button class="btn-lobby" id="lobbyBtn" type="button">Lobby</button>
+            </div>
+          `;
+          document.getElementById("retryBtn").addEventListener("click", startCountdown);
+          document.getElementById("lobbyBtn").addEventListener("click", goToLobby);
+        }
+
+        function startCountdown() {
+          resetGameState(false);
+          state.countdown = 3;
+          showCountdown(3);
+          state.countdownTimer = setInterval(() => {
+            state.countdown -= 1;
+            if (state.countdown > 0) {
+              showCountdown(state.countdown);
+            } else {
+              clearInterval(state.countdownTimer);
+              state.countdownTimer = null;
+              state.countdown = 0;
+              state.running = true;
+              hideOverlay();
+            }
+          }, 1000);
+        }
+
+        function goToLobby() {
+          stopGame();
+          gameWrap.classList.add("hidden");
+          lobby.classList.remove("hidden");
+          renderLobby();
+        }
+
+        function flapHorse() {
+          if (state.countdown > 0 || state.gameOver || !state.running) return;
+          state.horse.velocity = state.flap;
+        }
+
+        function endGame() {
+          state.running = false;
+          state.gameOver = true;
+          if (state.score > state.bestScore) {
+            state.bestScore = state.score;
+            localStorage.setItem(BEST_KEY, String(state.bestScore));
+          }
+          lobbyRecord.textContent = String(state.bestScore);
+          postToParent({ type: "flappy-horse-score", score: state.score, best: state.bestScore });
+          showGameOver();
+        }
+
+        function update() {
+          state.frame += 1;
+          state.horse.bob += 0.08;
+          if (!state.running || state.gameOver) return;
+
+          const level = Math.floor(state.score / 25);
+          state.speed = state.baseSpeed * Math.pow(1.01, level);
+          state.gravity = config().gravity * Math.pow(1.01, level);
+          state.currentGap = Math.max(config().gap - level * 6, state.difficulty === "hard" ? 150 : 170);
+
+          state.spawnTimer += 1;
+          if (state.spawnTimer >= state.spawnEvery) {
+            state.spawnTimer = 0;
+            spawnFence();
+          }
+
+          state.horse.velocity += state.gravity;
+          state.horse.y += state.horse.velocity;
+
+          state.fences.forEach((fence) => {
+            fence.x -= state.speed;
+            if (!fence.scored && fence.x + fence.width < state.horse.x) {
+              fence.scored = true;
+              state.score += 1;
+            }
+          });
+          state.fences = state.fences.filter((fence) => fence.x + fence.width > -140);
+
+          const horseBox = {
+            x: state.horse.x - state.horse.width * 0.34,
+            y: state.horse.y - state.horse.height * 0.35,
+            width: state.horse.width * 0.72,
+            height: state.horse.height * 0.7
+          };
+
+          const hitGround = state.horse.y + state.horse.height / 2 >= canvas.height - state.groundHeight;
+          const hitSky = state.horse.y - state.horse.height / 2 <= 0;
+          const hitFence = state.fences.some((fence) => {
+            const topRect = { x: fence.x, y: 0, width: fence.width, height: fence.gapY };
+            const bottomRect = {
+              x: fence.x,
+              y: fence.gapY + fence.gapHeight,
+              width: fence.width,
+              height: canvas.height - state.groundHeight - (fence.gapY + fence.gapHeight)
+            };
+            return intersects(horseBox, topRect) || intersects(horseBox, bottomRect);
+          });
+
+          if (hitGround || hitSky || hitFence) endGame();
+        }
+
+        function spawnFence() {
+          const minTop = 62;
+          const maxTop = canvas.height - state.groundHeight - state.currentGap - 62;
+          const topHeight = minTop + Math.random() * Math.max(40, maxTop - minTop);
+          state.fences.push({
+            x: canvas.width + 40,
+            width: 92,
+            gapY: topHeight,
+            gapHeight: state.currentGap,
+            scored: false,
+            colorA: Math.random() > 0.5 ? "#f3c969" : "#f2a94c",
+            colorB: Math.random() > 0.5 ? "#2f8f6b" : "#367dc0"
+          });
+        }
+
+        function intersects(a, b) {
+          return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+        }
+
+        function drawCloud(x, y, scale) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(scale, scale);
+          ctx.fillStyle = "rgba(255,255,255,0.78)";
+          ctx.beginPath();
+          ctx.arc(0, 0, 20, 0, Math.PI * 2);
+          ctx.arc(24, -10, 26, 0, Math.PI * 2);
+          ctx.arc(56, 0, 20, 0, Math.PI * 2);
+          ctx.arc(28, 10, 26, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawBackground() {
+          const W = canvas.width;
+          const H = canvas.height;
+          const sky = ctx.createLinearGradient(0, 0, 0, H);
+          sky.addColorStop(0, "#bdeeff");
+          sky.addColorStop(0.68, "#ecf9ff");
+          sky.addColorStop(0.68, "#f3ddb0");
+          sky.addColorStop(1, "#d2b57b");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, W, H);
+
+          [[W * 0.1, 80, 1.1], [W * 0.35, 110, 0.9], [W * 0.65, 75, 1.25], [W * 0.88, 130, 0.95]].forEach(([x, y, s]) => drawCloud(x, y, s));
+
+          ctx.fillStyle = "#7fb96d";
+          ctx.beginPath();
+          ctx.moveTo(0, H - state.groundHeight - 24);
+          for (let x = 0; x <= W; x += 42) {
+            ctx.lineTo(x, H - state.groundHeight - 18 - Math.sin((x + state.frame * 2) * 0.01) * 8);
+          }
+          ctx.lineTo(W, H - state.groundHeight + 18);
+          ctx.lineTo(0, H - state.groundHeight + 18);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = "#9a7b4e";
+          ctx.fillRect(0, H - state.groundHeight, W, state.groundHeight);
+          ctx.fillStyle = "#b8925d";
+          for (let i = 0; i < W; i += 28) {
+            ctx.fillRect(i + (state.frame * 2 % 28), H - state.groundHeight + 8, 12, 8);
+          }
+
+          if (state.running) {
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
+            ctx.font = "bold 28px monospace";
+            ctx.textAlign = "center";
+            ctx.fillText(String(state.score), canvas.width / 2, 48);
+          }
+        }
+
+        function drawFenceSection(x, y, width, height, fence) {
+          const postWidth = 12;
+          ctx.fillStyle = "#6b4f2f";
+          ctx.fillRect(x, y, postWidth, height);
+          ctx.fillRect(x + width - postWidth, y, postWidth, height);
+          const rails = Math.max(2, Math.floor(height / 70));
+          for (let i = 0; i < rails; i += 1) {
+            const railY = y + 18 + i * ((height - 36) / Math.max(1, rails - 1));
+            const stripeWidth = (width - postWidth * 2) / 6;
+            for (let j = 0; j < 6; j += 1) {
+              ctx.fillStyle = [fence.colorA, "#ffffff", fence.colorB][j % 3];
+              ctx.fillRect(x + postWidth + j * stripeWidth, railY, stripeWidth + 1, 16);
+            }
+            ctx.strokeStyle = "rgba(58,44,26,0.22)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x + postWidth, railY, width - postWidth * 2, 16);
+          }
+        }
+
+        function drawFence(fence) {
+          const bottomStart = fence.gapY + fence.gapHeight;
+          drawFenceSection(fence.x, 0, fence.width, fence.gapY, fence);
+          drawFenceSection(fence.x, bottomStart, fence.width, canvas.height - state.groundHeight - bottomStart, fence);
+        }
+
+        function drawHorse() {
+          const { x, y, velocity, bob } = state.horse;
+          const angle = Math.max(-0.55, Math.min(0.65, velocity * 0.045));
+          ctx.save();
+          ctx.translate(x, y + Math.sin(bob) * 4);
+          ctx.rotate(angle);
+          ctx.translate(-50, -36);
+          GC.drawPixelHorse(ctx, 0, 0, 5, state.selectedTheme);
+          ctx.restore();
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawBackground();
+          state.fences.forEach(drawFence);
+          drawHorse();
+        }
+
+        function loop() {
+          update();
+          if (!gameWrap.classList.contains("hidden")) draw();
+          requestAnimationFrame(loop);
+        }
+
+        horseGrid.addEventListener("click", (event) => {
+          const option = event.target.closest("[data-theme]");
+          if (!option) return;
+          state.selectedTheme = GC.themeById(option.dataset.theme);
+          renderLobby();
+        });
+
+        document.querySelectorAll("[data-difficulty]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.difficulty = button.dataset.difficulty;
+            syncSettings();
+          });
+        });
+
+        speedSlider.addEventListener("input", (event) => {
+          state.speedFactor = Math.min(1.5, Math.max(0.7, Number(event.target.value) / 100));
+          syncSettings();
+        });
+
+        playBtn.addEventListener("click", () => {
+          lobby.classList.add("hidden");
+          gameWrap.classList.remove("hidden");
+          resizeCanvas();
+          startCountdown();
+        });
+
+        backBtn.addEventListener("click", goToLobby);
+        canvas.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          flapHorse();
+        });
+        jumpBtn.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          flapHorse();
+        });
+        window.addEventListener("keydown", (event) => {
+          if (event.code === "Space" || event.code === "ArrowUp") {
+            event.preventDefault();
+            flapHorse();
+          }
+          if (event.code === "Escape" && !gameWrap.classList.contains("hidden")) {
+            goToLobby();
+          }
+        });
+        window.addEventListener("resize", resizeCanvas);
+
+        renderLobby();
+        loop();
+      })();
     </script>
   </body>
 </html>

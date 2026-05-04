@@ -135,12 +135,15 @@ const DEFAULT_GAMES = {
     bestScore: 0,
     lastScore: 0,
     selectedColor: "castano",
+    difficulty: "normal",
     speedFactor: 1
   },
   pixelRunner: {
     bestScore: 0,
     lastScore: 0,
-    selectedHorse: "castano"
+    selectedHorse: "castano",
+    difficulty: "normal",
+    speedFactor: 1
   }
 };
 const state = {
@@ -589,43 +592,35 @@ function normalizeGamesData(games) {
   const source = games && typeof games === "object" ? games : {};
   const flappyHorse = source.flappyHorse && typeof source.flappyHorse === "object" ? source.flappyHorse : {};
   const pixelRunner = source.pixelRunner && typeof source.pixelRunner === "object" ? source.pixelRunner : {};
-  const validFlappyColors = ["castano","negro","blanco","alazan","gris","palomino","pinto","appaloosa","isabela","tordo","moro","rosillo"];
+  const validThemeIds = (window.GAME_CHARACTERS?.PIXEL_HORSE_THEMES || []).map((theme) => theme.id);
   const legacyBirdMap = {
     "bird-tropical": "castano",
     "bird-pirata": "negro",
-    "bird-nube": "blanco",
+    "bird-nube": "crema",
     "bird-fuego": "alazan",
     "bird-cielo": "gris"
   };
-  const legacyHorseMap = {
-    "horse-caramelo": "castano",
-    "horse-arcoiris": "palomino",
-    "horse-deportivo": "negro",
-    "horse-princesa": "blanco",
-    "horse-vaquero": "alazan",
-    "horse-fantasia-azul": "gris",
-    "horse-fuego": "alazan",
-    "horse-bosque": "pinto",
-    "horse-nieve": "blanco",
-    "horse-neon": "moro"
-  };
+  const legacyHorseMap = window.GAME_CHARACTERS?.LEGACY_HORSE_MAP || {};
   let selectedColor = flappyHorse.selectedColor;
   if (legacyBirdMap[selectedColor]) selectedColor = legacyBirdMap[selectedColor];
-  if (!validFlappyColors.includes(selectedColor)) selectedColor = DEFAULT_GAMES.flappyHorse.selectedColor;
+  if (!validThemeIds.includes(selectedColor)) selectedColor = DEFAULT_GAMES.flappyHorse.selectedColor;
   let selectedHorse = pixelRunner.selectedHorse;
   if (legacyHorseMap[selectedHorse]) selectedHorse = legacyHorseMap[selectedHorse];
-  if (!validFlappyColors.includes(selectedHorse)) selectedHorse = DEFAULT_GAMES.pixelRunner.selectedHorse;
+  if (!validThemeIds.includes(selectedHorse)) selectedHorse = DEFAULT_GAMES.pixelRunner.selectedHorse;
   return {
     flappyHorse: {
       bestScore: Math.max(0, Number(flappyHorse.bestScore) || 0),
       lastScore: Math.max(0, Number(flappyHorse.lastScore) || 0),
       selectedColor,
-      speedFactor: Math.min(1.7, Math.max(0.7, Number(flappyHorse.speedFactor) || 1))
+      difficulty: ["easy", "normal", "hard"].includes(flappyHorse.difficulty) ? flappyHorse.difficulty : DEFAULT_GAMES.flappyHorse.difficulty,
+      speedFactor: Math.min(1.5, Math.max(0.7, Number(flappyHorse.speedFactor) || 1))
     },
     pixelRunner: {
       bestScore: Math.max(0, Number(pixelRunner.bestScore) || 0),
       lastScore: Math.max(0, Number(pixelRunner.lastScore) || 0),
-      selectedHorse
+      selectedHorse,
+      difficulty: ["easy", "normal", "hard"].includes(pixelRunner.difficulty) ? pixelRunner.difficulty : DEFAULT_GAMES.pixelRunner.difficulty,
+      speedFactor: Math.min(1.5, Math.max(0.7, Number(pixelRunner.speedFactor) || 1))
     }
   };
 }
@@ -1371,25 +1366,22 @@ function renderGames() {
 
 function drawGameIcons() {
   const GC = window.GAME_CHARACTERS;
-  if (!GC?.drawPixelHorse || !GC?.PIXEL_HORSE_THEMES) return;
+  if (!GC?.drawHorseGameIcon || !GC?.PIXEL_HORSE_THEMES) return;
   const themes = GC.PIXEL_HORSE_THEMES;
+  const games = normalizeGamesData(state.games);
   const flappyCanvas = $("#flappyIconCanvas");
   const runnerCanvas = $("#runnerIconCanvas");
   if (flappyCanvas) {
     flappyCanvas.width = 96; flappyCanvas.height = 72;
     const ctx = flappyCanvas.getContext("2d");
-    ctx.clearRect(0, 0, 96, 72);
-    const games = normalizeGamesData(state.games);
     const theme = themes.find((item) => item.id === games.flappyHorse.selectedColor) || themes[0];
-    GC.drawPixelHorse(ctx, 0, 0, 6, theme);
+    GC.drawHorseGameIcon(ctx, "flappy", theme);
   }
   if (runnerCanvas) {
     runnerCanvas.width = 96; runnerCanvas.height = 72;
     const ctx = runnerCanvas.getContext("2d");
-    ctx.clearRect(0, 0, 96, 72);
-    const games = normalizeGamesData(state.games);
     const theme = themes.find((item) => item.id === games.pixelRunner.selectedHorse) || themes[3] || themes[0];
-    GC.drawPixelHorse(ctx, 0, 0, 6, theme);
+    GC.drawHorseGameIcon(ctx, "runner", theme);
   }
 }
 
@@ -1432,10 +1424,10 @@ function openGameInFrame(which) {
   const games = normalizeGamesData(state.games);
   if (which === "flappy") {
     const color = games.flappyHorse.selectedColor || "castano";
-    frame.src = `games/flappy-horse-preview.html?horse=${encodeURIComponent(color)}`;
+    frame.src = `games/flappy-horse-preview.html?horse=${encodeURIComponent(color)}&difficulty=${encodeURIComponent(games.flappyHorse.difficulty)}&speed=${encodeURIComponent(games.flappyHorse.speedFactor)}`;
   } else {
     const horse = games.pixelRunner.selectedHorse;
-    frame.src = `games/pixel-runner.html?horse=${encodeURIComponent(horse)}`;
+    frame.src = `games/pixel-runner.html?horse=${encodeURIComponent(horse)}&difficulty=${encodeURIComponent(games.pixelRunner.difficulty)}&speed=${encodeURIComponent(games.pixelRunner.speedFactor)}`;
   }
   overlay.classList.add("open");
   document.body.classList.add("game-fullscreen-open");
@@ -1461,6 +1453,13 @@ function handleGameMessage(event) {
     persistGames();
     return;
   }
+  if (data.type === "pixel-runner-settings") {
+    state.games.pixelRunner.selectedHorse = data.characterId || state.games.pixelRunner.selectedHorse;
+    state.games.pixelRunner.difficulty = data.difficulty || state.games.pixelRunner.difficulty;
+    state.games.pixelRunner.speedFactor = Math.min(1.5, Math.max(0.7, Number(data.speedFactor) || state.games.pixelRunner.speedFactor || 1));
+    persistGames();
+    return;
+  }
   if (data.type === "pixel-runner-score") {
     const score = Math.max(0, Number(data.score) || 0);
     const best = Math.max(score, Number(data.best) || 0, state.games.pixelRunner.bestScore || 0);
@@ -1471,6 +1470,13 @@ function handleGameMessage(event) {
   }
   if (data.type === "flappy-horse-character") {
     state.games.flappyHorse.selectedColor = data.characterId;
+    persistGames();
+    return;
+  }
+  if (data.type === "flappy-horse-settings") {
+    state.games.flappyHorse.selectedColor = data.characterId || state.games.flappyHorse.selectedColor;
+    state.games.flappyHorse.difficulty = data.difficulty || state.games.flappyHorse.difficulty;
+    state.games.flappyHorse.speedFactor = Math.min(1.5, Math.max(0.7, Number(data.speedFactor) || state.games.flappyHorse.speedFactor || 1));
     persistGames();
     return;
   }
@@ -3101,12 +3107,15 @@ function mergeDataSets(localData, cloudData) {
         bestScore: Math.max(Number(local.games?.flappyHorse?.bestScore) || 0, Number(cloud.games?.flappyHorse?.bestScore) || 0),
         lastScore: Math.max(Number(local.games?.flappyHorse?.lastScore) || 0, Number(cloud.games?.flappyHorse?.lastScore) || 0),
         selectedColor: local.games?.flappyHorse?.selectedColor || cloud.games?.flappyHorse?.selectedColor || DEFAULT_GAMES.flappyHorse.selectedColor,
+        difficulty: local.games?.flappyHorse?.difficulty || cloud.games?.flappyHorse?.difficulty || DEFAULT_GAMES.flappyHorse.difficulty,
         speedFactor: local.games?.flappyHorse?.speedFactor || cloud.games?.flappyHorse?.speedFactor || DEFAULT_GAMES.flappyHorse.speedFactor
       },
       pixelRunner: {
         bestScore: Math.max(Number(local.games?.pixelRunner?.bestScore) || 0, Number(cloud.games?.pixelRunner?.bestScore) || 0),
         lastScore: Math.max(Number(local.games?.pixelRunner?.lastScore) || 0, Number(cloud.games?.pixelRunner?.lastScore) || 0),
-        selectedHorse: local.games?.pixelRunner?.selectedHorse || cloud.games?.pixelRunner?.selectedHorse || DEFAULT_GAMES.pixelRunner.selectedHorse
+        selectedHorse: local.games?.pixelRunner?.selectedHorse || cloud.games?.pixelRunner?.selectedHorse || DEFAULT_GAMES.pixelRunner.selectedHorse,
+        difficulty: local.games?.pixelRunner?.difficulty || cloud.games?.pixelRunner?.difficulty || DEFAULT_GAMES.pixelRunner.difficulty,
+        speedFactor: local.games?.pixelRunner?.speedFactor || cloud.games?.pixelRunner?.speedFactor || DEFAULT_GAMES.pixelRunner.speedFactor
       }
     }),
     theme: local.theme?.mode ? local.theme : cloud.theme
@@ -4145,8 +4154,6 @@ document.addEventListener("click", (e) => {
 });
 
 init();
-
-
 
 
 

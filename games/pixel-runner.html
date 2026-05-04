@@ -6,472 +6,890 @@
   <title>Pixel Runner</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { width: 100%; height: 100%; overflow: hidden; font-family: monospace; touch-action: none; }
+    html, body { width: 100%; height: 100%; overflow: hidden; font-family: monospace; background: #f3f0ea; touch-action: none; }
+    body { color: #231913; }
+    .hidden { display: none !important; }
 
-    /* ── LOBBY ─────────────────────────────────────── */
     #lobby {
-      position: fixed; inset: 0; z-index: 50;
-      background: linear-gradient(160deg, #f0f4f0 0%, #e8f0e8 50%, #f4f0e8 100%);
-      display: flex; flex-direction: column; align-items: center;
-      overflow-y: auto; padding: 24px 16px 32px;
-      gap: 20px;
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      overflow-y: auto;
+      padding: 20px 14px 26px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.1)),
+        repeating-linear-gradient(45deg, rgba(111,77,46,0.04) 0 14px, rgba(255,255,255,0.05) 14px 28px),
+        linear-gradient(160deg, #efe7da 0%, #e6f1e7 55%, #f6efe0 100%);
     }
-    #lobby.hidden { display: none; }
 
-    .lobby-header { text-align: center; }
-    .lobby-header .eyebrow { font-size: 0.72rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin-bottom: 4px; }
-    .lobby-header h1 { font-size: clamp(2rem, 8vw, 3rem); font-family: monospace; font-weight: 900; color: #222; letter-spacing: -1px; }
+    .lobby-shell {
+      width: min(100%, 560px);
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
 
-    .lobby-score { display: flex; gap: 12px; }
-    .score-pill { padding: 10px 20px; border-radius: 16px; background: #fff; border: 2px solid #e0e0e0; text-align: center; min-width: 100px; }
-    .score-pill span { display: block; font-size: 0.7rem; color: #888; font-weight: 700; margin-bottom: 2px; }
-    .score-pill strong { font-size: 1.4rem; color: #222; }
+    .lobby-hero,
+    .lobby-card {
+      background: rgba(255,255,255,0.78);
+      border: 2px solid rgba(51,34,21,0.12);
+      border-radius: 18px;
+      box-shadow: 0 10px 26px rgba(26, 17, 10, 0.10);
+      backdrop-filter: blur(10px);
+    }
 
-    .lobby-section { width: 100%; max-width: 520px; }
-    .lobby-section h2 { font-size: 0.78rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+    .lobby-hero {
+      padding: 18px;
+      text-align: center;
+    }
 
-    .character-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
-    .char-btn { height: 70px; border: 2px solid #ddd; border-radius: 12px; background: #fff; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: border-color .15s, background .15s, transform .15s; }
-    .char-btn.active { border-color: #222; background: #fff3c4; transform: scale(1.05); }
-    .char-btn svg { width: 76px; height: 58px; overflow: visible; image-rendering: pixelated; }
+    .lobby-hero p {
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #816954;
+      margin-bottom: 6px;
+    }
 
-    .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .diff-btn { padding: 14px 8px; border: 2px solid #ddd; border-radius: 12px; background: #fff; cursor: pointer; text-align: center; font-family: monospace; font-weight: 900; font-size: 0.9rem; color: #444; transition: border-color .15s, background .15s, transform .15s; }
-    .diff-btn.active { border-color: #222; background: #fff3c4; transform: scale(1.02); }
-    .diff-btn .diff-label { display: block; font-size: 0.68rem; color: #888; margin-top: 4px; font-weight: 700; }
+    .lobby-hero h1 {
+      font-size: clamp(2rem, 9vw, 3rem);
+      line-height: 0.95;
+    }
+
+    .record-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .record-pill {
+      min-width: 104px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: #fff8ef;
+      border: 2px solid rgba(64,43,27,0.1);
+    }
+
+    .record-pill span {
+      display: block;
+      font-size: 0.7rem;
+      color: #876d57;
+      font-weight: 700;
+    }
+
+    .record-pill strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 1.25rem;
+    }
+
+    .lobby-card {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .lobby-card h2 {
+      font-size: 0.8rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #816954;
+    }
+
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+      gap: 8px;
+    }
+
+    .char-btn,
+    .diff-btn {
+      border: 2px solid rgba(58,38,24,0.12);
+      border-radius: 14px;
+      background: #fff;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s, background 0.15s;
+      font-family: monospace;
+      color: #2b2018;
+    }
+
+    .char-btn {
+      min-height: 82px;
+      display: grid;
+      place-items: center;
+      padding: 8px;
+    }
+
+    .char-btn svg {
+      width: 72px;
+      height: 52px;
+      image-rendering: pixelated;
+    }
+
+    .char-btn.active,
+    .diff-btn.active {
+      border-color: #4d311d;
+      background: #fff1cf;
+      transform: translateY(-1px);
+    }
+
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .diff-btn {
+      min-height: 66px;
+      padding: 10px 8px;
+      font-weight: 900;
+    }
+
+    .diff-btn span {
+      display: block;
+      font-size: 0.68rem;
+      color: #866c57;
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
+    .slider-row {
+      display: grid;
+      gap: 8px;
+    }
+
+    .slider-readout {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      color: #5c4636;
+      font-weight: 900;
+    }
+
+    .slider-readout strong {
+      font-size: 1.12rem;
+    }
+
+    .slider-readout span {
+      font-size: 0.78rem;
+      color: #8a725d;
+    }
+
+    .slider-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: #7c6550;
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #6d4228;
+    }
 
     .play-btn {
-      width: 100%; max-width: 520px; height: 62px;
-      border: 0; border-radius: 16px;
-      background: #222; color: #fff;
-      font-family: monospace; font-size: 1.3rem; font-weight: 900;
-      cursor: pointer; letter-spacing: 1px;
-      transition: transform .15s, background .15s;
+      width: 100%;
+      height: 60px;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #4d311d, #7f5634);
+      color: #fff;
+      font-family: monospace;
+      font-size: 1.2rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(77, 49, 29, 0.28);
     }
-    .play-btn:hover { background: #000; transform: scale(1.02); }
 
-    /* ── GAME ─────────────────────────────────────── */
     #gameWrap {
-      position: fixed; inset: 0; z-index: 40;
-      display: flex; flex-direction: column;
-      background: #f3f3f3;
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      background: #f3f0ea;
     }
-    #gameWrap.hidden { display: none; }
 
     #game {
-      position: relative; flex: 1; overflow: hidden;
-      background: #fff; user-select: none; image-rendering: pixelated;
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      background: linear-gradient(180deg, #dff5ff 0%, #eefafc 58%, #f1ddbb 58%, #d8b47a 100%);
+      image-rendering: pixelated;
     }
-    .hud { position: absolute; top: 12px; right: 14px; display: flex; gap: 16px; color: #555; font-size: clamp(13px, 3.5vw, 18px); font-weight: 900; letter-spacing: 1px; z-index: 20; }
-    .ground { position: absolute; left: 0; right: 0; bottom: var(--ground-bottom); height: 3px; background: repeating-linear-gradient(to right, #555 0, #555 18px, transparent 18px, transparent 32px); z-index: 2; }
-    .cloud { position: absolute; top: 52px; right: -90px; width: 56px; height: 18px; opacity: .45; z-index: 1; }
-    .cloud::before, .cloud::after, .cloud span { content: ""; position: absolute; bottom: 0; border-top: 3px solid #999; border-radius: 50%; }
+
+    .hud {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      display: flex;
+      gap: 16px;
+      color: #534336;
+      font-size: clamp(13px, 3.5vw, 18px);
+      font-weight: 900;
+      letter-spacing: 1px;
+      z-index: 20;
+    }
+
+    .ground {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: var(--ground-bottom);
+      height: 3px;
+      background: repeating-linear-gradient(to right, #5a4634 0, #5a4634 18px, transparent 18px, transparent 32px);
+      z-index: 2;
+    }
+
+    .cloud {
+      position: absolute;
+      top: 48px;
+      right: -90px;
+      width: 56px;
+      height: 18px;
+      opacity: 0.42;
+      z-index: 1;
+    }
+
+    .cloud::before,
+    .cloud::after,
+    .cloud span {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      border-top: 3px solid #93a4ab;
+      border-radius: 50%;
+    }
+
     .cloud::before { left: 0; width: 22px; height: 12px; }
     .cloud span { left: 17px; width: 28px; height: 18px; }
     .cloud::after { left: 38px; width: 22px; height: 12px; }
-    .horse { position: absolute; left: clamp(28px, 11vw, 72px); bottom: calc(var(--ground-bottom) + 3px); width: 84px; height: 72px; z-index: 10; transform-origin: bottom left; }
-    .horse.duck { height: 48px; }
-    .horse.duck .pixel-horse { transform: translateY(20px) scaleY(.72); transform-origin: bottom left; }
-    .pixel-horse { position: absolute; left: 0; bottom: 0; width: 84px; height: 72px; }
-    .horse-runner-svg { position: absolute; left: -6px; bottom: 2px; width: 96px; height: 72px; overflow: visible; image-rendering: pixelated; }
-    .px { position: absolute; width: 6px; height: 6px; background: #555; }
-    .mane, .hoof, .eye { background: #333; }
-    .tail-anim-a, .tail-anim-b, .leg-a, .leg-b { animation-duration: 260ms; animation-iteration-count: infinite; animation-timing-function: steps(1, end); }
-    .tail-anim-a { animation-name: tailA; } .tail-anim-b { animation-name: tailB; } .leg-a { animation-name: legA; } .leg-b { animation-name: legB; }
-    @keyframes legA { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-    @keyframes legB { 0%,100% { transform: translateY(-6px); } 50% { transform: translateY(0); } }
-    @keyframes tailA { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-6px,6px); } }
-    @keyframes tailB { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-6px,-6px); } }
-    .obstacle, .low-obstacle { position: absolute; z-index: 8; image-rendering: pixelated; }
-    .fence { bottom: calc(var(--ground-bottom) + 3px); height: 66px; }
-    .fence.small { width: 48px; } .fence.medium { width: 68px; } .fence.long { width: 96px; }
-    .fence .post, .fence .bar, .low-obstacle .rail, .low-obstacle .cap { position: absolute; background: #555; }
+
+    .horse {
+      position: absolute;
+      left: clamp(28px, 11vw, 74px);
+      bottom: calc(var(--ground-bottom) + 3px);
+      width: 96px;
+      height: 80px;
+      z-index: 10;
+      transform-origin: bottom left;
+    }
+
+    .horse.duck {
+      height: 58px;
+    }
+
+    .pixel-horse {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 96px;
+      height: 80px;
+      transition: transform 70ms linear;
+    }
+
+    .horse.duck .pixel-horse {
+      transform: translateY(18px) scaleY(0.78);
+      transform-origin: bottom left;
+    }
+
+    .horse-runner-svg {
+      position: absolute;
+      left: -8px;
+      bottom: 0;
+      width: 108px;
+      height: 76px;
+      image-rendering: pixelated;
+    }
+
+    .obstacle,
+    .low-obstacle {
+      position: absolute;
+      z-index: 8;
+      image-rendering: pixelated;
+    }
+
+    .fence {
+      bottom: calc(var(--ground-bottom) + 3px);
+      height: 66px;
+    }
+
+    .fence.small { width: 48px; }
+    .fence.medium { width: 68px; }
+    .fence.long { width: 96px; }
+    .fence .post,
+    .fence .bar,
+    .low-obstacle .rail,
+    .low-obstacle .cap {
+      position: absolute;
+      background: #5f4b39;
+    }
+
     .fence .post { bottom: 0; width: 7px; height: 62px; }
-    .fence .post.left { left: 4px; } .fence .post.right { right: 4px; }
+    .fence .post.left { left: 4px; }
+    .fence .post.right { right: 4px; }
     .fence .bar { left: 0; height: 7px; width: 100%; }
-    .fence .bar.one { bottom: 12px; } .fence .bar.two { bottom: 28px; } .fence .bar.three { bottom: 44px; }
-    .low-obstacle { width: 86px; height: 52px; bottom: calc(var(--ground-bottom) + 64px); }
+    .fence .bar.one { bottom: 12px; }
+    .fence .bar.two { bottom: 28px; }
+    .fence .bar.three { bottom: 44px; }
+
+    .low-obstacle {
+      width: 86px;
+      height: 52px;
+      bottom: calc(var(--ground-bottom) + 64px);
+    }
+
     .low-obstacle .rail { left: 0; top: 0; width: 86px; height: 8px; }
     .low-obstacle .cap { width: 9px; height: 20px; top: 0; }
-    .low-obstacle .cap.left { left: 0; } .low-obstacle .cap.right { right: 0; }
-    .msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(255,255,255,.82); color: #333; text-align: center; z-index: 40; padding: 24px; }
-    .msg.hidden { display: none; }
-    .msg h1 { font-size: clamp(22px, 7vw, 38px); letter-spacing: 1px; }
-    .msg p { max-width: 360px; color: #666; font-size: clamp(13px, 3.5vw, 15px); line-height: 1.4; }
-    .msg-btn { border: 0; border-radius: 999px; padding: 12px 24px; background: #333; color: #fff; font-weight: 900; font-family: monospace; cursor: pointer; font-size: 1rem; }
-    .msg-btn.secondary { background: transparent; border: 2px solid #ccc; color: #555; margin-top: 4px; }
+    .low-obstacle .cap.left { left: 0; }
+    .low-obstacle .cap.right { right: 0; }
 
-    .controls-bar { display: flex; gap: 10px; padding: 10px 10px env(safe-area-inset-bottom, 10px); background: #f3f3f3; flex-shrink: 0; }
-    .control-btn { flex: 1; height: 58px; border: 3px solid #222; border-radius: 12px; background: #fff; color: #333; font-family: monospace; font-size: 18px; font-weight: 900; touch-action: none; }
-    .lobby-back-btn { flex: 0 0 58px; height: 58px; border: 3px solid #ccc; border-radius: 12px; background: #fff; color: #888; font-family: monospace; font-size: 1.1rem; font-weight: 900; touch-action: none; }
+    .msg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.8);
+      z-index: 40;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .msg h1 {
+      font-size: clamp(22px, 7vw, 38px);
+    }
+
+    .msg p {
+      max-width: 360px;
+      line-height: 1.4;
+      color: #685544;
+    }
+
+    .msg-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 6px;
+    }
+
+    .msg-btn {
+      height: 46px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 0;
+      background: #4d311d;
+      color: #fff;
+      font-family: monospace;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .msg-btn.secondary {
+      background: #fff;
+      color: #4d311d;
+      border: 2px solid rgba(77,49,29,0.16);
+    }
+
+    .controls-bar {
+      display: flex;
+      gap: 10px;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+      background: #eee4d7;
+      flex-shrink: 0;
+    }
+
+    .control-btn,
+    .back-btn {
+      min-height: 58px;
+      border-radius: 14px;
+      font-family: monospace;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .back-btn {
+      flex: 0 0 64px;
+      border: 2px solid rgba(58,38,24,0.14);
+      background: #fff;
+      color: #765d47;
+    }
+
+    .control-btn {
+      flex: 1;
+      border: 3px solid #3e2819;
+      background: #fffdfa;
+      color: #30221a;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 620px) {
+      .character-grid {
+        grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+      }
+    }
   </style>
 </head>
 <body>
-
-  <!-- LOBBY -->
   <div id="lobby">
-    <div class="lobby-header">
-      <div class="eyebrow">Hípica App</div>
-      <h1>🐴 Pixel Runner</h1>
-    </div>
+    <div class="lobby-shell">
+      <section class="lobby-hero">
+        <p>Minijuego</p>
+        <h1>Pixel Runner</h1>
+        <div class="record-row">
+          <article class="record-pill">
+            <span>Record</span>
+            <strong id="lobbyBest">00000</strong>
+          </article>
+          <article class="record-pill">
+            <span>Velocidad</span>
+            <strong id="speedValue">100%</strong>
+          </article>
+        </div>
+      </section>
 
-    <div class="lobby-score">
-      <div class="score-pill"><span>RÉCORD</span><strong id="lobbyBest">00000</strong></div>
-    </div>
+      <section class="lobby-card">
+        <h2>Caballo</h2>
+        <div class="character-grid" id="charGrid"></div>
+      </section>
 
-    <div class="lobby-section">
-      <h2>Elige tu caballo</h2>
-      <div class="character-grid" id="lobbyCharGrid"></div>
-    </div>
+      <section class="lobby-card">
+        <h2>Dificultad</h2>
+        <div class="diff-grid">
+          <button class="diff-btn" data-difficulty="easy" type="button">Facil<span>Saltos amplios</span></button>
+          <button class="diff-btn" data-difficulty="normal" type="button">Normal<span>Equilibrado</span></button>
+          <button class="diff-btn" data-difficulty="hard" type="button">Dificil<span>Mas presion</span></button>
+        </div>
+      </section>
 
-    <div class="lobby-section">
-      <h2>Dificultad</h2>
-      <div class="diff-grid">
-        <button class="diff-btn active" data-diff="easy">🐢 Fácil<span class="diff-label">Más lento</span></button>
-        <button class="diff-btn" data-diff="normal">🐎 Normal<span class="diff-label">Equilibrado</span></button>
-        <button class="diff-btn" data-diff="hard">🔥 Difícil<span class="diff-label">Veloz</span></button>
-      </div>
-    </div>
+      <section class="lobby-card">
+        <h2>Velocidad fina</h2>
+        <div class="slider-row">
+          <div class="slider-readout">
+            <strong id="speedValue">100%</strong>
+            <span id="speedMeta">Equilibrado</span>
+          </div>
+          <input id="speedSlider" type="range" min="70" max="150" step="5" value="100" />
+          <div class="slider-meta">
+            <span>Suave</span>
+            <span>Rapido</span>
+          </div>
+        </div>
+      </section>
 
-    <button class="play-btn" id="lobbyPlayBtn">¡ JUGAR !</button>
+      <button class="play-btn" id="playBtn" type="button">Jugar</button>
+    </div>
   </div>
 
-  <!-- GAME -->
   <div id="gameWrap" class="hidden">
-    <div class="game" id="game" style="--ground-bottom: 54px;">
-      <div class="hud"><span>HI <span id="best">00000</span></span><span id="score">00000</span></div>
+    <div id="game" style="--ground-bottom: 54px;">
+      <div class="hud">
+        <span>HI <span id="best">00000</span></span>
+        <span id="score">00000</span>
+      </div>
       <div class="cloud" id="cloud"><span></span></div>
       <div class="ground" id="ground"></div>
-      <div class="horse pixel" id="horse" aria-label="Caballo">
+      <div class="horse" id="horse" aria-label="Caballo runner">
         <div class="pixel-horse"></div>
       </div>
       <div class="msg hidden" id="msg"></div>
     </div>
     <div class="controls-bar">
-      <button class="lobby-back-btn" id="backBtn" title="Volver">←</button>
-      <button class="control-btn" id="jumpBtn">SALTAR</button>
-      <button class="control-btn" id="duckBtn">AGACHAR</button>
+      <button class="back-btn" id="backBtn" type="button"><</button>
+      <button class="control-btn" id="jumpBtn" type="button">SALTAR</button>
+      <button class="control-btn" id="duckBtn" type="button">AGACHAR</button>
     </div>
   </div>
 
   <script src="game-characters.js"></script>
   <script>
-    // ── State ────────────────────────────────────────
-    const DIFF_SPEEDS = { easy: 3.2, normal: 4.2, hard: 5.6 };
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialHorseParam = urlParams.get("horse");
-    const pixelThemes = window.GAME_CHARACTERS?.PIXEL_HORSE_THEMES || [];
-    const legacyHorseMap = {
-      "horse-caramelo": "castano",
-      "horse-arcoiris": "palomino",
-      "horse-deportivo": "negro",
-      "horse-princesa": "blanco",
-      "horse-vaquero": "alazan",
-      "horse-fantasia-azul": "gris",
-      "horse-fuego": "alazan",
-      "horse-bosque": "pinto",
-      "horse-nieve": "blanco",
-      "horse-neon": "moro"
+    const GC = window.GAME_CHARACTERS;
+    const query = new URLSearchParams(window.location.search);
+    const difficultyMap = {
+      easy: { baseSpeed: 3.4, jumpPower: 13.8, lowChance: 0.14, gapBias: 34 },
+      normal: { baseSpeed: 4.2, jumpPower: 13.2, lowChance: 0.22, gapBias: 0 },
+      hard: { baseSpeed: 5.1, jumpPower: 12.7, lowChance: 0.3, gapBias: -32 }
     };
-    function normalizeHorseId(id) {
-      const migrated = legacyHorseMap[id] || id;
-      return pixelThemes.some((theme) => theme.id === migrated) ? migrated : "castano";
-    }
-    let selectedHorse = normalizeHorseId(initialHorseParam || localStorage.getItem("horsePixelCharacter") || "castano");
-    let selectedDiff = localStorage.getItem("horsePixelDiff") || "easy";
-    let best = Number(localStorage.getItem("horsePixelBest") || 0);
 
-    function postToParent(payload) {
-      try { window.parent && window.parent !== window && window.parent.postMessage(payload, window.location.origin); }
-      catch (_) {}
-    }
+    const state = {
+      selectedHorse: GC.normalizeThemeId(query.get("horse") || localStorage.getItem("horsePixelCharacter") || "castano"),
+      difficulty: ["easy", "normal", "hard"].includes(query.get("difficulty")) ? query.get("difficulty") : (localStorage.getItem("horsePixelDifficulty") || "normal"),
+      speedFactor: Math.min(1.5, Math.max(0.7, Number(query.get("speed")) || Number(localStorage.getItem("horsePixelSpeedFactor")) || 1)),
+      best: Number(localStorage.getItem("horsePixelBest") || 0),
+      running: false,
+      score: 0,
+      speed: 0,
+      jumpPower: 13.2,
+      horseY: 0,
+      velocityY: 0,
+      isJumping: false,
+      isDucking: false,
+      obstacles: [],
+      nextObstacleIn: 0,
+      animationId: null,
+      lastTime: 0,
+      cloudX: -80
+    };
 
-    // ── DOM refs ─────────────────────────────────────
-    const lobby = document.getElementById("lobby");
-    const gameWrap = document.getElementById("gameWrap");
     const game = document.getElementById("game");
     const horse = document.getElementById("horse");
     const scoreEl = document.getElementById("score");
     const bestEl = document.getElementById("best");
+    const cloud = document.getElementById("cloud");
     const msg = document.getElementById("msg");
+    const lobbyBest = document.getElementById("lobbyBest");
+    const charGrid = document.getElementById("charGrid");
+    const speedSlider = document.getElementById("speedSlider");
+    const speedValue = document.getElementById("speedValue");
+    const speedMeta = document.getElementById("speedMeta");
+    const playBtn = document.getElementById("playBtn");
+    const backBtn = document.getElementById("backBtn");
     const jumpBtn = document.getElementById("jumpBtn");
     const duckBtn = document.getElementById("duckBtn");
-    const backBtn = document.getElementById("backBtn");
-    const cloud = document.getElementById("cloud");
-    const lobbyCharGrid = document.getElementById("lobbyCharGrid");
-    const lobbyBest = document.getElementById("lobbyBest");
+    const lobby = document.getElementById("lobby");
+    const gameWrap = document.getElementById("gameWrap");
 
-    // ── Physics ──────────────────────────────────────
-    const groundBottom = 54;
-    const gravity = 0.62;
-    const jumpPower = 13.2;
-    let running = false;
-    let score = 0;
-    let speed = DIFF_SPEEDS[selectedDiff];
-    let horseY = 0;
-    let velocityY = 0;
-    let isJumping = false;
-    let isDucking = false;
-    let obstacles = [];
-    let nextObstacleIn = 0;
-    let animationId = null;
-    let lastTime = 0;
-    let cloudX = -80;
+    function postToParent(payload) {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(payload, window.location.origin);
+        }
+      } catch (_) {}
+    }
 
-    // ── Init sprites ─────────────────────────────────
-    window.GAME_CHARACTERS?.injectHorseSprite(document);
+    function format(n) {
+      return String(Math.floor(n)).padStart(5, "0");
+    }
 
-    function format(n) { return String(Math.floor(n)).padStart(5, "0"); }
+    function config() {
+      return difficultyMap[state.difficulty] || difficultyMap.normal;
+    }
 
-    // ── Lobby ────────────────────────────────────────
-    function initLobby() {
-      lobbyBest.textContent = format(best);
-      bestEl.textContent = format(best);
+    function speedDescription(factor) {
+      if (factor <= 0.85) return "Muy suave";
+      if (factor < 0.97) return "Suave";
+      if (factor <= 1.08) return "Equilibrado";
+      if (factor <= 1.22) return "Rapido";
+      return "Muy rapido";
+    }
 
-      const chars = pixelThemes;
-      lobbyCharGrid.innerHTML = chars.map((c) => `
-        <button class="char-btn ${c.id === selectedHorse ? "active" : ""}" data-char="${c.id}" title="${c.label}">
-          ${window.GAME_CHARACTERS.pixelHorseSvg(4, c)}
+    function syncSettings() {
+      localStorage.setItem("horsePixelCharacter", state.selectedHorse);
+      localStorage.setItem("horsePixelDifficulty", state.difficulty);
+      localStorage.setItem("horsePixelSpeedFactor", String(state.speedFactor));
+      speedSlider.value = String(Math.round(state.speedFactor * 100));
+      speedValue.textContent = `${Math.round(state.speedFactor * 100)}%`;
+      speedMeta.textContent = speedDescription(state.speedFactor);
+      document.querySelectorAll("[data-difficulty]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.difficulty === state.difficulty);
+      });
+      document.querySelectorAll("[data-horse]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.horse === state.selectedHorse);
+      });
+      postToParent({
+        type: "pixel-runner-settings",
+        characterId: state.selectedHorse,
+        difficulty: state.difficulty,
+        speedFactor: state.speedFactor
+      });
+    }
+
+    function renderLobby() {
+      lobbyBest.textContent = format(state.best);
+      bestEl.textContent = format(state.best);
+      charGrid.innerHTML = GC.PIXEL_HORSE_THEMES.map((theme) => `
+        <button class="char-btn ${theme.id === state.selectedHorse ? "active" : ""}" data-horse="${theme.id}" type="button" title="${theme.label}">
+          ${GC.pixelHorseSvg(4, theme)}
         </button>
       `).join("");
-
-      document.querySelectorAll(".diff-btn").forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.diff === selectedDiff);
-      });
+      syncSettings();
     }
 
-    lobbyCharGrid.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-char]");
-      if (!btn) return;
-      selectedHorse = btn.dataset.char;
-      localStorage.setItem("horsePixelCharacter", selectedHorse);
-      postToParent({ type: "pixel-runner-character", characterId: selectedHorse });
-      document.querySelectorAll(".char-btn").forEach((b) => b.classList.toggle("active", b.dataset.char === selectedHorse));
-      applyCharacter();
-    });
-
-    document.querySelectorAll(".diff-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        selectedDiff = btn.dataset.diff;
-        localStorage.setItem("horsePixelDiff", selectedDiff);
-        document.querySelectorAll(".diff-btn").forEach((b) => b.classList.toggle("active", b.dataset.diff === selectedDiff));
-      });
-    });
-
-    document.getElementById("lobbyPlayBtn").addEventListener("click", () => {
-      lobby.classList.add("hidden");
-      gameWrap.classList.remove("hidden");
-      applyCharacter();
-      startGame();
-    });
-
-    backBtn.addEventListener("click", () => {
-      stopGame();
-      gameWrap.classList.add("hidden");
-      lobby.classList.remove("hidden");
-      initLobby();
-    });
-
-    // ── Character ────────────────────────────────────
     function applyCharacter() {
-      const pixelHorse = horse.querySelector(".pixel-horse");
-      if (pixelHorse && window.GAME_CHARACTERS) {
-        const theme = pixelThemes.find((item) => item.id === selectedHorse) || pixelThemes[0];
-        pixelHorse.innerHTML = window.GAME_CHARACTERS.pixelHorseSvg(6, theme).replace("<svg ", '<svg class="horse-runner-svg" ');
-      }
+      const holder = horse.querySelector(".pixel-horse");
+      const theme = GC.themeById(state.selectedHorse);
+      holder.innerHTML = GC.pixelHorseSvg(5, theme).replace("<svg ", '<svg class="horse-runner-svg" ');
     }
 
-    // ── Game ─────────────────────────────────────────
     function startGame() {
       clearObstacles();
-      running = true;
-      score = 0;
-      speed = DIFF_SPEEDS[selectedDiff];
-      horseY = 0;
-      velocityY = 0;
-      isJumping = false;
-      isDucking = false;
-      nextObstacleIn = 190;
-      lastTime = performance.now();
+      const cfg = config();
+      state.running = true;
+      state.score = 0;
+      state.speed = cfg.baseSpeed * state.speedFactor;
+      state.jumpPower = cfg.jumpPower;
+      state.horseY = 0;
+      state.velocityY = 0;
+      state.isJumping = false;
+      state.isDucking = false;
+      state.nextObstacleIn = 190;
+      state.lastTime = performance.now();
       horse.classList.remove("duck");
       msg.classList.add("hidden");
-      scoreEl.textContent = format(score);
-      cancelAnimationFrame(animationId);
-      animationId = requestAnimationFrame(loop);
+      scoreEl.textContent = format(state.score);
+      cancelAnimationFrame(state.animationId);
+      state.animationId = requestAnimationFrame(loop);
     }
 
     function stopGame() {
-      running = false;
-      cancelAnimationFrame(animationId);
+      state.running = false;
+      cancelAnimationFrame(state.animationId);
     }
 
     function endGame() {
-      running = false;
-      cancelAnimationFrame(animationId);
-      postToParent({ type: "pixel-runner-score", score: Math.floor(score), best: Math.max(Math.floor(score), best) });
-      if (score > best) {
-        best = score;
-        localStorage.setItem("horsePixelBest", String(best));
-        bestEl.textContent = format(best);
+      stopGame();
+      if (state.score > state.best) {
+        state.best = state.score;
+        localStorage.setItem("horsePixelBest", String(state.best));
+        bestEl.textContent = format(state.best);
       }
+      lobbyBest.textContent = format(state.best);
+      postToParent({ type: "pixel-runner-score", score: Math.floor(state.score), best: Math.floor(state.best) });
       msg.classList.remove("hidden");
       msg.innerHTML = `
         <h1>Fin del juego</h1>
-        <p>Puntos: ${format(score)}<br>Récord: ${format(best)}</p>
-        <button class="msg-btn" id="restartBtn">Volver a jugar</button>
-        <button class="msg-btn secondary" id="toLobbyBtn">Cambiar caballo</button>
+        <p>Puntos: ${format(state.score)}<br>Record: ${format(state.best)}</p>
+        <div class="msg-actions">
+          <button class="msg-btn" id="restartBtn" type="button">Repetir</button>
+          <button class="msg-btn secondary" id="lobbyBtn" type="button">Lobby</button>
+        </div>
       `;
       document.getElementById("restartBtn").addEventListener("click", startGame);
-      document.getElementById("toLobbyBtn").addEventListener("click", () => {
-        stopGame();
-        gameWrap.classList.add("hidden");
-        lobby.classList.remove("hidden");
-        initLobby();
-      });
+      document.getElementById("lobbyBtn").addEventListener("click", openLobby);
     }
 
-    function loop(now) {
-      if (!running) return;
-      const delta = Math.min((now - lastTime) / 16.67, 2);
-      lastTime = now;
-      updateHorse(delta);
-      updateWorld(delta);
-      updateObstacles(delta);
-      updateScore(delta);
-      checkCollision();
-      animationId = requestAnimationFrame(loop);
+    function openLobby() {
+      stopGame();
+      gameWrap.classList.add("hidden");
+      lobby.classList.remove("hidden");
+      renderLobby();
     }
 
     function updateHorse(delta) {
-      if (isJumping) {
-        horseY += velocityY * delta;
-        velocityY -= gravity * delta;
-        if (horseY <= 0) { horseY = 0; velocityY = 0; isJumping = false; }
+      if (state.isJumping) {
+        state.horseY += state.velocityY * delta;
+        state.velocityY -= 0.62 * delta;
+        if (state.horseY <= 0) {
+          state.horseY = 0;
+          state.velocityY = 0;
+          state.isJumping = false;
+        }
       }
-      horse.style.bottom = `calc(var(--ground-bottom) + 3px + ${horseY}px)`;
+      horse.style.bottom = `calc(var(--ground-bottom) + 3px + ${state.horseY}px)`;
     }
 
     function updateWorld(delta) {
       const ground = document.getElementById("ground");
-      const groundOffset = (Number(ground.dataset.offset || 0) + speed * delta) % 32;
+      const groundOffset = (Number(ground.dataset.offset || 0) + state.speed * delta) % 32;
       ground.dataset.offset = groundOffset;
       ground.style.backgroundPositionX = `-${groundOffset}px`;
-      cloudX += speed * .28 * delta;
-      if (cloudX > game.clientWidth + 100) cloudX = -90;
+      state.cloudX += state.speed * 0.28 * delta;
+      if (state.cloudX > game.clientWidth + 100) state.cloudX = -90;
       cloud.style.right = "auto";
-      cloud.style.left = `${game.clientWidth - cloudX}px`;
+      cloud.style.left = `${game.clientWidth - state.cloudX}px`;
     }
 
     function updateScore(delta) {
-      score += speed * .23 * delta;
-      scoreEl.textContent = format(score);
+      state.score += state.speed * 0.23 * delta;
+      scoreEl.textContent = format(state.score);
     }
 
     function updateObstacles(delta) {
-      nextObstacleIn -= speed * delta;
-      if (nextObstacleIn <= 0) {
-        spawnObstacle();
-        const minGap = Math.max(210, 330 - speed * 8);
-        const maxGap = Math.max(300, 460 - speed * 10);
-        nextObstacleIn = random(minGap, maxGap);
+      const cfg = config();
+      state.nextObstacleIn -= state.speed * delta;
+      if (state.nextObstacleIn <= 0) {
+        spawnObstacle(cfg);
+        const minGap = Math.max(190, 330 - state.speed * 8 + cfg.gapBias);
+        const maxGap = Math.max(280, 460 - state.speed * 10 + cfg.gapBias);
+        state.nextObstacleIn = random(minGap, maxGap);
       }
-      for (const ob of obstacles) {
-        ob.x -= speed * delta;
-        ob.el.style.transform = `translateX(${ob.x}px)`;
+
+      for (const obstacle of state.obstacles) {
+        obstacle.x -= state.speed * delta;
+        obstacle.el.style.transform = `translateX(${obstacle.x}px)`;
       }
-      obstacles = obstacles.filter((ob) => {
-        if (ob.x + ob.width < -40) {
-          ob.el.remove();
-          speed = Math.min(speed + (ob.type === "low" ? .09 : .12), 9.5);
+
+      state.obstacles = state.obstacles.filter((obstacle) => {
+        if (obstacle.x + obstacle.width < -40) {
+          obstacle.el.remove();
+          state.speed = Math.min(state.speed + (obstacle.type === "low" ? 0.08 : 0.11), 9.6);
           return false;
         }
         return true;
       });
     }
 
-    function spawnObstacle() {
+    function spawnObstacle(cfg) {
       const gameWidth = game.clientWidth;
-      const difficulty = Math.min(score / 280, 1);
+      const difficulty = Math.min(state.score / 280, 1);
       const roll = Math.random();
       let type = "small";
-      if (score > 120 && roll < .20 + difficulty * .12) type = "long";
-      else if (score > 70 && roll < .48) type = "medium";
-      if (score > 180 && Math.random() < .22 + difficulty * .12) type = "low";
+      if (state.score > 120 && roll < 0.18 + difficulty * 0.12) type = "long";
+      else if (state.score > 70 && roll < 0.46) type = "medium";
+      if (state.score > 150 && Math.random() < cfg.lowChance + difficulty * 0.08) type = "low";
+
       if (type === "low") {
         const el = document.createElement("div");
         el.className = "low-obstacle";
         el.innerHTML = '<span class="rail"></span><span class="cap left"></span><span class="cap right"></span>';
         game.appendChild(el);
-        obstacles.push({ el, x: gameWidth + 40, width: 86, type: "low" });
+        state.obstacles.push({ el, x: gameWidth + 40, width: 86, type: "low" });
         el.style.transform = `translateX(${gameWidth + 40}px)`;
         return;
       }
+
       const el = document.createElement("div");
       el.className = `obstacle fence ${type}`;
       el.innerHTML = '<span class="post left"></span><span class="post right"></span><span class="bar one"></span><span class="bar two"></span><span class="bar three"></span>';
       game.appendChild(el);
       const width = type === "long" ? 96 : type === "medium" ? 68 : 48;
-      obstacles.push({ el, x: gameWidth + 40, width, type });
+      state.obstacles.push({ el, x: gameWidth + 40, width, type });
       el.style.transform = `translateX(${gameWidth + 40}px)`;
-    }
-
-    function checkCollision() {
-      const horseRect = getHorseHitbox();
-      for (const ob of obstacles) {
-        const r = ob.el.getBoundingClientRect();
-        const g = game.getBoundingClientRect();
-        const obsRect = ob.type === "low"
-          ? { left: r.left - g.left + 4, right: r.right - g.left - 4, top: r.top - g.top, bottom: r.top - g.top + 18 }
-          : { left: r.left - g.left + 7, right: r.right - g.left - 7, top: r.top - g.top + 6, bottom: r.bottom - g.top };
-        if (rectsOverlap(horseRect, obsRect)) { endGame(); return; }
-      }
     }
 
     function getHorseHitbox() {
       const r = horse.getBoundingClientRect();
       const g = game.getBoundingClientRect();
-      const duckBonus = isDucking ? 20 : 0;
-      return { left: r.left - g.left + 10, right: r.right - g.left - 12, top: r.top - g.top + 8 + duckBonus, bottom: r.bottom - g.top - 4 };
+      const duckBonus = state.isDucking ? 20 : 0;
+      return {
+        left: r.left - g.left + 12,
+        right: r.right - g.left - 16,
+        top: r.top - g.top + 10 + duckBonus,
+        bottom: r.bottom - g.top - 4
+      };
     }
 
-    function rectsOverlap(a, b) { return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top; }
+    function rectsOverlap(a, b) {
+      return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    }
+
+    function checkCollision() {
+      const horseRect = getHorseHitbox();
+      for (const obstacle of state.obstacles) {
+        const r = obstacle.el.getBoundingClientRect();
+        const g = game.getBoundingClientRect();
+        const obsRect = obstacle.type === "low"
+          ? { left: r.left - g.left + 4, right: r.right - g.left - 4, top: r.top - g.top, bottom: r.top - g.top + 18 }
+          : { left: r.left - g.left + 7, right: r.right - g.left - 7, top: r.top - g.top + 6, bottom: r.bottom - g.top };
+        if (rectsOverlap(horseRect, obsRect)) {
+          endGame();
+          return;
+        }
+      }
+    }
 
     function jump() {
-      if (!running) return;
-      if (!isJumping && !isDucking) { isJumping = true; velocityY = jumpPower; }
+      if (!state.running) return;
+      if (!state.isJumping && !state.isDucking) {
+        state.isJumping = true;
+        state.velocityY = state.jumpPower;
+      }
     }
 
     function setDuck(value) {
-      if (!running || isJumping) return;
-      isDucking = value;
+      if (!state.running || state.isJumping) return;
+      state.isDucking = value;
       horse.classList.toggle("duck", value);
     }
 
     function clearObstacles() {
-      for (const ob of obstacles) ob.el.remove();
-      obstacles = [];
+      for (const obstacle of state.obstacles) obstacle.el.remove();
+      state.obstacles = [];
     }
 
-    function random(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function random(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-    // ── Controls ─────────────────────────────────────
-    game.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; jump(); });
-    jumpBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); jump(); });
-    duckBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); setDuck(true); });
+    function loop(now) {
+      if (!state.running) return;
+      const delta = Math.min((now - state.lastTime) / 16.67, 2);
+      state.lastTime = now;
+      updateHorse(delta);
+      updateWorld(delta);
+      updateObstacles(delta);
+      updateScore(delta);
+      checkCollision();
+      state.animationId = requestAnimationFrame(loop);
+    }
+
+    charGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-horse]");
+      if (!button) return;
+      state.selectedHorse = GC.normalizeThemeId(button.dataset.horse);
+      applyCharacter();
+      syncSettings();
+    });
+
+    document.querySelectorAll("[data-difficulty]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.difficulty = button.dataset.difficulty;
+        syncSettings();
+      });
+    });
+
+    speedSlider.addEventListener("input", (event) => {
+      state.speedFactor = Math.min(1.5, Math.max(0.7, Number(event.target.value) / 100));
+      syncSettings();
+    });
+
+    playBtn.addEventListener("click", () => {
+      lobby.classList.add("hidden");
+      gameWrap.classList.remove("hidden");
+      applyCharacter();
+      startGame();
+    });
+
+    backBtn.addEventListener("click", openLobby);
+    game.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("button")) return;
+      jump();
+    });
+    jumpBtn.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      jump();
+    });
+    duckBtn.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      setDuck(true);
+    });
     duckBtn.addEventListener("pointerup", () => setDuck(false));
-    duckBtn.addEventListener("pointercancel", () => setDuck(false));
     duckBtn.addEventListener("pointerleave", () => setDuck(false));
+    duckBtn.addEventListener("pointercancel", () => setDuck(false));
 
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
-      if (e.code === "ArrowDown") { e.preventDefault(); setDuck(true); }
-    });
-    document.addEventListener("keyup", (e) => {
-      if (e.code === "ArrowDown") { e.preventDefault(); setDuck(false); }
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "ArrowUp") {
+        event.preventDefault();
+        jump();
+      }
+      if (event.code === "ArrowDown") {
+        event.preventDefault();
+        setDuck(true);
+      }
+      if (event.code === "Escape" && !gameWrap.classList.contains("hidden")) {
+        openLobby();
+      }
     });
 
-    // ── Start ─────────────────────────────────────────
-    initLobby();
+    document.addEventListener("keyup", (event) => {
+      if (event.code === "ArrowDown") {
+        event.preventDefault();
+        setDuck(false);
+      }
+    });
+
+    renderLobby();
+    applyCharacter();
   </script>
 </body>
 </html>
