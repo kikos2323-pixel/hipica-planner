@@ -302,19 +302,33 @@ function createHistoricalWorkEntry(dateString) {
   });
 }
 
+function hasMeaningfulWorkEntry(entry) {
+  if (!entry) return false;
+  if (Array.isArray(entry.segments) && entry.segments.length) return true;
+  if (entry.startTime && entry.endTime) return calculateWorkHours(entry) > 0;
+  return calculateWorkHours(entry) > 0;
+}
+
 function backfillHistoricalWorkEntries() {
-  const existingDates = new Set(
-    state.workEntries
-      .filter((entry) => entry && typeof entry.date === "string")
-      .map((entry) => entry.date)
-  );
+  const workByDate = new Map();
+  state.workEntries.forEach((entry) => {
+    if (!entry || typeof entry.date !== "string") return;
+    const list = workByDate.get(entry.date) || [];
+    list.push(entry);
+    workByDate.set(entry.date, list);
+  });
   const additions = [];
   for (let current = HISTORICAL_BACKFILL_START; current <= HISTORICAL_BACKFILL_END; current = addDaysToIso(current, 1)) {
-    if (existingDates.has(current)) continue;
+    const existing = workByDate.get(current) || [];
+    const hasMeaningfulEntry = existing.some(hasMeaningfulWorkEntry);
+    if (hasMeaningfulEntry) continue;
     const entry = createHistoricalWorkEntry(current);
     if (!entry) continue;
+    if (existing.length) {
+      state.workEntries = state.workEntries.filter((item) => item.date !== current);
+    }
     additions.push(entry);
-    existingDates.add(current);
+    workByDate.set(current, [entry]);
   }
   if (!additions.length) return 0;
   state.workEntries = [...state.workEntries, ...additions].sort((a, b) => a.date.localeCompare(b.date));
@@ -1667,7 +1681,7 @@ function renderCalendarModalOverview(iso) {
       <p>${tasks.length} tarea${tasks.length === 1 ? "" : "s"} y ${notes.length} nota${notes.length === 1 ? "" : "s"}</p>
     </article>
     <div class="cal-overview-actions">
-      <button class="primary-button" type="button" data-open-day="${iso}">Ver jornada del día</button>
+      <button class="primary-button" type="button" data-view-work-day="${iso}">Ver jornada del día</button>
       <button class="ghost-button" type="button" data-switch-cal-tab="agenda">Ver agenda</button>
       <button class="ghost-button" type="button" data-switch-cal-tab="nota">Añadir nota</button>
     </div>
@@ -2702,7 +2716,11 @@ function renderCalendar() {
     const hasNotes = notes.length > 0;
 
     const notesDots = hasNotes ? notes.slice(0, 3).map((n) => `<span class="cal-note-pip cal-note-pip-${n.color}"></span>`).join("") : "";
-    const workDot = hasWork ? `<span class="cal-work-dot" title="Jornada registrada">?</span>` : "";
+    const workDot = hasWork ? `<span class="cal-work-dot icon-slot" data-icon="days" title="Jornada registrada" aria-hidden="true"></span>` : "";
+    const summaryBadges = [
+      hasTasks ? `<span class="calendar-badge task">${buttonIcon("tasks")}<strong>${tasks.length}</strong></span>` : "",
+      hasNotes ? `<span class="calendar-badge note">${buttonIcon("notes")}<strong>${notes.length}</strong></span>` : ""
+    ].filter(Boolean).join("");
 
     cells.push(`
       <div class="calendar-day ${isToday ? "today" : ""} ${hasWork ? "has-work" : ""}" data-open-day="${iso}">
@@ -2711,8 +2729,7 @@ function renderCalendar() {
           <div class="cal-icons">${workDot}</div>
         </div>
         ${notesDots ? `<div class="cal-note-pips">${notesDots}</div>` : ""}
-        ${tasks.map((task) => `<span class="calendar-event task">${escapeHtml(task.name)}</span>`).join("")}
-        ${notes.map((n) => `<span class="calendar-event cal-note-event cal-note-event-${n.color}">${escapeHtml(n.text)}</span>`).join("")}
+        ${summaryBadges ? `<div class="calendar-badges">${summaryBadges}</div>` : `<div class="calendar-badges empty"></div>`}
       </div>
     `);
   }
@@ -3628,12 +3645,18 @@ function bindEvents() {
     if (goToTrashBtn) { switchView("historial"); switchHistorialTab("papelera"); }
     if (removeSegmentButton) removeManualSegment(Number(removeSegmentButton.dataset.removeSegment));
     const openDayBtn = event.target.closest("[data-open-day]");
+    const viewWorkDayBtn = event.target.closest("[data-view-work-day]");
     const switchCalTabBtn = event.target.closest("[data-switch-cal-tab]");
     const editNoteBtn = event.target.closest("[data-edit-note]");
     const deleteNoteBtn = event.target.closest("[data-delete-note]");
     if (switchCalTabBtn) switchCalendarModalTab(switchCalTabBtn.dataset.switchCalTab);
     if (editNoteBtn) { event.stopPropagation(); editCalendarNote(editNoteBtn.dataset.editNote); }
     else if (deleteNoteBtn) { event.stopPropagation(); deleteCalendarNote(deleteNoteBtn.dataset.deleteNote); }
+    else if (viewWorkDayBtn) {
+      event.stopPropagation();
+      closeCalendarDayModal();
+      openWorkDate(viewWorkDayBtn.dataset.viewWorkDay);
+    }
     else if (openDayBtn) openCalendarDayModal(openDayBtn.dataset.openDay);
     else if (calendarDay) openWorkDate(calendarDay.dataset.calendarDate);
   });
@@ -4213,10 +4236,6 @@ document.addEventListener("click", (e) => {
 });
 
 init();
-
-
-
-
 
 
 

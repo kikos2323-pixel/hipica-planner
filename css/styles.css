@@ -1885,8 +1885,12 @@ th {
 }
 
 .cal-work-dot {
-  font-size: 0.75rem;
-  line-height: 1;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
 }
 
 .calendar-day:not(.empty):hover {
@@ -3383,11 +3387,16 @@ details[open] .schedule-chevron {
 }
 
 .calendar-day {
-  min-height: 148px;
-  padding: 12px;
+  height: 112px;
+  min-height: 112px;
+  padding: 10px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--glass-strong);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .calendar-day:hover {
@@ -3408,7 +3417,7 @@ details[open] .schedule-chevron {
 
 .day-number {
   display: block;
-  margin-bottom: 7px;
+  margin-bottom: 0;
   font-weight: 800;
 }
 
@@ -3423,8 +3432,53 @@ details[open] .schedule-chevron {
 .cal-icons {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex-shrink: 0;
+}
+
+.calendar-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+  margin-top: auto;
+}
+
+.calendar-badges.empty {
+  opacity: 0;
+}
+
+.calendar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  min-height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--glass-soft) 82%, transparent);
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.calendar-badge .button-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.calendar-badge strong {
+  color: var(--text);
+  font-size: 0.72rem;
+}
+
+.calendar-badge.task {
+  background: color-mix(in srgb, var(--accent) 12%, var(--glass-soft));
+}
+
+.calendar-badge.note {
+  background: color-mix(in srgb, var(--primary) 12%, var(--glass-soft));
 }
 
 .cal-icon-btn {
@@ -3641,13 +3695,38 @@ details[open] .schedule-chevron {
   }
 
   .calendar-day {
-    min-height: 92px;
+    height: 84px;
+    min-height: 84px;
     padding: 6px;
     border-radius: 12px;
   }
 
-  .calendar-event {
-    font-size: 0.68rem;
+  .day-number {
+    font-size: 0.96rem;
+  }
+
+  .cal-work-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .calendar-badges {
+    gap: 4px;
+    min-height: 18px;
+  }
+
+  .calendar-badge {
+    padding: 0 5px;
+    font-size: 0.62rem;
+  }
+
+  .calendar-badge strong {
+    font-size: 0.66rem;
+  }
+
+  .calendar-badge .button-icon {
+    width: 10px;
+    height: 10px;
   }
 }
 
