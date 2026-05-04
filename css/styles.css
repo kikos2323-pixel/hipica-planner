@@ -1216,32 +1216,12 @@ body.game-fullscreen-open {
   background: linear-gradient(180deg, #bdeeff, #f9eec5 78%);
 }
 
-#flappyCanvasFullscreen {
+.game-frame {
   width: 100%;
   height: 100%;
   display: block;
-  touch-action: none;
-}
-
-.pixel-runner-frame {
-  width: 100%;
-  height: 100%;
-  display: none;
   border: 0;
-  background: #f3f3f3;
-}
-
-.game-fullscreen-overlay.pixel-runner-open #flappyCanvasFullscreen,
-.game-fullscreen-overlay.pixel-runner-open .flappy-overlay {
-  display: none !important;
-}
-
-.game-fullscreen-overlay.pixel-runner-open .pixel-runner-frame {
-  display: block;
-}
-
-.flappy-overlay.fullscreen {
-  pointer-events: auto;
+  background: #000;
 }
 
 .game-actions-bar {

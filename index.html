@@ -546,7 +546,7 @@
         </section>
 
         <section class="view" id="juegos">
-          <div class="games-shell">
+          <div class="games-shell-simple">
             <section class="panel game-panel-main">
               <div class="panel-heading game-panel-heading">
                 <div>
@@ -574,62 +574,7 @@
                   <span class="game-list-score">Récord <strong id="pixelRunnerBestValue">0</strong></span>
                 </button>
               </div>
-
-              <div class="flappy-preview-buffer" id="flappyWrap" aria-hidden="true">
-                <canvas id="flappyCanvas" width="960" height="540" aria-label="Juego Flappy Horse"></canvas>
-                <div class="flappy-overlay" id="flappyOverlay">
-                  <div class="flappy-overlay-card" id="flappyOverlayCard">
-                    <h3 id="flappyOverlayTitle">3</h3>
-                    <p id="flappyOverlayText">Pulsa jugar para empezar.</p>
-                  </div>
-                </div>
-              </div>
             </section>
-
-            <aside class="games-side">
-              <section class="panel">
-                <div class="panel-heading">
-                  <h2><span class="icon-slot" data-icon="sparkle"></span>Caballo</h2>
-                </div>
-                <p class="muted">Elige el personaje de Flappy. Se guarda en tu cuenta.</p>
-                <div class="game-swatches" id="flappySwatches"></div>
-              </section>
-
-              <section class="panel">
-                <div class="panel-heading">
-                  <h2><span class="icon-slot" data-icon="timer"></span>Velocidad</h2>
-                </div>
-                <div class="game-speed-control">
-                  <label for="flappySpeedSlider">Avance horizontal</label>
-                  <input id="flappySpeedSlider" type="range" min="70" max="170" step="5" value="100">
-                  <div class="game-speed-meta">
-                    <span>Suave</span>
-                    <strong id="flappySpeedSliderValue">100%</strong>
-                    <span>Rápido</span>
-                  </div>
-                </div>
-              </section>
-
-              <section class="panel">
-                <div class="panel-heading">
-                  <h2><span class="icon-slot" data-icon="top"></span>Tu progreso</h2>
-                </div>
-                <div class="game-progress-grid">
-                  <article class="game-progress-card">
-                    <span>Última Flappy</span>
-                    <strong id="flappyLastScoreValue">0</strong>
-                  </article>
-                  <article class="game-progress-card">
-                    <span>Última Runner</span>
-                    <strong id="pixelRunnerLastScoreValue">0</strong>
-                  </article>
-                  <article class="game-progress-card">
-                    <span>Dificultad actual</span>
-                    <strong id="flappySpeedValue">100%</strong>
-                  </article>
-                </div>
-              </section>
-            </aside>
           </div>
         </section>
 
@@ -637,18 +582,7 @@
           <div class="game-fullscreen-shell">
             <button class="game-fullscreen-close" id="gameFullscreenClose" type="button" aria-label="Cerrar juego">✕</button>
             <div class="game-fullscreen-stage" id="gameFullscreenStage">
-              <canvas id="flappyCanvasFullscreen" aria-label="Juego Flappy Horse en pantalla completa"></canvas>
-              <iframe class="pixel-runner-frame" id="pixelRunnerFrame" title="Caballo Pixel Runner" src="about:blank"></iframe>
-              <div class="flappy-overlay fullscreen" id="flappyOverlayFullscreen">
-                <div class="flappy-overlay-card" id="flappyOverlayCardFullscreen">
-                  <h3 id="flappyOverlayTitleFullscreen">3</h3>
-                  <p id="flappyOverlayTextFullscreen">Pulsa jugar para empezar.</p>
-                  <div class="game-overlay-actions" id="flappyOverlayActionsFullscreen">
-                    <button class="primary-button" id="flappyPlayAgainBtn" type="button">Jugar otra vez</button>
-                    <button class="ghost-button" id="flappyExitBtn" type="button">Salir</button>
-                  </div>
-                </div>
-              </div>
+              <iframe class="game-frame" id="gameFrame" title="Juego" src="about:blank"></iframe>
             </div>
           </div>
         </div>

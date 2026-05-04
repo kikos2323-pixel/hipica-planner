@@ -2,404 +2,404 @@
 <html lang="es">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hípica App · Flappy Horse Preview</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Flappy Horse</title>
     <style>
-      :root {
-        color-scheme: light dark;
-        --bg-a: #dff4ff;
-        --bg-b: #f9f3df;
-        --panel: rgba(255, 255, 255, 0.84);
-        --line: rgba(27, 58, 44, 0.14);
-        --text: #173126;
-        --muted: #617468;
-        --primary: #287257;
-        --accent: #d7902f;
-        --danger: #c45145;
-        --shadow: 0 18px 50px rgba(26, 53, 40, 0.16);
-      }
-
-      * { box-sizing: border-box; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
 
       body {
-        margin: 0;
-        min-height: 100vh;
         font-family: Inter, system-ui, sans-serif;
-        color: var(--text);
-        background:
-          radial-gradient(circle at top left, rgba(255, 206, 120, 0.55), transparent 28rem),
-          radial-gradient(circle at top right, rgba(61, 151, 117, 0.32), transparent 30rem),
-          linear-gradient(180deg, var(--bg-a), var(--bg-b));
-        display: grid;
-        place-items: center;
-        padding: 24px;
-      }
-
-      .preview-shell {
-        width: min(1100px, 100%);
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 320px;
-        gap: 20px;
-        align-items: start;
-      }
-
-      .game-card,
-      .info-card {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 28px;
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(16px);
-      }
-
-      .game-card {
-        padding: 18px;
-      }
-
-      .game-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 14px;
-      }
-
-      .game-title {
-        display: grid;
-        gap: 4px;
-      }
-
-      .game-title span {
-        font-size: 0.8rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted);
-      }
-
-      .game-title h1 {
-        margin: 0;
-        font-size: clamp(1.8rem, 4vw, 2.7rem);
-        line-height: 1;
-      }
-
-      .scoreboard {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .score-pill {
-        min-width: 108px;
-        padding: 10px 14px;
-        border-radius: 18px;
-        border: 1px solid var(--line);
-        background: rgba(255,255,255,0.72);
-      }
-
-      .score-pill span {
-        display: block;
-        font-size: 0.74rem;
-        color: var(--muted);
-        font-weight: 700;
-      }
-
-      .score-pill strong {
-        display: block;
-        font-size: 1.45rem;
-        margin-top: 2px;
-      }
-
-      .canvas-wrap {
-        position: relative;
-        border-radius: 24px;
+        background: linear-gradient(160deg, #bdeeff 0%, #ecf9ff 45%, #f3ddb0 100%);
+        min-height: 100dvh;
         overflow: hidden;
-        border: 1px solid rgba(38, 76, 57, 0.16);
-        background: linear-gradient(180deg, #bdeeff, #f9eec5 78%);
-        aspect-ratio: 16 / 9;
+        touch-action: none;
+        user-select: none;
       }
 
-      canvas {
-        width: 100%;
-        height: 100%;
-        display: block;
-      }
-
-      .overlay {
-        position: absolute;
+      /* ── LOBBY ───────────────────────────────────── */
+      #lobby {
+        position: fixed;
         inset: 0;
-        display: grid;
-        place-items: center;
-        pointer-events: none;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        background: linear-gradient(160deg, #bdeeff 0%, #ecf9ff 45%, #f3ddb0 100%);
+        padding: 24px 16px 32px;
+        overflow-y: auto;
       }
 
-      .overlay-card {
-        width: min(420px, calc(100% - 24px));
-        padding: 24px;
+      #lobby.hidden { display: none; }
+
+      .lobby-title {
         text-align: center;
-        border-radius: 24px;
-        border: 1px solid rgba(255,255,255,0.45);
-        background: rgba(255,255,255,0.72);
-        box-shadow: 0 18px 50px rgba(18, 43, 31, 0.14);
-        backdrop-filter: blur(16px);
+        margin-bottom: 28px;
       }
 
-      .overlay-card h2 {
-        margin: 0 0 10px;
-        font-size: clamp(1.3rem, 3vw, 2rem);
+      .lobby-title .eyebrow {
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6a7d72;
+        margin-bottom: 6px;
       }
 
-      .overlay-card p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.45;
+      .lobby-title h1 {
+        font-size: clamp(2rem, 8vw, 3.2rem);
+        line-height: 1;
+        color: #173126;
       }
 
-      .overlay-card .hint {
-        margin-top: 16px;
+      .record-badge {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 10px 14px;
+        margin-top: 10px;
+        padding: 8px 16px;
         border-radius: 999px;
         background: rgba(40, 114, 87, 0.12);
-        color: var(--primary);
+        border: 1px solid rgba(40, 114, 87, 0.2);
+        color: #287257;
         font-weight: 800;
+        font-size: 0.92rem;
       }
 
-      .countdown-card {
-        width: auto;
-        min-width: 180px;
-        padding: 26px 34px;
-      }
-
-      .countdown-card h2 {
-        margin: 0;
-        font-size: clamp(4rem, 14vw, 7rem);
-        line-height: 0.95;
+      /* horse picker */
+      .section-label {
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #6a7d72;
+        margin-bottom: 12px;
         text-align: center;
       }
 
-      .countdown-card p,
-      .countdown-card .hint {
-        display: none;
-      }
-
-      .controls {
+      .horse-grid {
         display: flex;
-        gap: 10px;
         flex-wrap: wrap;
-        margin-top: 16px;
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 28px;
+        max-width: 360px;
       }
 
-      .color-picker {
+      .horse-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        padding: 10px 14px;
+        border-radius: 18px;
+        border: 2px solid transparent;
+        background: rgba(255,255,255,0.55);
+        transition: all 0.18s;
+        min-width: 80px;
+      }
+
+      .horse-option:hover {
+        background: rgba(255,255,255,0.8);
+        transform: translateY(-2px);
+      }
+
+      .horse-option.selected {
+        border-color: #287257;
+        background: rgba(40,114,87,0.1);
+        box-shadow: 0 0 0 3px rgba(40,114,87,0.18);
+      }
+
+      .horse-preview {
+        width: 52px;
+        height: 52px;
+        position: relative;
         display: flex;
         align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
+        justify-content: center;
       }
 
-      .color-picker span {
-        font-weight: 800;
-        color: var(--muted);
+      .horse-preview canvas {
+        width: 52px;
+        height: 52px;
       }
 
-      .swatches {
+      .horse-option-name {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #3a5248;
+        text-align: center;
+      }
+
+      /* play button */
+      .play-btn {
         display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .swatch {
-        width: 34px;
-        height: 34px;
-        border-radius: 999px;
-        border: 2px solid rgba(255,255,255,0.9);
-        box-shadow: 0 4px 14px rgba(28, 51, 39, 0.14);
-        cursor: pointer;
-      }
-
-      .swatch.active {
-        outline: 3px solid rgba(40, 114, 87, 0.28);
-        transform: scale(1.06);
-      }
-
-      button {
-        appearance: none;
-        border: 0;
-        border-radius: 16px;
-        min-height: 46px;
-        padding: 0 18px;
-        font: inherit;
-        font-weight: 800;
-        cursor: pointer;
-      }
-
-      .primary {
-        background: linear-gradient(135deg, var(--primary), #3ba97d);
-        color: white;
-      }
-
-      .ghost {
-        border: 1px solid var(--line);
-        background: rgba(255,255,255,0.7);
-        color: var(--text);
-      }
-
-      .info-card {
-        padding: 22px;
-        display: grid;
-        gap: 18px;
-      }
-
-      .info-card h2 {
-        margin: 0;
-        font-size: 1.35rem;
-      }
-
-      .bullet-list {
-        display: grid;
+        align-items: center;
+        justify-content: center;
         gap: 10px;
-      }
-
-      .bullet {
-        padding: 14px 16px;
+        width: min(300px, 100%);
+        height: 58px;
         border-radius: 18px;
-        background: rgba(255,255,255,0.68);
-        border: 1px solid var(--line);
-      }
-
-      .bullet strong {
-        display: block;
-        margin-bottom: 4px;
-      }
-
-      .bullet span {
-        color: var(--muted);
-        line-height: 1.45;
-      }
-
-      .tag-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .tag {
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(215, 144, 47, 0.14);
-        color: #9f640d;
-        border: 1px solid rgba(215, 144, 47, 0.2);
-        font-size: 0.8rem;
+        border: none;
+        font: inherit;
+        font-size: 1.1rem;
         font-weight: 800;
+        cursor: pointer;
+        background: linear-gradient(135deg, #287257, #3ba97d);
+        color: white;
+        box-shadow: 0 8px 24px rgba(40,114,87,0.35);
+        transition: transform 0.15s, box-shadow 0.15s;
+        touch-action: manipulation;
       }
 
-      @media (max-width: 920px) {
-        .preview-shell {
-          grid-template-columns: 1fr;
-        }
+      .play-btn:active {
+        transform: scale(0.97);
+        box-shadow: 0 4px 12px rgba(40,114,87,0.3);
+      }
+
+      /* ── GAME WRAP ──────────────────────────────── */
+      #gameWrap {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        background: #000;
+      }
+
+      #gameWrap.hidden { display: none; }
+
+      #gameCanvas {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+      }
+
+      .controls-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: rgba(0,0,0,0.65);
+        gap: 10px;
+        flex-shrink: 0;
+      }
+
+      .back-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 14px;
+        height: 44px;
+        border-radius: 14px;
+        border: none;
+        background: rgba(255,255,255,0.14);
+        color: rgba(255,255,255,0.9);
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+
+      .jump-btn {
+        flex: 1;
+        height: 52px;
+        border-radius: 16px;
+        border: none;
+        background: rgba(40,200,120,0.22);
+        border: 1px solid rgba(40,200,120,0.4);
+        color: rgba(255,255,255,0.95);
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        touch-action: manipulation;
+        letter-spacing: 0.04em;
+      }
+
+      .jump-btn:active {
+        background: rgba(40,200,120,0.4);
+      }
+
+      /* in-game overlay */
+      #gameOverlay {
+        position: absolute;
+        inset: 0;
+        bottom: 0;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      #gameOverlay.hidden { display: none; }
+
+      .overlay-card {
+        width: min(360px, calc(100% - 32px));
+        padding: 28px 24px;
+        text-align: center;
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,0.45);
+        background: rgba(255,255,255,0.78);
+        box-shadow: 0 18px 50px rgba(18, 43, 31, 0.18);
+        backdrop-filter: blur(18px);
+        pointer-events: all;
+      }
+
+      .overlay-card h2 {
+        font-size: clamp(1.4rem, 4vw, 2rem);
+        color: #173126;
+        margin-bottom: 8px;
+      }
+
+      .overlay-card p {
+        color: #617468;
+        line-height: 1.5;
+        margin-bottom: 0;
+      }
+
+      .hint-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(40, 114, 87, 0.12);
+        color: #287257;
+        font-weight: 800;
+        font-size: 0.9rem;
+      }
+
+      .countdown-num {
+        font-size: clamp(5rem, 18vw, 9rem);
+        font-weight: 900;
+        line-height: 1;
+        color: #173126;
+      }
+
+      .gameover-score {
+        font-size: 2.4rem;
+        font-weight: 900;
+        color: #287257;
+        margin: 4px 0 12px;
+      }
+
+      .gameover-record {
+        font-size: 0.88rem;
+        color: #6a7d72;
+        font-weight: 700;
+        margin-bottom: 20px;
+      }
+
+      .gameover-btns {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .btn-retry {
+        height: 50px;
+        border-radius: 16px;
+        border: none;
+        background: linear-gradient(135deg, #287257, #3ba97d);
+        color: white;
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+
+      .btn-lobby {
+        height: 44px;
+        border-radius: 16px;
+        border: 1px solid rgba(27,58,44,0.2);
+        background: rgba(255,255,255,0.6);
+        color: #3a5248;
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        touch-action: manipulation;
       }
     </style>
   </head>
   <body>
-    <div class="preview-shell">
-      <section class="game-card">
-        <div class="game-header">
-          <div class="game-title">
-            <span>Preview de juego</span>
-            <h1>Flappy Horse</h1>
-          </div>
-          <div class="scoreboard">
-            <div class="score-pill">
-              <span>Puntuación</span>
-              <strong id="scoreValue">0</strong>
-            </div>
-            <div class="score-pill">
-              <span>Récord</span>
-              <strong id="bestValue">0</strong>
-            </div>
-          </div>
-        </div>
 
-        <div class="canvas-wrap" id="gameWrap">
-          <canvas id="gameCanvas" width="960" height="540"></canvas>
-          <div class="overlay" id="overlay">
-            <div class="overlay-card" id="overlayCard">
-              <h2 id="overlayTitle">Pulsa para empezar</h2>
-              <p id="overlayText">Haz saltar al caballo y pasa por los huecos entre las vallas sin tocar el suelo.</p>
-              <div class="hint">Espacio · clic · toque</div>
-            </div>
-          </div>
-        </div>
+    <!-- ── LOBBY ───────────────────────────────────────── -->
+    <div id="lobby">
+      <div class="lobby-title">
+        <div class="eyebrow">Minijuego</div>
+        <h1>🐴 Flappy Horse</h1>
+        <div class="record-badge">🏆 Récord: <span id="lobbyRecord">0</span></div>
+      </div>
 
-        <div class="controls">
-          <button class="primary" id="startBtn" type="button">Jugar</button>
-          <button class="ghost" id="restartBtn" type="button">Reiniciar</button>
-        </div>
-        <div class="controls color-picker">
-          <span>Color del caballo</span>
-          <div class="swatches" id="swatches"></div>
-        </div>
-      </section>
+      <p class="section-label">Elige tu caballo</p>
+      <div class="horse-grid" id="horseGrid"></div>
 
-      <aside class="info-card">
-        <div>
-          <h2>Cómo ha quedado</h2>
-        </div>
-        <div class="bullet-list">
-          <div class="bullet">
-            <strong>Caballito animado</strong>
-            <span>Salta con una trayectoria suave y con pequeñas animaciones de crin y patas.</span>
-          </div>
-          <div class="bullet">
-            <strong>Vallas en vez de tuberías</strong>
-            <span>Las columnas son vallas hípicas coloridas con hueco central para pasar.</span>
-          </div>
-          <div class="bullet">
-            <strong>Hecho para móvil y ordenador</strong>
-            <span>Funciona con toque, clic o tecla espacio, y se adapta bien a pantalla pequeña.</span>
-          </div>
-        </div>
-        <div class="tag-row">
-          <span class="tag">Colorido</span>
-          <span class="tag">Funcional</span>
-          <span class="tag">Arcade</span>
-          <span class="tag">Tema hípico</span>
-        </div>
-      </aside>
+      <button class="play-btn" id="playBtn" type="button">
+        ▶ &nbsp;¡Jugar!
+      </button>
+    </div>
+
+    <!-- ── GAME WRAP ──────────────────────────────────── -->
+    <div id="gameWrap" class="hidden">
+      <div id="gameOverlay">
+        <div class="overlay-card" id="overlayCard"></div>
+      </div>
+      <canvas id="gameCanvas"></canvas>
+      <div class="controls-bar">
+        <button class="back-btn" id="backBtn" type="button">← Lobby</button>
+        <button class="jump-btn" id="jumpBtn" type="button">🐴 SALTAR</button>
+      </div>
     </div>
 
     <script>
-      const canvas = document.getElementById("gameCanvas");
-      const ctx = canvas.getContext("2d");
-      const overlay = document.getElementById("overlay");
-      const overlayCard = document.getElementById("overlayCard");
-      const overlayTitle = document.getElementById("overlayTitle");
-      const overlayText = document.getElementById("overlayText");
-      const scoreValue = document.getElementById("scoreValue");
-      const bestValue = document.getElementById("bestValue");
-      const bestStorageKey = "hipica.flappyHorse.best";
-      const colorStorageKey = "hipica.flappyHorse.color";
-      const bestScore = Number(localStorage.getItem(bestStorageKey) || 0);
-      bestValue.textContent = String(bestScore);
-      const horseThemes = [
-        { id: "castano", body: "#9b5f33", dark: "#5a3218", mane: "#4d2c1a", accent: "#744222" },
-        { id: "negro", body: "#34363c", dark: "#17181c", mane: "#101114", accent: "#24262b" },
-        { id: "blanco", body: "#f2ede3", dark: "#8f867b", mane: "#c9c0b3", accent: "#d8d0c3" },
-        { id: "alazan", body: "#ba6a36", dark: "#6a381c", mane: "#82411e", accent: "#99532a" },
-        { id: "gris", body: "#adb4bb", dark: "#5f6870", mane: "#7f8891", accent: "#929aa3" }
-      ];
-      const storedThemeId = localStorage.getItem(colorStorageKey);
-      const defaultTheme = horseThemes.find((theme) => theme.id === storedThemeId) || horseThemes[0];
+    (() => {
+      /* ── CONSTANTS ─────────────────────────────────── */
+      const BEST_KEY = "hipica.flappyHorse.best";
+      const COLOR_KEY = "hipica.flappyHorse.color";
 
-      const state = {
+      const horseThemes = [
+        { id: "castano",   label: "Castaño",   body: "#9b5f33", dark: "#5a3218", mane: "#4d2c1a", accent: "#744222", pattern: "blaze",     socks: true  },
+        { id: "negro",     label: "Negro",     body: "#34363c", dark: "#17181c", mane: "#101114", accent: "#24262b", pattern: "none",      socks: false },
+        { id: "blanco",    label: "Blanco",    body: "#f2ede3", dark: "#8f867b", mane: "#c9c0b3", accent: "#d8d0c3", pattern: "none",      socks: false },
+        { id: "alazan",    label: "Alazán",    body: "#ba6a36", dark: "#6a381c", mane: "#82411e", accent: "#99532a", pattern: "blaze",     socks: false },
+        { id: "gris",      label: "Gris",      body: "#adb4bb", dark: "#5f6870", mane: "#7f8891", accent: "#929aa3", pattern: "none",      socks: false },
+        { id: "palomino",  label: "Palomino",  body: "#e6c275", dark: "#9d7c33", mane: "#fff5d6", accent: "#cda44a", pattern: "blaze",     socks: true  },
+        { id: "pinto",     label: "Pinto",     body: "#f2ede3", dark: "#5a3218", mane: "#3a2415", accent: "#7a4225", pattern: "pinto",     socks: false },
+        { id: "appaloosa", label: "Appaloosa", body: "#d8c9b4", dark: "#5a4530", mane: "#3a2c1d", accent: "#7a5a3a", pattern: "appaloosa", socks: false },
+        { id: "isabela",   label: "Isabela",   body: "#f0d8a8", dark: "#a08055", mane: "#7a4c20", accent: "#c8a070", pattern: "blaze",     socks: true  },
+        { id: "tordo",     label: "Tordo",     body: "#c4c4c0", dark: "#5a5a55", mane: "#2d2d2a", accent: "#8a8a85", pattern: "dapple",    socks: false },
+        { id: "moro",      label: "Moro",      body: "#3d2d1a", dark: "#1f1208", mane: "#0a0604", accent: "#2a1d0e", pattern: "blaze",     socks: true  },
+        { id: "rosillo",   label: "Rosillo",   body: "#c89e8a", dark: "#7a5848", mane: "#9d6f55", accent: "#a07060", pattern: "appaloosa", socks: false }
+      ];
+
+      /* ── STATE ─────────────────────────────────────── */
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialHorse = urlParams.get("horse");
+      let bestScore = Number(localStorage.getItem(BEST_KEY) || 0);
+      let selectedTheme = horseThemes.find(t => t.id === initialHorse)
+        || horseThemes.find(t => t.id === localStorage.getItem(COLOR_KEY))
+        || horseThemes[0];
+
+      function postToParent(payload) {
+        try { window.parent && window.parent !== window && window.parent.postMessage(payload, window.location.origin); }
+        catch (_) {}
+      }
+
+      const gameState = {
         running: false,
         gameOver: false,
         countdown: 0,
         countdownTimer: null,
         score: 0,
-        best: bestScore,
         gravity: 0.27,
         flap: -6.6,
         groundHeight: 82,
@@ -407,92 +407,338 @@
         speed: 2.15,
         spawnTimer: 0,
         spawnEvery: 132,
-        currentGap: 196,
+        currentGap: 248,
         frame: 0,
-        horseTheme: defaultTheme,
-        horse: {
-          x: 180,
-          y: 240,
-          width: 74,
-          height: 46,
-          velocity: 0,
-          bob: 0
-        },
+        horse: { x: 0, y: 0, width: 74, height: 46, velocity: 0, bob: 0 },
         fences: []
       };
 
-      function resetGame(start = false) {
-        state.running = start;
-        state.gameOver = false;
-        state.countdown = 0;
-        if (state.countdownTimer) {
-          clearInterval(state.countdownTimer);
-          state.countdownTimer = null;
+      /* ── DOM ───────────────────────────────────────── */
+      const lobby      = document.getElementById("lobby");
+      const gameWrap   = document.getElementById("gameWrap");
+      const canvas     = document.getElementById("gameCanvas");
+      const ctx        = canvas.getContext("2d");
+      const gameOverlay = document.getElementById("gameOverlay");
+      const overlayCard = document.getElementById("overlayCard");
+      const lobbyRecord = document.getElementById("lobbyRecord");
+      const horseGrid  = document.getElementById("horseGrid");
+      const playBtn    = document.getElementById("playBtn");
+      const backBtn    = document.getElementById("backBtn");
+      const jumpBtn    = document.getElementById("jumpBtn");
+
+      /* ── LOBBY ─────────────────────────────────────── */
+      function renderLobby() {
+        lobbyRecord.textContent = bestScore;
+        horseGrid.innerHTML = horseThemes.map(t => `
+          <div class="horse-option ${t.id === selectedTheme.id ? 'selected' : ''}"
+               data-theme="${t.id}" role="button" tabindex="0">
+            <canvas class="horse-preview" width="52" height="52" data-preview="${t.id}"></canvas>
+            <span class="horse-option-name">${t.label}</span>
+          </div>
+        `).join("");
+
+        horseThemes.forEach(t => {
+          const cvs = horseGrid.querySelector(`[data-preview="${t.id}"]`);
+          drawPreviewHorse(cvs, t);
+        });
+      }
+
+      function drawPreviewHorse(cvs, theme) {
+        const c = cvs.getContext("2d");
+        c.clearRect(0, 0, 52, 52);
+        c.save();
+        c.translate(26, 30);
+
+        c.fillStyle = theme.body;
+        c.strokeStyle = theme.dark;
+        c.lineWidth = 1.5;
+        roundedRectCtx(c, -18, -12, 28, 16, 7, true, true);
+        roundedRectCtx(c, 2, -24, 14, 16, 7, true, true);
+
+        c.beginPath();
+        c.moveTo(10, -17);
+        c.lineTo(20, -27);
+        c.lineTo(13, -10);
+        c.closePath();
+        c.fillStyle = theme.accent;
+        c.fill();
+
+        c.beginPath();
+        c.moveTo(-16, -12);
+        c.quadraticCurveTo(-30, -22, -34, -3);
+        c.quadraticCurveTo(-26, -6, -16, 2);
+        c.lineWidth = 4.5;
+        c.strokeStyle = theme.mane;
+        c.stroke();
+
+        // pattern overlay (preview)
+        if (theme.pattern === "pinto") {
+          c.fillStyle = theme.dark;
+          c.beginPath();
+          c.ellipse(-12, -8, 7, 5, 0.3, 0, Math.PI*2); c.fill();
+          c.beginPath();
+          c.ellipse(-2, 0, 5, 4, -0.2, 0, Math.PI*2); c.fill();
+        } else if (theme.pattern === "appaloosa") {
+          c.fillStyle = theme.dark;
+          [[-10,-6],[-4,-2],[2,-6],[-12,2],[-2,2]].forEach(([px,py]) => {
+            c.beginPath(); c.arc(px,py,1.4,0,Math.PI*2); c.fill();
+          });
+        } else if (theme.pattern === "dapple") {
+          c.fillStyle = "rgba(255,255,255,0.35)";
+          [[-12,-7],[-4,-3],[-10,2],[0,-1]].forEach(([px,py]) => {
+            c.beginPath(); c.arc(px,py,2,0,Math.PI*2); c.fill();
+          });
         }
-        state.score = 0;
-        state.speed = state.baseSpeed;
-        state.spawnTimer = 0;
-        state.currentGap = 248;
-        state.frame = 0;
-        state.fences = [];
-        state.horse.y = 240;
-        state.horse.velocity = 0;
-        state.horse.bob = 0;
-        scoreValue.textContent = "0";
-        showOverlay(!start, start ? "" : "Pulsa para empezar", start ? "" : "Haz saltar al caballo y pasa por los huecos entre las vallas sin tocar el suelo.");
+        if (theme.pattern === "blaze") {
+          c.fillStyle = "#ffffff";
+          c.beginPath();
+          c.moveTo(8,-22); c.lineTo(11,-22); c.lineTo(10,-12); c.lineTo(7,-12);
+          c.closePath(); c.fill();
+        }
+
+        c.beginPath();
+        c.arc(12, -16, 1.6, 0, Math.PI * 2);
+        c.fillStyle = "#20130a";
+        c.fill();
+
+        [[-6,4],[-1,5],[-12,4],[7,5]].forEach(([ox,oy], i) => {
+          c.save();
+          c.translate(ox, oy);
+          c.strokeStyle = theme.dark;
+          c.lineWidth = 2.5;
+          c.lineCap = "round";
+          c.beginPath();
+          c.moveTo(0,0); c.lineTo(0,8); c.lineTo(0,16);
+          c.stroke();
+          if (theme.socks) {
+            c.strokeStyle = "#ffffff";
+            c.lineWidth = 2.2;
+            c.beginPath();
+            c.moveTo(0,12); c.lineTo(0,16);
+            c.stroke();
+          }
+          c.restore();
+        });
+
+        c.restore();
       }
 
-      function showOverlay(show, title = "", text = "") {
-        overlay.style.display = show ? "grid" : "none";
-        if (!show) overlayCard.classList.remove("countdown-card");
-        if (title) overlayTitle.textContent = title;
-        if (text) overlayText.textContent = text;
+      horseGrid.addEventListener("click", e => {
+        const opt = e.target.closest("[data-theme]");
+        if (!opt) return;
+        selectedTheme = horseThemes.find(t => t.id === opt.dataset.theme);
+        localStorage.setItem(COLOR_KEY, selectedTheme.id);
+        postToParent({ type: "flappy-horse-character", characterId: selectedTheme.id });
+        renderLobby();
+      });
+
+      playBtn.addEventListener("click", () => {
+        lobby.classList.add("hidden");
+        gameWrap.classList.remove("hidden");
+        resizeCanvas();
+        startCountdown();
+      });
+
+      backBtn.addEventListener("click", goToLobby);
+
+      function goToLobby() {
+        stopGame();
+        gameWrap.classList.add("hidden");
+        lobby.classList.remove("hidden");
+        renderLobby();
       }
 
-      function startGame() {
-        if (state.running || state.countdown > 0) return;
-        if (state.gameOver) resetGame(false);
-        state.gameOver = false;
-        state.countdown = 3;
-        overlay.style.display = "grid";
-        overlayTitle.textContent = "3";
-        overlayText.textContent = "";
-        overlayCard.classList.add("countdown-card");
-        const hint = overlay.querySelector(".hint");
-        if (hint) hint.textContent = "3";
+      /* ── CANVAS RESIZE ─────────────────────────────── */
+      function resizeCanvas() {
+        const bar = gameWrap.querySelector(".controls-bar");
+        const barH = bar ? bar.offsetHeight : 70;
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight - barH;
+        gameState.horse.x = Math.round(canvas.width * 0.22);
+        if (!gameState.running && !gameState.gameOver) {
+          gameState.horse.y = Math.round(canvas.height * 0.45);
+        }
+      }
 
-        state.countdownTimer = setInterval(() => {
-          state.countdown -= 1;
-          overlayTitle.textContent = state.countdown > 0 ? String(state.countdown) : "¡Ya!";
-          if (state.countdown <= 0) {
-            clearInterval(state.countdownTimer);
-            state.countdownTimer = null;
-            state.running = true;
-            overlayCard.classList.remove("countdown-card");
-            showOverlay(false);
+      window.addEventListener("resize", () => {
+        resizeCanvas();
+      });
+
+      /* ── GAME CONTROL ──────────────────────────────── */
+      function stopGame() {
+        gameState.running = false;
+        gameState.gameOver = false;
+        if (gameState.countdownTimer) {
+          clearInterval(gameState.countdownTimer);
+          gameState.countdownTimer = null;
+        }
+        gameState.countdown = 0;
+      }
+
+      function resetGameState(startRunning) {
+        stopGame();
+        gameState.running  = startRunning;
+        gameState.score    = 0;
+        gameState.speed    = gameState.baseSpeed;
+        gameState.spawnTimer = 0;
+        gameState.currentGap = 248;
+        gameState.frame    = 0;
+        gameState.fences   = [];
+        gameState.horse.y  = Math.round(canvas.height * 0.45);
+        gameState.horse.velocity = 0;
+        gameState.horse.bob = 0;
+        gameState.gravity  = 0.27;
+      }
+
+      function startCountdown() {
+        resetGameState(false);
+        gameState.countdown = 3;
+        showCountdown(3);
+
+        gameState.countdownTimer = setInterval(() => {
+          gameState.countdown -= 1;
+          if (gameState.countdown > 0) {
+            showCountdown(gameState.countdown);
+          } else {
+            clearInterval(gameState.countdownTimer);
+            gameState.countdownTimer = null;
+            gameState.countdown = 0;
+            gameState.running = true;
+            hideOverlay();
           }
         }, 1000);
       }
 
       function flapHorse() {
-        if (state.countdown > 0) return;
-        if (!state.running) {
-          startGame();
-          return;
+        if (gameState.countdown > 0) return;
+        if (gameState.gameOver) return;
+        if (!gameState.running) return;
+        gameState.horse.velocity = gameState.flap;
+      }
+
+      function endGame() {
+        gameState.running = false;
+        gameState.gameOver = true;
+        if (gameState.score > bestScore) {
+          bestScore = gameState.score;
+          localStorage.setItem(BEST_KEY, String(bestScore));
         }
-        if (state.gameOver) return;
-        state.horse.velocity = state.flap;
+        postToParent({ type: "flappy-horse-score", score: gameState.score, best: bestScore });
+        showGameOver();
+      }
+
+      /* ── OVERLAY HELPERS ───────────────────────────── */
+      function hideOverlay() {
+        gameOverlay.classList.add("hidden");
+        overlayCard.innerHTML = "";
+      }
+
+      function showCountdown(n) {
+        gameOverlay.classList.remove("hidden");
+        overlayCard.innerHTML = `<div class="countdown-num">${n}</div>`;
+      }
+
+      function showStartScreen() {
+        gameOverlay.classList.remove("hidden");
+        overlayCard.innerHTML = `
+          <h2>¡Listo!</h2>
+          <p>Salta para no tocar las vallas ni el suelo.</p>
+          <div class="hint-pill">Espacio · clic · toque</div>
+        `;
+      }
+
+      function showGameOver() {
+        const isNew = gameState.score >= bestScore;
+        gameOverlay.classList.remove("hidden");
+        overlayCard.innerHTML = `
+          <h2>¡Has chocado!</h2>
+          <div class="gameover-score">${gameState.score}</div>
+          <div class="gameover-record">${isNew ? "🏆 ¡Nuevo récord!" : `Récord: ${bestScore}`}</div>
+          <div class="gameover-btns">
+            <button class="btn-retry" id="retryBtn">🔄 Volver a jugar</button>
+            <button class="btn-lobby" id="toLobbyBtn">← Cambiar caballo</button>
+          </div>
+        `;
+        document.getElementById("retryBtn").addEventListener("click", startCountdown);
+        document.getElementById("toLobbyBtn").addEventListener("click", goToLobby);
+      }
+
+      /* ── INPUT ─────────────────────────────────────── */
+      canvas.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        flapHorse();
+      });
+
+      jumpBtn.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        flapHorse();
+      });
+
+      window.addEventListener("keydown", e => {
+        if (e.code === "Space" || e.code === "ArrowUp") {
+          e.preventDefault();
+          flapHorse();
+        }
+      });
+
+      /* ── UPDATE ────────────────────────────────────── */
+      function update() {
+        gameState.frame += 1;
+        gameState.horse.bob += 0.08;
+
+        if (!gameState.running || gameState.gameOver) return;
+
+        const lvl = Math.floor(gameState.score / 25);
+        gameState.speed    = gameState.baseSpeed * Math.pow(1.01, lvl);
+        gameState.gravity  = 0.27 * Math.pow(1.01, lvl);
+        gameState.currentGap = Math.max(132, 248 - lvl * 6);
+
+        gameState.spawnTimer += 1;
+        if (gameState.spawnTimer >= gameState.spawnEvery) {
+          gameState.spawnTimer = 0;
+          spawnFence();
+        }
+
+        gameState.horse.velocity += gameState.gravity;
+        gameState.horse.y += gameState.horse.velocity;
+
+        gameState.fences.forEach(f => {
+          f.x -= gameState.speed;
+          if (!f.scored && f.x + f.width < gameState.horse.x) {
+            f.scored = true;
+            gameState.score += 1;
+          }
+        });
+        gameState.fences = gameState.fences.filter(f => f.x + f.width > -140);
+
+        const hb = {
+          x: gameState.horse.x - gameState.horse.width  * 0.34,
+          y: gameState.horse.y - gameState.horse.height * 0.35,
+          width:  gameState.horse.width  * 0.72,
+          height: gameState.horse.height * 0.7
+        };
+
+        const hitGround = gameState.horse.y + gameState.horse.height / 2 >= canvas.height - gameState.groundHeight;
+        const hitSky    = gameState.horse.y - gameState.horse.height / 2 <= 0;
+        const hitFence  = gameState.fences.some(f => {
+          const top = { x: f.x, y: 0, width: f.width, height: f.gapY };
+          const bot = { x: f.x, y: f.gapY + f.gapHeight, width: f.width,
+                        height: canvas.height - gameState.groundHeight - (f.gapY + f.gapHeight) };
+          return intersects(hb, top) || intersects(hb, bot);
+        });
+
+        if (hitGround || hitSky || hitFence) endGame();
       }
 
       function spawnFence() {
-        const gap = state.currentGap;
+        const gap    = gameState.currentGap;
         const minTop = 62;
-        const maxTop = canvas.height - state.groundHeight - gap - 62;
-        const topHeight = minTop + Math.random() * (maxTop - minTop);
-        state.fences.push({
+        const maxTop = canvas.height - gameState.groundHeight - gap - 62;
+        const topH   = minTop + Math.random() * (maxTop - minTop);
+        gameState.fences.push({
           x: canvas.width + 40,
           width: 92,
-          gapY: topHeight,
+          gapY: topH,
           gapHeight: gap,
           scored: false,
           colorA: Math.random() > 0.5 ? "#f3c969" : "#f2a94c",
@@ -500,121 +746,54 @@
         });
       }
 
-      function update() {
-        state.frame += 1;
-        state.horse.bob += 0.08;
-
-        if (!state.running || state.gameOver) return;
-
-        const levelBoost = Math.floor(state.score / 25);
-        state.speed = state.baseSpeed * Math.pow(1.01, levelBoost);
-        state.gravity = 0.27 * Math.pow(1.01, levelBoost);
-        state.currentGap = Math.max(132, 248 - levelBoost * 6);
-
-        state.spawnTimer += 1;
-        if (state.spawnTimer >= state.spawnEvery) {
-          state.spawnTimer = 0;
-          spawnFence();
-        }
-
-        state.horse.velocity += state.gravity;
-        state.horse.y += state.horse.velocity;
-
-        state.fences.forEach((fence) => {
-          fence.x -= state.speed;
-          if (!fence.scored && fence.x + fence.width < state.horse.x) {
-            fence.scored = true;
-            state.score += 1;
-            scoreValue.textContent = String(state.score);
-          }
-        });
-
-        state.fences = state.fences.filter((fence) => fence.x + fence.width > -120);
-
-        const horseBox = {
-          x: state.horse.x - state.horse.width * 0.34,
-          y: state.horse.y - state.horse.height * 0.35,
-          width: state.horse.width * 0.72,
-          height: state.horse.height * 0.7
-        };
-
-        const hitGround = state.horse.y + state.horse.height / 2 >= canvas.height - state.groundHeight;
-        const hitSky = state.horse.y - state.horse.height / 2 <= 0;
-
-        const hitFence = state.fences.some((fence) => {
-          const topRect = { x: fence.x, y: 0, width: fence.width, height: fence.gapY };
-          const bottomRect = {
-            x: fence.x,
-            y: fence.gapY + fence.gapHeight,
-            width: fence.width,
-            height: canvas.height - state.groundHeight - (fence.gapY + fence.gapHeight)
-          };
-          return intersects(horseBox, topRect) || intersects(horseBox, bottomRect);
-        });
-
-        if (hitGround || hitSky || hitFence) {
-          endGame();
-        }
-      }
-
-      function endGame() {
-        state.running = false;
-        state.gameOver = true;
-        if (state.score > state.best) {
-          state.best = state.score;
-          localStorage.setItem(bestStorageKey, String(state.best));
-          bestValue.textContent = String(state.best);
-        }
-        showOverlay(true, "Has tirado la valla", `Puntuación: ${state.score}. Pulsa jugar o toca la pantalla para volver a intentarlo.`);
-      }
-
       function intersects(a, b) {
-        return (
-          a.x < b.x + b.width &&
-          a.x + a.width > b.x &&
-          a.y < b.y + b.height &&
-          a.y + a.height > b.y
-        );
+        return a.x < b.x + b.width && a.x + a.width > b.x &&
+               a.y < b.y + b.height && a.y + a.height > b.y;
       }
 
+      /* ── DRAW ──────────────────────────────────────── */
       function drawBackground() {
-        const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        sky.addColorStop(0, "#bdeeff");
+        const W = canvas.width, H = canvas.height;
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+        sky.addColorStop(0,    "#bdeeff");
         sky.addColorStop(0.68, "#ecf9ff");
         sky.addColorStop(0.68, "#f3ddb0");
-        sky.addColorStop(1, "#d2b57b");
+        sky.addColorStop(1,    "#d2b57b");
         ctx.fillStyle = sky;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, W, H);
 
-        drawCloud(110, 90, 1.1);
-        drawCloud(340, 130, 0.9);
-        drawCloud(640, 88, 1.25);
-        drawCloud(860, 150, 0.95);
+        [[W*0.1, 80, 1.1],[W*0.35, 110, 0.9],[W*0.65, 75, 1.25],[W*0.88, 130, 0.95]].forEach(([x,y,s]) => drawCloud(x,y,s));
 
         ctx.fillStyle = "#7fb96d";
         ctx.beginPath();
-        ctx.moveTo(0, canvas.height - state.groundHeight - 24);
-        for (let x = 0; x <= canvas.width; x += 42) {
-          ctx.lineTo(x, canvas.height - state.groundHeight - 18 - Math.sin((x + state.frame * 2) * 0.01) * 8);
+        ctx.moveTo(0, H - gameState.groundHeight - 24);
+        for (let x = 0; x <= W; x += 42) {
+          ctx.lineTo(x, H - gameState.groundHeight - 18 - Math.sin((x + gameState.frame * 2) * 0.01) * 8);
         }
-        ctx.lineTo(canvas.width, canvas.height - state.groundHeight + 18);
-        ctx.lineTo(0, canvas.height - state.groundHeight + 18);
+        ctx.lineTo(W, H - gameState.groundHeight + 18);
+        ctx.lineTo(0,  H - gameState.groundHeight + 18);
         ctx.closePath();
         ctx.fill();
 
         ctx.fillStyle = "#9a7b4e";
-        ctx.fillRect(0, canvas.height - state.groundHeight, canvas.width, state.groundHeight);
-
+        ctx.fillRect(0, H - gameState.groundHeight, W, gameState.groundHeight);
         ctx.fillStyle = "#b8925d";
-        for (let i = 0; i < canvas.width; i += 28) {
-          ctx.fillRect(i + (state.frame * 2 % 28), canvas.height - state.groundHeight + 8, 12, 8);
+        for (let i = 0; i < W; i += 28) {
+          ctx.fillRect(i + (gameState.frame * 2 % 28), H - gameState.groundHeight + 8, 12, 8);
+        }
+
+        if (gameState.running) {
+          ctx.fillStyle = "rgba(255,255,255,0.9)";
+          ctx.font = "bold 28px Inter, system-ui, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(String(gameState.score), canvas.width / 2, 48);
         }
       }
 
-      function drawCloud(x, y, scale) {
+      function drawCloud(x, y, s) {
         ctx.save();
         ctx.translate(x, y);
-        ctx.scale(scale, scale);
+        ctx.scale(s, s);
         ctx.fillStyle = "rgba(255,255,255,0.78)";
         ctx.beginPath();
         ctx.arc(0, 0, 20, 0, Math.PI * 2);
@@ -625,63 +804,48 @@
         ctx.restore();
       }
 
-      function drawFence(fence) {
-        const railHeight = 16;
-        const postWidth = 12;
-        const bottomStart = fence.gapY + fence.gapHeight;
-        const colors = [fence.colorA, "#ffffff", fence.colorB];
-
-        drawFenceSection(fence.x, 0, fence.width, fence.gapY, postWidth, railHeight, colors);
-        drawFenceSection(fence.x, bottomStart, fence.width, canvas.height - state.groundHeight - bottomStart, postWidth, railHeight, colors);
+      function drawFence(f) {
+        const botStart = f.gapY + f.gapHeight;
+        drawFenceSection(f.x, 0, f.width, f.gapY, f);
+        drawFenceSection(f.x, botStart, f.width, canvas.height - gameState.groundHeight - botStart, f);
       }
 
-      function drawFenceSection(x, y, width, height, postWidth, railHeight, colors) {
+      function drawFenceSection(x, y, width, height, f) {
+        const pw = 12;
         ctx.fillStyle = "#6b4f2f";
-        ctx.fillRect(x, y, postWidth, height);
-        ctx.fillRect(x + width - postWidth, y, postWidth, height);
-
+        ctx.fillRect(x, y, pw, height);
+        ctx.fillRect(x + width - pw, y, pw, height);
         const rails = Math.max(2, Math.floor(height / 70));
-        for (let i = 0; i < rails; i += 1) {
-          const railY = y + 18 + i * ((height - 36) / Math.max(1, rails - 1));
-          drawStripedRail(x + postWidth, railY, width - postWidth * 2, railHeight, colors);
+        for (let i = 0; i < rails; i++) {
+          const ry = y + 18 + i * ((height - 36) / Math.max(1, rails - 1));
+          const sw = (width - pw * 2) / 6;
+          for (let j = 0; j < 6; j++) {
+            ctx.fillStyle = [f.colorA, "#ffffff", f.colorB][j % 3];
+            ctx.fillRect(x + pw + j * sw, ry, sw + 1, 16);
+          }
+          ctx.strokeStyle = "rgba(58,44,26,0.22)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + pw, ry, width - pw * 2, 16);
         }
-      }
-
-      function drawStripedRail(x, y, width, height, colors) {
-        const stripeWidth = width / 6;
-        for (let i = 0; i < 6; i += 1) {
-          ctx.fillStyle = colors[i % colors.length];
-          ctx.fillRect(x + i * stripeWidth, y, stripeWidth + 1, height);
-        }
-        ctx.strokeStyle = "rgba(58, 44, 26, 0.22)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, width, height);
       }
 
       function drawHorse() {
-        const { x, y, width, height, velocity, bob } = state.horse;
+        const { x, y, velocity, bob } = gameState.horse;
         const angle = Math.max(-0.55, Math.min(0.65, velocity * 0.045));
-        const theme = state.horseTheme;
-
+        const theme = selectedTheme;
         ctx.save();
         ctx.translate(x, y + Math.sin(bob) * 4);
         ctx.rotate(angle);
-
         ctx.fillStyle = theme.body;
         ctx.strokeStyle = theme.dark;
         ctx.lineWidth = 2;
-
-        roundedRect(-24, -15, 38, 22, 10, true, true);
-        roundedRect(3, -30, 20, 22, 10, true, true);
-
+        roundedRectCtx(ctx, -24, -15, 38, 22, 10, true, true);
+        roundedRectCtx(ctx, 3, -30, 20, 22, 10, true, true);
         ctx.beginPath();
-        ctx.moveTo(15, -21);
-        ctx.lineTo(26, -33);
-        ctx.lineTo(18, -14);
+        ctx.moveTo(15, -21); ctx.lineTo(26, -33); ctx.lineTo(18, -14);
         ctx.closePath();
         ctx.fillStyle = theme.accent;
         ctx.fill();
-
         ctx.beginPath();
         ctx.moveTo(-20, -15);
         ctx.quadraticCurveTo(-42, -28, -48, -4);
@@ -690,107 +854,90 @@
         ctx.strokeStyle = theme.mane;
         ctx.stroke();
 
+        // pattern overlay on body
+        if (theme.pattern === "pinto") {
+          ctx.fillStyle = theme.dark;
+          ctx.beginPath(); ctx.ellipse(-15, -6, 9, 6, 0.3, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(-2, 1, 7, 5, -0.2, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(8, -22, 5, 4, 0.4, 0, Math.PI*2); ctx.fill();
+        } else if (theme.pattern === "appaloosa") {
+          ctx.fillStyle = theme.dark;
+          [[-15,-8],[-8,-3],[-2,-9],[4,-4],[-18,2],[-10,3],[-3,5]].forEach(([px,py]) => {
+            ctx.beginPath(); ctx.arc(px,py,1.8,0,Math.PI*2); ctx.fill();
+          });
+        } else if (theme.pattern === "dapple") {
+          ctx.fillStyle = "rgba(255,255,255,0.32)";
+          [[-15,-8],[-6,-3],[-12,3],[-2,1],[-18,0],[3,-5]].forEach(([px,py]) => {
+            ctx.beginPath(); ctx.arc(px,py,2.6,0,Math.PI*2); ctx.fill();
+          });
+        }
+        if (theme.pattern === "blaze") {
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.moveTo(11,-28); ctx.lineTo(15,-28); ctx.lineTo(13,-12); ctx.lineTo(9,-12);
+          ctx.closePath(); ctx.fill();
+        }
+
         ctx.beginPath();
         ctx.arc(17, -20, 2.1, 0, Math.PI * 2);
         ctx.fillStyle = "#20130a";
         ctx.fill();
-
-        drawLeg(-9, 6, 0.9);
-        drawLeg(2, 7, 1.1);
-        drawLeg(-17, 6, 1.15);
-        drawLeg(10, 7, 0.85);
-
+        [[-9,6,0.9],[2,7,1.1],[-17,6,1.15],[10,7,0.85]].forEach(([ox,oy,ph]) => {
+          const t = Math.sin(gameState.frame * 0.18 + ph) * 5;
+          ctx.save();
+          ctx.translate(ox, oy);
+          ctx.strokeStyle = theme.dark;
+          ctx.lineWidth = 4.2;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(0,0); ctx.lineTo(t*0.16, 14); ctx.lineTo(-1.5+t*0.28, 27);
+          ctx.stroke();
+          if (theme.socks) {
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 3.6;
+            ctx.beginPath();
+            ctx.moveTo(-1+t*0.24, 22); ctx.lineTo(-1.5+t*0.28, 27);
+            ctx.stroke();
+          }
+          ctx.restore();
+        });
         ctx.restore();
       }
 
-      function drawLeg(offsetX, offsetY, phase) {
-        const t = Math.sin(state.frame * 0.18 + phase) * 5;
-        const theme = state.horseTheme;
-        ctx.save();
-        ctx.translate(offsetX, offsetY);
-        ctx.strokeStyle = theme.dark;
-        ctx.lineWidth = 4.2;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0 + t * 0.16, 14);
-        ctx.lineTo(-1.5 + t * 0.28, 27);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      function roundedRect(x, y, width, height, radius, fill, stroke) {
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + width - radius, y);
-        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-        ctx.lineTo(x + width, y + height - radius);
-        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-        ctx.lineTo(x + radius, y + height);
-        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-        ctx.closePath();
-        if (fill) ctx.fill();
-        if (stroke) ctx.stroke();
+      function roundedRectCtx(c, x, y, w, h, r, fill, stroke) {
+        c.beginPath();
+        c.moveTo(x+r, y);
+        c.lineTo(x+w-r, y);
+        c.quadraticCurveTo(x+w, y, x+w, y+r);
+        c.lineTo(x+w, y+h-r);
+        c.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+        c.lineTo(x+r, y+h);
+        c.quadraticCurveTo(x, y+h, x, y+h-r);
+        c.lineTo(x, y+r);
+        c.quadraticCurveTo(x, y, x+r, y);
+        c.closePath();
+        if (fill)   c.fill();
+        if (stroke) c.stroke();
       }
 
       function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawBackground();
-        state.fences.forEach(drawFence);
+        gameState.fences.forEach(drawFence);
         drawHorse();
       }
 
+      /* ── LOOP ──────────────────────────────────────── */
       function loop() {
         update();
-        draw();
+        if (!gameWrap.classList.contains("hidden")) draw();
         requestAnimationFrame(loop);
       }
 
-      document.getElementById("startBtn").addEventListener("click", () => {
-        if (state.gameOver) resetGame(false);
-        startGame();
-      });
-
-      document.getElementById("restartBtn").addEventListener("click", () => resetGame(false));
-
-      document.getElementById("gameWrap").addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        flapHorse();
-      });
-      window.addEventListener("keydown", (event) => {
-        if (event.code === "Space") {
-          event.preventDefault();
-          flapHorse();
-        }
-      });
-
-      function renderSwatches() {
-        const swatches = document.getElementById("swatches");
-        swatches.innerHTML = horseThemes.map((theme) => `
-          <button
-            class="swatch ${state.horseTheme.id === theme.id ? "active" : ""}"
-            type="button"
-            data-theme-id="${theme.id}"
-            title="${theme.id}"
-            style="background:${theme.body}"
-          ></button>
-        `).join("");
-      }
-
-      document.getElementById("swatches").addEventListener("click", (event) => {
-        const button = event.target.closest("[data-theme-id]");
-        if (!button) return;
-        const nextTheme = horseThemes.find((theme) => theme.id === button.dataset.themeId);
-        if (!nextTheme) return;
-        state.horseTheme = nextTheme;
-        localStorage.setItem(colorStorageKey, nextTheme.id);
-        renderSwatches();
-      });
-
-      resetGame(false);
-      renderSwatches();
+      /* ── INIT ──────────────────────────────────────── */
+      renderLobby();
       loop();
+    })();
     </script>
   </body>
 </html>
