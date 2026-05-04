@@ -1,4 +1,4 @@
-const CACHE = "finca-planner-v10";
+const CACHE = "finca-planner-v11";
 const BASE = self.location.pathname.replace(/\/sw\.js$/, "");
 const ASSETS = [
   BASE + "/",

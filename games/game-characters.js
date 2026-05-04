@@ -1,100 +1,24 @@
 (function () {
-  const RUNNER_BASE_SPRITE = [
-    "............................",
-    "................MM..........",
-    "..............MMCCM.........",
-    ".............MCCCCCM........",
-    ".......OOOO..CCCCCCO........",
-    ".....OOCCCCOOCCCCCCCO.......",
-    "....OCCCCCCCCCCCCCCCCO......",
-    "....OCCCCCCCCCCCCCCCO.......",
-    "....OCCCCPPCCCCCCCCCO.......",
-    ".....OCCCCCCCCCCCCCDO.......",
-    "TT...ODCCCCCCCCCCCDO........",
-    ".T...ODDCCCCCCDDDDO.........",
-    ".....OD..DD..DD............",
-    ".....HH..HH..HH............",
-    "............................",
-    "............................"
-  ];
-
-  const RUNNER_PINTO_MASK = [
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "........PP......PP..........",
-    ".........PPP..PPP...........",
-    "...........PPPP.............",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................"
-  ];
-
-  const RUNNER_OVERO_MASK = [
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "..........PPPP..............",
-    "........PP....PP............",
-    ".............PPP............",
-    "..........PP................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................"
-  ];
-
-  const RUNNER_APPALOOSA_MASK = [
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "........P.P.P.P.............",
-    ".........P.P.P..............",
-    "........P.P.P.P.............",
-    ".........P.P.P..............",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................",
-    "............................"
+  const RUNNER_HORSE_THEMES = [
+    { id: "castano", label: "Castano clasico", coat: "#5a3a27", shade: "#3a2418", mane: "#22150f", tack: "#8a5a36", mark: "#f5f0ea", bg: "#f6ece0" },
+    { id: "gris", label: "Tordo claro", coat: "#d7dce1", shade: "#a4adb8", mane: "#5b6570", tack: "#7f8b97", mark: "#ffffff", bg: "#edf3f7" },
+    { id: "palomino", label: "Palomino", coat: "#e8d1a1", shade: "#c5a777", mane: "#f7eed7", tack: "#b98a4e", mark: "#fff8ec", bg: "#fff1d8" },
+    { id: "alazan", label: "Alazan", coat: "#a95531", shade: "#73361d", mane: "#1f1410", tack: "#7e4a27", mark: "#ffe7dc", bg: "#ffebe1" },
+    { id: "negro", label: "Negro", coat: "#26272c", shade: "#131418", mane: "#08090b", tack: "#a63737", mark: "#ccd2dc", bg: "#edf0f4" },
+    { id: "pinto", label: "Pinto", coat: "#efe8df", shade: "#23252a", mane: "#7d5b45", tack: "#d8ccb9", mark: "#ffffff", bg: "#f7f1ea" },
+    { id: "overo", label: "Overo", coat: "#f0e8dd", shade: "#b2612f", mane: "#7f4322", tack: "#cfb79b", mark: "#fffdf8", bg: "#fff1e2" },
+    { id: "appaloosa", label: "Appaloosa", coat: "#8a5d38", shade: "#613e26", mane: "#2f1d13", tack: "#c89a63", mark: "#ead7bb", bg: "#f7e8d6" }
   ];
 
   const FLAPPY_HORSE_THEMES = [
-    { id: "castano", label: "Sombra", coat: "#23242a", shade: "#111319", mane: "#08090d", wing: "#eef2ff", wingShade: "#bbc8e6", accent: "#8a79ff", mark: "#f7f8ff", eye: "#fafbff", iconBg: "#dff2ff" },
-    { id: "gris", label: "Plata", coat: "#d2d7df", shade: "#9aa3b3", mane: "#555e6f", wing: "#f8fbff", wingShade: "#d7e4f2", accent: "#55cdf6", mark: "#ffffff", eye: "#1a2230", iconBg: "#edf8ff" },
-    { id: "palomino", label: "Brasa", coat: "#f2ddae", shade: "#d7b97c", mane: "#fff4d4", wing: "#fff7df", wingShade: "#eed8a2", accent: "#ffae3d", mark: "#fffdf3", eye: "#2c2417", iconBg: "#fff2d8" },
-    { id: "alazan", label: "Viento", coat: "#94452c", shade: "#6d2e1c", mane: "#1f1410", wing: "#f2f2f2", wingShade: "#d5d5d5", accent: "#78d4ff", mark: "#fff1ea", eye: "#fff6ef", iconBg: "#eceff5" },
-    { id: "negro", label: "Obsidiana", coat: "#101116", shade: "#050608", mane: "#1a1c23", wing: "#cfd6df", wingShade: "#8f98a7", accent: "#f0c34a", mark: "#b6bcc8", eye: "#f7fbff", iconBg: "#e8edf6" },
-    { id: "pinto", label: "Tormenta", coat: "#21242a", shade: "#111319", mane: "#050608", wing: "#dfeaff", wingShade: "#9cc3ff", accent: "#4b86ff", mark: "#ffffff", eye: "#fdfefe", iconBg: "#e7f0ff" },
-    { id: "overo", label: "Carmesi", coat: "#5a2e2b", shade: "#351919", mane: "#161113", wing: "#ffe6ef", wingShade: "#ffb6ca", accent: "#ff4da2", mark: "#fff3f6", eye: "#fff8fb", iconBg: "#fff0f5" },
-    { id: "appaloosa", label: "Eclipse", coat: "#47382f", shade: "#2d221c", mane: "#09090b", wing: "#fff2cc", wingShade: "#e3bc57", accent: "#f8d24a", mark: "#f7ead8", eye: "#fffdf9", iconBg: "#fff4da" }
-  ];
-
-  const RUNNER_HORSE_THEMES = [
-    { id: "castano", label: "Castano", C: "#654029", D: "#412719", M: "#d8c0a0", H: "#24160f", E: "#111111", W: "#f8efe1", P: "#7f5336", S: "#7c5738", O: "#140d09", iconBg: "#f5e7d5" },
-    { id: "gris", label: "Tordo", C: "#dde1e4", D: "#a7afb5", M: "#727b84", H: "#2f3337", E: "#171b1e", W: "#ffffff", P: "#ced3d7", S: "#b6bec4", O: "#1e2327", iconBg: "#edf4f8" },
-    { id: "palomino", label: "Crema", C: "#f1d7a2", D: "#c9a56b", M: "#fff1d2", H: "#49311f", E: "#211810", W: "#fffaf0", P: "#ebc882", S: "#d0ae78", O: "#27170d", iconBg: "#fff0d0" },
-    { id: "alazan", label: "Alazan", C: "#a8562f", D: "#76361d", M: "#1e1410", H: "#1f120d", E: "#fff5ee", W: "#fce0d1", P: "#c56d40", S: "#92603b", O: "#20110c", iconBg: "#ffe7dc" },
-    { id: "negro", label: "Negro", C: "#23252a", D: "#111216", M: "#0a0b0d", H: "#070809", E: "#f3f6ff", W: "#b4bdca", P: "#3a3d45", S: "#b53935", O: "#050607", iconBg: "#eceff3" },
-    { id: "pinto", label: "Pinto N.", C: "#efebe2", D: "#161718", M: "#7f5b43", H: "#17100d", E: "#141414", W: "#ffffff", P: "#212328", S: "#dad1c0", O: "#14110f", iconBg: "#f5f0e7" },
-    { id: "overo", label: "Pinto C.", C: "#f0e9de", D: "#b2602d", M: "#8b4722", H: "#23150f", E: "#16100c", W: "#fffdf9", P: "#bb6a35", S: "#d4c2aa", O: "#1b120d", iconBg: "#fff2e3" },
-    { id: "appaloosa", label: "Appaloosa", C: "#936139", D: "#683f25", M: "#3d2517", H: "#20120c", E: "#14110d", W: "#f3e1c5", P: "#e8d5b5", S: "#b9895b", O: "#1a100b", iconBg: "#f7ead8" }
+    { id: "castano", label: "Sombra alada", coat: "#1f2127", shade: "#0e1014", mane: "#06070a", wing: "#f0f4ff", wingShade: "#cfd8ea", accent: "#7c8cff", mark: "#fafcff", bg: "#e8f3ff" },
+    { id: "gris", label: "Plata alada", coat: "#d3d8de", shade: "#a1aab6", mane: "#616a75", wing: "#fbfdff", wingShade: "#dce5f1", accent: "#55cdf6", mark: "#ffffff", bg: "#eef8ff" },
+    { id: "palomino", label: "Aurora", coat: "#ecd8af", shade: "#cfb07d", mane: "#fff3d8", wing: "#fffaf0", wingShade: "#f0dfb0", accent: "#ffc04d", mark: "#fffdf6", bg: "#fff4de" },
+    { id: "alazan", label: "Brasa", coat: "#8d4730", shade: "#642d1d", mane: "#181011", wing: "#f6f6f6", wingShade: "#dbdbdb", accent: "#72d0ff", mark: "#fff3ee", bg: "#eef4fb" },
+    { id: "negro", label: "Obsidiana", coat: "#111217", shade: "#05060a", mane: "#181a20", wing: "#d5dbe3", wingShade: "#99a3b1", accent: "#f2c84c", mark: "#bec7d3", bg: "#e9eef5" },
+    { id: "pinto", label: "Tormenta", coat: "#1f2328", shade: "#0e1014", mane: "#05070a", wing: "#e7f0ff", wingShade: "#a4c3ff", accent: "#4a84ff", mark: "#ffffff", bg: "#e9f1ff" },
+    { id: "overo", label: "Carmesi", coat: "#5b302e", shade: "#361a19", mane: "#120d10", wing: "#ffe8ef", wingShade: "#ffc1d2", accent: "#ff56a7", mark: "#fff5f7", bg: "#fff0f5" },
+    { id: "appaloosa", label: "Eclipse", coat: "#47372f", shade: "#2b211d", mane: "#09090c", wing: "#fff4d5", wingShade: "#ebc86f", accent: "#f7d24f", mark: "#f8eddf", bg: "#fff5dd" }
   ];
 
   const PIXEL_HORSE_THEMES = RUNNER_HORSE_THEMES;
@@ -115,22 +39,56 @@
     "bird-nube": "palomino",
     "bird-fuego": "alazan",
     "bird-cielo": "gris",
-    tordo: "gris",
     crema: "palomino",
+    tordo: "gris",
     rosillo: "alazan"
   };
 
-  const FLAPPY_ID_SET = new Set(FLAPPY_HORSE_THEMES.map((theme) => theme.id));
-  const RUNNER_ID_SET = new Set(RUNNER_HORSE_THEMES.map((theme) => theme.id));
+  const RUNNER_IDS = new Set(RUNNER_HORSE_THEMES.map((theme) => theme.id));
+  const FLAPPY_IDS = new Set(FLAPPY_HORSE_THEMES.map((theme) => theme.id));
+
+  const RUNNER_PATHS = {
+    body: "M34 74 C43 57 69 47 103 47 C131 47 160 58 174 75 C162 82 143 88 121 90 C87 94 55 89 34 74 Z",
+    barrel: "M58 58 C79 51 118 52 145 66 C133 74 103 78 76 75 C64 73 55 68 58 58 Z",
+    neck: "M119 50 C128 32 144 20 164 17 C178 15 191 21 194 31 C197 41 190 49 176 54 C161 59 146 63 132 68 C129 61 125 55 119 50 Z",
+    muzzle: "M176 32 C186 31 196 35 196 42 C196 48 188 51 175 49 Z",
+    mane: "M118 50 C125 34 139 22 157 16 C148 26 143 37 141 49 C132 45 125 46 118 50 Z",
+    tail: "M34 70 C17 62 9 69 11 80 C13 91 20 94 29 91 C20 86 19 78 23 71 C26 66 30 64 34 65 Z",
+    earFront: "M165 17 L170 7 L175 18 Z",
+    earBack: "M175 18 L181 8 L185 20 Z",
+    legBackRear: "M50 81 C56 88 57 100 55 118 L47 118 C48 104 47 90 43 84 Z",
+    legBackFront: "M73 82 C77 89 77 102 74 120 L66 120 C67 106 66 92 61 85 Z",
+    legFrontRear: "M119 84 C126 92 127 103 123 118 L115 118 C116 104 114 91 109 84 Z",
+    legFrontFront: "M144 82 C151 89 154 102 150 120 L142 120 C144 106 141 91 136 84 Z",
+    blaze: "M172 22 C177 26 179 31 177 38 C173 34 171 29 172 22 Z",
+    sockBack: "M46 112 L56 112 L56 120 L46 120 Z",
+    sockFront: "M141 114 L151 114 L151 120 L141 120 Z"
+  };
+
+  const FLAPPY_PATHS = {
+    body: "M30 68 C39 54 62 45 90 45 C114 45 138 54 149 68 C139 75 123 80 103 82 C73 86 48 81 30 68 Z",
+    barrel: "M51 56 C69 50 99 50 122 60 C113 67 87 71 63 69 C54 68 47 63 51 56 Z",
+    neck: "M100 48 C107 33 120 23 137 20 C149 18 160 23 162 31 C165 39 159 46 147 50 C135 54 123 58 111 63 C109 57 105 52 100 48 Z",
+    muzzle: "M146 30 C154 29 161 33 161 39 C161 44 154 47 144 45 Z",
+    mane: "M100 48 C106 35 118 25 132 20 C126 28 123 37 121 46 C114 43 106 44 100 48 Z",
+    tail: "M30 65 C16 59 10 64 11 73 C12 81 17 85 25 84 C18 79 18 72 21 66 C24 62 27 60 30 61 Z",
+    wingBack: "M71 44 C47 24 42 4 57 -10 C74 3 83 20 88 40 C82 38 76 39 71 44 Z",
+    wingFront: "M83 39 C67 10 78 -12 103 -21 C113 3 112 22 101 44 C95 41 89 39 83 39 Z",
+    earFront: "M139 20 L143 11 L147 21 Z",
+    earBack: "M147 21 L152 12 L156 23 Z",
+    legRear: "M52 75 C57 81 57 90 55 102 L48 102 C49 91 47 82 44 77 Z",
+    legFront: "M111 76 C117 83 118 91 115 103 L108 103 C109 92 107 83 103 77 Z",
+    blaze: "M143 24 C147 27 148 31 147 36 C143 33 141 29 143 24 Z"
+  };
 
   function normalizeRunnerThemeId(id) {
     const next = LEGACY_HORSE_MAP[id] || id;
-    return RUNNER_ID_SET.has(next) ? next : RUNNER_HORSE_THEMES[0].id;
+    return RUNNER_IDS.has(next) ? next : RUNNER_HORSE_THEMES[0].id;
   }
 
   function normalizeFlappyThemeId(id) {
     const next = LEGACY_HORSE_MAP[id] || id;
-    return FLAPPY_ID_SET.has(next) ? next : FLAPPY_HORSE_THEMES[0].id;
+    return FLAPPY_IDS.has(next) ? next : FLAPPY_HORSE_THEMES[0].id;
   }
 
   function normalizeThemeId(id) {
@@ -151,65 +109,123 @@
     return runnerThemeById(id);
   }
 
-  function drawSprite(ctx, sprite, ox, oy, px, palette) {
-    ctx.imageSmoothingEnabled = false;
-    sprite.forEach((row, ry) => {
-      for (let cx = 0; cx < row.length; cx += 1) {
-        const key = row[cx];
-        if (key === ".") continue;
-        const fill = palette[key];
-        if (!fill) continue;
-        ctx.fillStyle = fill;
-        ctx.fillRect(ox + cx * px, oy + ry * px, px, px);
-      }
-    });
+  function fillSvg(path, color, opacity = 1) {
+    return `<path d="${path}" fill="${color}" opacity="${opacity}"/>`;
   }
 
-  function buildSvgFromSprite(sprite, px, palette, className = "") {
-    const width = sprite[0].length * px;
-    const height = sprite.length * px;
-    let rects = "";
-    sprite.forEach((row, ry) => {
-      for (let cx = 0; cx < row.length; cx += 1) {
-        const key = row[cx];
-        if (key === ".") continue;
-        const fill = palette[key];
-        if (!fill) continue;
-        rects += `<rect x="${cx * px}" y="${ry * px}" width="${px}" height="${px}" fill="${fill}"/>`;
-      }
-    });
-    const attr = className ? ` class="${className}"` : "";
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" shape-rendering="crispEdges"${attr}>${rects}</svg>`;
+  function outlineSvg(path, color, width = 2, opacity = 0.22) {
+    return `<path d="${path}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}"/>`;
   }
 
-  function patchMaskForTheme(theme) {
-    if (theme.id === "pinto") return RUNNER_PINTO_MASK;
-    if (theme.id === "overo") return RUNNER_OVERO_MASK;
-    if (theme.id === "appaloosa") return RUNNER_APPALOOSA_MASK;
-    return null;
-  }
-
-  function drawRunnerHorse(ctx, ox, oy, px, theme) {
+  function runnerHorseSvg(scale, theme, className = "") {
     const palette = runnerThemeById(theme?.id || theme);
-    drawSprite(ctx, RUNNER_BASE_SPRITE, ox, oy, px, palette);
-    const patchMask = patchMaskForTheme(palette);
-    if (patchMask) {
-      drawSprite(ctx, patchMask, ox, oy, px, { P: palette.P });
+    const spots = [];
+    if (palette.id === "pinto") {
+      spots.push('<path d="M78 56 C90 50 102 50 112 58 C103 64 92 65 82 62 Z" fill="#202227"/>');
+      spots.push('<path d="M120 66 C128 61 137 61 143 67 C136 72 128 73 121 71 Z" fill="#202227"/>');
     }
+    if (palette.id === "overo") {
+      spots.push(`<path d="M84 57 C95 52 106 53 115 60 C103 66 91 67 83 63 Z" fill="${palette.shade}"/>`);
+      spots.push(`<path d="M124 68 C131 64 140 64 147 69 C139 74 129 75 123 73 Z" fill="${palette.shade}"/>`);
+    }
+    if (palette.id === "appaloosa") {
+      spots.push('<circle cx="83" cy="58" r="2.6" fill="#ead7bb"/><circle cx="95" cy="63" r="2.2" fill="#ead7bb"/><circle cx="109" cy="58" r="2.5" fill="#ead7bb"/><circle cx="122" cy="65" r="2.4" fill="#ead7bb"/>');
+    }
+    const classes = className ? ` class="${className}"` : "";
+    const svg = [
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 126" width="${210 * scale}" height="${126 * scale}"${classes}>`,
+      fillSvg(RUNNER_PATHS.tail, palette.mane),
+      fillSvg(RUNNER_PATHS.body, palette.coat),
+      fillSvg(RUNNER_PATHS.barrel, palette.shade, 0.88),
+      ...spots,
+      fillSvg(RUNNER_PATHS.neck, palette.coat),
+      fillSvg(RUNNER_PATHS.muzzle, palette.shade),
+      fillSvg(RUNNER_PATHS.mane, palette.mane),
+      fillSvg(RUNNER_PATHS.earBack, palette.mane),
+      fillSvg(RUNNER_PATHS.earFront, palette.mane),
+      fillSvg("M88 55 C95 52 108 52 116 56 L112 64 C103 62 93 62 85 65 Z", palette.tack, 0.92),
+      fillSvg(RUNNER_PATHS.legBackRear, palette.shade),
+      fillSvg(RUNNER_PATHS.legBackFront, palette.coat),
+      fillSvg(RUNNER_PATHS.legFrontRear, palette.shade),
+      fillSvg(RUNNER_PATHS.legFrontFront, palette.coat),
+      palette.id === "pinto" || palette.id === "overo" ? fillSvg(RUNNER_PATHS.sockBack, palette.mark) : "",
+      palette.id === "gris" || palette.id === "palomino" ? fillSvg(RUNNER_PATHS.sockFront, palette.mark) : "",
+      palette.id === "castano" || palette.id === "palomino" || palette.id === "gris" ? fillSvg(RUNNER_PATHS.blaze, palette.mark, 0.95) : "",
+      `<circle cx="178" cy="33" r="2.1" fill="#111318"/>`,
+      outlineSvg(RUNNER_PATHS.body, "#1f1511", 2.2, 0.22),
+      outlineSvg(RUNNER_PATHS.neck, "#1f1511", 2, 0.2),
+      `</svg>`
+    ].join("");
+    return svg;
   }
 
-  function pixelHorseSvg(px, theme) {
+  function pixelHorseSvg(scale, theme) {
+    return runnerHorseSvg(scale, theme);
+  }
+
+  function applyPath(ctx, path, fill) {
+    ctx.fillStyle = fill;
+    ctx.fill(new Path2D(path));
+  }
+
+  function applyStroke(ctx, path, stroke, width, opacity) {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = width;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke(new Path2D(path));
+    ctx.restore();
+  }
+
+  function drawRunnerHorse(ctx, ox, oy, scale, theme) {
     const palette = runnerThemeById(theme?.id || theme);
-    let rects = buildSvgFromSprite(RUNNER_BASE_SPRITE, px, palette).replace("</svg>", "");
-    const patchMask = patchMaskForTheme(palette);
-    if (patchMask) {
-      rects += buildSvgFromSprite(patchMask, px, { P: palette.P }).replace(/^<svg[^>]*>|<\/svg>$/g, "");
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(scale, scale);
+    applyPath(ctx, RUNNER_PATHS.tail, palette.mane);
+    applyPath(ctx, RUNNER_PATHS.body, palette.coat);
+    ctx.save();
+    ctx.globalAlpha = 0.88;
+    applyPath(ctx, RUNNER_PATHS.barrel, palette.shade);
+    ctx.restore();
+    if (palette.id === "pinto") {
+      applyPath(ctx, "M78 56 C90 50 102 50 112 58 C103 64 92 65 82 62 Z", "#202227");
+      applyPath(ctx, "M120 66 C128 61 137 61 143 67 C136 72 128 73 121 71 Z", "#202227");
     }
-    return `${rects}</svg>`;
-  }
-
-  function drawPixelHorse(ctx, ox, oy, px, theme) {
-    drawRunnerHorse(ctx, ox, oy, px, theme);
+    if (palette.id === "overo") {
+      applyPath(ctx, "M84 57 C95 52 106 53 115 60 C103 66 91 67 83 63 Z", palette.shade);
+      applyPath(ctx, "M124 68 C131 64 140 64 147 69 C139 74 129 75 123 73 Z", palette.shade);
+    }
+    if (palette.id === "appaloosa") {
+      ctx.fillStyle = "#ead7bb";
+      [[83, 58, 2.6], [95, 63, 2.2], [109, 58, 2.5], [122, 65, 2.4]].forEach(([x, y, r]) => {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+    applyPath(ctx, RUNNER_PATHS.neck, palette.coat);
+    applyPath(ctx, RUNNER_PATHS.muzzle, palette.shade);
+    applyPath(ctx, RUNNER_PATHS.mane, palette.mane);
+    applyPath(ctx, RUNNER_PATHS.earBack, palette.mane);
+    applyPath(ctx, RUNNER_PATHS.earFront, palette.mane);
+    applyPath(ctx, "M88 55 C95 52 108 52 116 56 L112 64 C103 62 93 62 85 65 Z", palette.tack);
+    applyPath(ctx, RUNNER_PATHS.legBackRear, palette.shade);
+    applyPath(ctx, RUNNER_PATHS.legBackFront, palette.coat);
+    applyPath(ctx, RUNNER_PATHS.legFrontRear, palette.shade);
+    applyPath(ctx, RUNNER_PATHS.legFrontFront, palette.coat);
+    if (palette.id === "pinto" || palette.id === "overo") applyPath(ctx, RUNNER_PATHS.sockBack, palette.mark);
+    if (palette.id === "gris" || palette.id === "palomino") applyPath(ctx, RUNNER_PATHS.sockFront, palette.mark);
+    if (palette.id === "castano" || palette.id === "palomino" || palette.id === "gris") applyPath(ctx, RUNNER_PATHS.blaze, palette.mark);
+    ctx.fillStyle = "#121317";
+    ctx.beginPath();
+    ctx.arc(178, 33, 2.1, 0, Math.PI * 2);
+    ctx.fill();
+    applyStroke(ctx, RUNNER_PATHS.body, "#1f1511", 2.2, 0.22);
+    applyStroke(ctx, RUNNER_PATHS.neck, "#1f1511", 2, 0.2);
+    ctx.restore();
   }
 
   function drawFlappyHorse(ctx, x, y, scale, theme, options = {}) {
@@ -218,145 +234,69 @@
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(scale, scale);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+    ctx.translate(-86, -56);
 
-    ctx.fillStyle = palette.wingShade;
+    ctx.save();
+    ctx.translate(-wingLift * 6, -wingLift * 10);
+    applyPath(ctx, FLAPPY_PATHS.wingBack, palette.wingShade);
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(wingLift * 4, -wingLift * 16);
+    applyPath(ctx, FLAPPY_PATHS.wingFront, palette.wing);
+    ctx.restore();
+
+    applyPath(ctx, FLAPPY_PATHS.tail, palette.mane);
+    applyPath(ctx, FLAPPY_PATHS.body, palette.coat);
+    ctx.save();
+    ctx.globalAlpha = 0.86;
+    applyPath(ctx, FLAPPY_PATHS.barrel, palette.shade);
+    ctx.restore();
+    applyPath(ctx, FLAPPY_PATHS.neck, palette.coat);
+    applyPath(ctx, FLAPPY_PATHS.muzzle, palette.shade);
+    applyPath(ctx, FLAPPY_PATHS.mane, palette.mane);
+    applyPath(ctx, FLAPPY_PATHS.earBack, palette.mane);
+    applyPath(ctx, FLAPPY_PATHS.earFront, palette.mane);
+    applyPath(ctx, FLAPPY_PATHS.legRear, palette.shade);
+    applyPath(ctx, FLAPPY_PATHS.legFront, palette.coat);
+    applyPath(ctx, "M75 54 C82 51 93 51 101 55 L98 61 C91 60 83 60 76 62 Z", palette.accent);
+    applyPath(ctx, FLAPPY_PATHS.blaze, palette.mark);
+    ctx.fillStyle = "#111318";
     ctx.beginPath();
-    ctx.moveTo(-6, -3);
-    ctx.quadraticCurveTo(-18, -26 - wingLift * 8, -3, -34 - wingLift * 4);
-    ctx.quadraticCurveTo(7, -18 - wingLift * 6, 1, -5);
-    ctx.closePath();
+    ctx.arc(149, 31, 1.9, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.fillStyle = palette.wing;
-    ctx.beginPath();
-    ctx.moveTo(2, -5);
-    ctx.quadraticCurveTo(20, -30 - wingLift * 11, 7, -44 - wingLift * 3);
-    ctx.quadraticCurveTo(-5, -24 - wingLift * 4, 6, -2);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = palette.outline || palette.shade;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(-22, 8);
-    ctx.lineTo(-28, 26);
-    ctx.moveTo(-4, 9);
-    ctx.lineTo(-10, 28);
-    ctx.moveTo(16, 8);
-    ctx.lineTo(20, 28);
-    ctx.moveTo(28, 6);
-    ctx.lineTo(30, 24);
-    ctx.stroke();
-
-    ctx.strokeStyle = palette.mane;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(-28, -4);
-    ctx.quadraticCurveTo(-40, 0, -42, 12);
-    ctx.stroke();
-
-    ctx.fillStyle = palette.coat;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 30, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = palette.shade;
-    ctx.beginPath();
-    ctx.ellipse(6, 3, 22, 9, 0.08, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = palette.coat;
-    ctx.beginPath();
-    ctx.moveTo(12, -8);
-    ctx.quadraticCurveTo(26, -22, 38, -16);
-    ctx.quadraticCurveTo(46, -13, 44, -6);
-    ctx.quadraticCurveTo(40, -2, 30, 0);
-    ctx.lineTo(16, 2);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = palette.shade;
-    ctx.beginPath();
-    ctx.moveTo(18, -6);
-    ctx.quadraticCurveTo(26, -16, 36, -12);
-    ctx.quadraticCurveTo(31, -4, 22, -1);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = palette.mane;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(8, -11);
-    ctx.lineTo(16, -20);
-    ctx.lineTo(21, -8);
-    ctx.stroke();
-
-    ctx.fillStyle = palette.mane;
-    ctx.beginPath();
-    ctx.moveTo(36, -18);
-    ctx.lineTo(39, -25);
-    ctx.lineTo(41, -17);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = palette.mark;
-    ctx.beginPath();
-    ctx.ellipse(34, -11, 3.6, 2.6, -0.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = palette.eye;
-    ctx.beginPath();
-    ctx.arc(38, -11, 1.4, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = palette.accent;
-    ctx.fillRect(-4, -5, 12, 6);
-    ctx.fillRect(5, -4, 8, 4);
-
+    applyStroke(ctx, FLAPPY_PATHS.body, "#171012", 1.8, 0.18);
+    applyStroke(ctx, FLAPPY_PATHS.neck, "#171012", 1.8, 0.18);
     ctx.restore();
   }
 
   function drawFlappyHorsePreview(ctx, theme) {
     const palette = flappyThemeById(theme?.id || theme);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.fillStyle = palette.iconBg || "#eef5ff";
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    drawFlappyHorse(ctx, 34, 33, 0.78, palette, { wingLift: -0.3 });
+    drawFlappyHorse(ctx, 43, 34, 0.62, palette, { wingLift: 0.2 });
   }
 
   function drawHorseGameIcon(ctx, variant, theme) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     if (variant === "flappy") {
       const palette = flappyThemeById(theme?.id || theme);
-      ctx.fillStyle = "#dff5ff";
+      ctx.fillStyle = palette.bg;
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.fillStyle = "rgba(92, 170, 255, 0.20)";
+      ctx.fillStyle = "rgba(116, 153, 255, 0.18)";
       ctx.beginPath();
-      ctx.arc(73, 16, 14, 0, Math.PI * 2);
+      ctx.arc(76, 17, 13, 0, Math.PI * 2);
       ctx.fill();
-      drawFlappyHorse(ctx, 43, 42, 0.72, palette, { wingLift: 0.55 });
-      ctx.strokeStyle = "rgba(78, 148, 255, 0.45)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(8, 56);
-      ctx.lineTo(24, 50);
-      ctx.lineTo(40, 56);
-      ctx.stroke();
+      drawFlappyHorse(ctx, 48, 42, 0.56, palette, { wingLift: 0.55 });
       return;
     }
-
     const palette = runnerThemeById(theme?.id || theme);
-    ctx.fillStyle = palette.iconBg || "#f6efe1";
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    drawRunnerHorse(ctx, 8, 8, 3, palette);
-    ctx.fillStyle = "rgba(63, 44, 30, 0.18)";
-    ctx.fillRect(8, 58, 76, 3);
-    ctx.fillStyle = "rgba(96, 70, 46, 0.22)";
-    ctx.fillRect(66, 13, 14, 2);
-    ctx.fillRect(70, 19, 10, 2);
-    ctx.fillRect(74, 25, 6, 2);
+    drawRunnerHorse(ctx, 4, 6, 0.42, palette);
+    ctx.fillStyle = "rgba(85, 62, 42, 0.18)";
+    ctx.fillRect(10, 58, 76, 3);
   }
 
   window.GAME_CHARACTERS = {
@@ -370,9 +310,10 @@
     themeById,
     runnerThemeById,
     flappyThemeById,
-    drawPixelHorse,
-    drawRunnerHorse,
     pixelHorseSvg,
+    runnerHorseSvg,
+    drawPixelHorse: drawRunnerHorse,
+    drawRunnerHorse,
     drawFlappyHorse,
     drawFlappyHorsePreview,
     drawHorseGameIcon

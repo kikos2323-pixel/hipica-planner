@@ -629,7 +629,7 @@
         if (!preview) return;
         const c = preview.getContext("2d");
         c.clearRect(0, 0, preview.width, preview.height);
-        GC.drawRunnerHorse(c, 4, 5, 3, theme);
+        GC.drawRunnerHorse(c, 5, 7, 0.34, theme);
       });
       syncSettings();
     }
@@ -637,7 +637,7 @@
     function applyCharacter() {
       const holder = horse.querySelector(".pixel-horse");
       const theme = GC.themeById(state.selectedHorse);
-      holder.innerHTML = GC.pixelHorseSvg(5, theme).replace("<svg ", '<svg class="horse-runner-svg" ');
+      holder.innerHTML = GC.runnerHorseSvg(0.5, theme, "horse-runner-svg");
     }
 
     function startGame() {
