@@ -60,6 +60,9 @@ async function recoverCloudinaryPhotos(user) {
 const STORAGE_KEY = "fincaPlanner.v1";
 const THEME_KEY = "fincaPlanner.theme";
 const STANDARD_DAY_HOURS = 7;
+const HISTORICAL_BACKFILL_START = "2026-01-01";
+const HISTORICAL_BACKFILL_END = "2026-04-30";
+const HISTORICAL_BACKFILL_NOTE = "Carga historica automatica desde el cuadrante semanal";
 const APP_SETTINGS_DOC = ["appSettings", "main"];
 const USER_PROFILES_COLLECTION = "userProfiles";
 const SHARED_HORSES_COLLECTION = "sharedHorses";
@@ -266,6 +269,56 @@ function scheduleTotalHours(schedule) {
 function scheduleLabel(schedule) {
   if (!schedule.shifts.length) return "Descanso";
   return schedule.shifts.map((shift) => `${shift.start} - ${shift.end}`).join(" / ");
+}
+
+function addDaysToIso(dateString, days) {
+  const date = new Date(`${dateString}T12:00:00`);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function createHistoricalWorkEntry(dateString) {
+  const schedule = getScheduleForDate(dateString);
+  if (!schedule.shifts.length) return null;
+  const segments = schedule.shifts
+    .map((shift) => ({
+      start: isoFromDateAndTime(dateString, shift.start),
+      end: isoFromDateAndTime(dateString, shift.end)
+    }))
+    .filter((segment) => segment.start && segment.end);
+  if (!segments.length) return null;
+  return normalizeWorkEntry({
+    id: uid(),
+    date: dateString,
+    dayType: "trabajado",
+    startTime: schedule.shifts[0].start,
+    endTime: schedule.shifts[schedule.shifts.length - 1].end,
+    breakMinutes: calculateBreakMinutesFromSegments(segments),
+    expectedHours: scheduleExpectedHours(dateString) || STANDARD_DAY_HOURS,
+    notes: HISTORICAL_BACKFILL_NOTE,
+    generatedByClock: false,
+    segments,
+    updatedAt: new Date().toISOString()
+  });
+}
+
+function backfillHistoricalWorkEntries() {
+  const existingDates = new Set(
+    state.workEntries
+      .filter((entry) => entry && typeof entry.date === "string")
+      .map((entry) => entry.date)
+  );
+  const additions = [];
+  for (let current = HISTORICAL_BACKFILL_START; current <= HISTORICAL_BACKFILL_END; current = addDaysToIso(current, 1)) {
+    if (existingDates.has(current)) continue;
+    const entry = createHistoricalWorkEntry(current);
+    if (!entry) continue;
+    additions.push(entry);
+    existingDates.add(current);
+  }
+  if (!additions.length) return 0;
+  state.workEntries = [...state.workEntries, ...additions].sort((a, b) => a.date.localeCompare(b.date));
+  return additions.length;
 }
 
 function buttonIcon(name) {
@@ -3744,6 +3797,12 @@ onAuthStateChanged(auth, async (user) => {
     state.isAdmin = isPrimaryAdmin(user);
     updateUserChip(user);
     await migrateOrLoadData(user);
+    const historicalEntriesAdded = backfillHistoricalWorkEntries();
+    if (historicalEntriesAdded) {
+      showSyncBanner(`Cargando historial de jornada (${historicalEntriesAdded} dias)...`);
+      saveData();
+      hideSyncBanner("Historial de enero a abril cargado");
+    }
     await migrateHorsePhotosToStorage(user);
     await recoverCloudinaryPhotos(user);
     await loadSharedHorses();
@@ -4154,8 +4213,6 @@ document.addEventListener("click", (e) => {
 });
 
 init();
-
-
 
 
 
