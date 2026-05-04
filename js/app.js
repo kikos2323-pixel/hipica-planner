@@ -122,6 +122,13 @@ const THEME_PRESETS = {
     accent: "#888888",
     glass: 0.72,
     bgStrength: 60
+  },
+  cyberpunk: {
+    mode: "dark",
+    primary: "#00e5ff",
+    accent: "#ff3db8",
+    glass: 0.76,
+    bgStrength: 100
   }
 };
 const WEEKLY_SCHEDULE = [
@@ -179,7 +186,8 @@ const state = {
   games: normalizeGamesData(),
   theme: {
     ...DEFAULT_THEME
-  }
+  },
+  themeBeforeCyberpunk: null
 };
 
 let charts = {};
@@ -758,12 +766,15 @@ function syncAppearanceControls() {
   $$("[data-preset]").forEach((button) => {
     button.classList.toggle("active", button.dataset.preset === state.theme.preset);
   });
+  $("#cyberpunkBtn")?.classList.toggle("active", state.theme.preset === "cyberpunk");
 }
 
 function applyTheme() {
   document.body.dataset.mode = state.theme.mode;
+  document.body.dataset.themePreset = state.theme.preset || DEFAULT_THEME.preset;
   const modeButton = $("#modeToggleBtn");
   const modeIcon = $("#modeIcon");
+  const cyberpunkButton = $("#cyberpunkBtn");
   const isDark = state.theme.mode === "dark";
   const rootStyle = document.body.style;
   const glass = state.theme.glass;
@@ -780,6 +791,14 @@ function applyTheme() {
     const label = isDark ? "Activar modo claro" : "Activar modo oscuro";
     modeButton.setAttribute("title", label);
     modeButton.setAttribute("aria-label", label);
+  }
+
+  if (cyberpunkButton) {
+    const active = state.theme.preset === "cyberpunk";
+    const label = active ? "Volver al estilo anterior" : "Activar estilo ciberpunk";
+    cyberpunkButton.setAttribute("title", label);
+    cyberpunkButton.setAttribute("aria-label", label);
+    cyberpunkButton.classList.toggle("active", active);
   }
 
   if (modeIcon) {
@@ -823,6 +842,18 @@ function applyThemePreset(presetName) {
   if (!preset) return;
   state.theme = normalizeTheme({ ...state.theme, preset: presetName, ...preset });
   applyTheme();
+}
+
+function toggleCyberpunkTheme() {
+  if (state.theme.preset === "cyberpunk") {
+    const fallbackTheme = state.themeBeforeCyberpunk || { ...DEFAULT_THEME, ...THEME_PRESETS[DEFAULT_THEME.preset] };
+    state.theme = normalizeTheme(fallbackTheme);
+    state.themeBeforeCyberpunk = null;
+    applyTheme();
+    return;
+  }
+  state.themeBeforeCyberpunk = { ...state.theme };
+  applyThemePreset("cyberpunk");
 }
 
 function resetThemeCustomization() {
@@ -3558,6 +3589,7 @@ function bindEvents() {
     applyTheme();
   });
   $("#appearanceBtn")?.addEventListener("click", openAppearanceModal);
+  $("#cyberpunkBtn")?.addEventListener("click", toggleCyberpunkTheme);
   $("#appearanceModalClose")?.addEventListener("click", closeAppearanceModal);
   $("#appearanceModal")?.addEventListener("click", (event) => {
     if (event.target === event.currentTarget) closeAppearanceModal();
@@ -4236,8 +4268,6 @@ document.addEventListener("click", (e) => {
 });
 
 init();
-
-
 
 
 

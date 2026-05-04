@@ -558,6 +558,29 @@ label,
   transform: translateY(-1px);
 }
 
+.cyberpunk-btn {
+  color: #00d9ff;
+  border-color: rgba(0, 229, 255, 0.34);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.08), 0 0 18px rgba(0, 229, 255, 0.14);
+}
+
+.cyberpunk-btn:hover {
+  background: rgba(0, 229, 255, 0.10);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.16), 0 0 24px rgba(0, 229, 255, 0.2);
+}
+
+.cyberpunk-btn.active {
+  color: #fff3ff;
+  border-color: rgba(255, 61, 184, 0.44);
+  background:
+    linear-gradient(135deg, rgba(0, 229, 255, 0.16), rgba(255, 61, 184, 0.18)),
+    var(--glass-strong);
+  box-shadow:
+    0 0 0 1px rgba(255, 61, 184, 0.18),
+    0 0 20px rgba(255, 61, 184, 0.24),
+    0 0 28px rgba(0, 229, 255, 0.18);
+}
+
 .auth-btn { color: #16a34a; border-color: rgba(34, 197, 94, 0.45); }
 .auth-btn:hover { background: rgba(34, 197, 94, 0.12); }
 .auth-btn.auth-logged-in { color: #dc2626; border-color: rgba(239, 68, 68, 0.42); }
@@ -761,6 +784,13 @@ label,
     var(--glass-strong);
 }
 
+.appearance-preset[data-preset="cyberpunk"] {
+  background:
+    linear-gradient(135deg, rgba(0, 229, 255, 0.22), rgba(255, 61, 184, 0.2)),
+    linear-gradient(180deg, rgba(15, 19, 34, 0.92), rgba(22, 14, 34, 0.88));
+  color: #f6f7ff;
+}
+
 .appearance-controls {
   display: flex;
   flex-direction: column;
@@ -793,6 +823,71 @@ label,
   display: flex;
   justify-content: flex-end;
   padding-top: 6px;
+}
+
+body[data-theme-preset="cyberpunk"] {
+  --shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+  --shadow-strong: 0 24px 56px rgba(0, 0, 0, 0.46);
+}
+
+body[data-theme-preset="cyberpunk"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(rgba(0, 229, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 61, 184, 0.05) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.62), transparent 92%);
+}
+
+body[data-theme-preset="cyberpunk"] .sidebar,
+body[data-theme-preset="cyberpunk"] .topbar,
+body[data-theme-preset="cyberpunk"] .panel,
+body[data-theme-preset="cyberpunk"] .section-tabs,
+body[data-theme-preset="cyberpunk"] .appearance-grid section,
+body[data-theme-preset="cyberpunk"] .auth-hover-card,
+body[data-theme-preset="cyberpunk"] .calendar-day,
+body[data-theme-preset="cyberpunk"] .game-list-item,
+body[data-theme-preset="cyberpunk"] .horse-list-row,
+body[data-theme-preset="cyberpunk"] .task-card,
+body[data-theme-preset="cyberpunk"] .history-item,
+body[data-theme-preset="cyberpunk"] .cal-modal-box {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
+  box-shadow:
+    0 0 0 1px rgba(0, 229, 255, 0.08),
+    0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+body[data-theme-preset="cyberpunk"] .brand-mark,
+body[data-theme-preset="cyberpunk"] .nav-link.active .nav-icon,
+body[data-theme-preset="cyberpunk"] .primary-button,
+body[data-theme-preset="cyberpunk"] .game-list-score strong {
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, 0.18),
+    0 0 22px rgba(255, 61, 184, 0.14);
+}
+
+body[data-theme-preset="cyberpunk"] .primary-button {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 66%, #08111f), color-mix(in srgb, var(--accent) 60%, #140816));
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+body[data-theme-preset="cyberpunk"] .ghost-button,
+body[data-theme-preset="cyberpunk"] .topbar-icon-btn,
+body[data-theme-preset="cyberpunk"] .appearance-preset,
+body[data-theme-preset="cyberpunk"] .section-tab,
+body[data-theme-preset="cyberpunk"] .nav-link {
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--line));
+}
+
+body[data-theme-preset="cyberpunk"] .eyebrow,
+body[data-theme-preset="cyberpunk"] .panel-heading h2,
+body[data-theme-preset="cyberpunk"] .game-panel-title {
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 14px rgba(0, 229, 255, 0.16);
 }
 
 .topbar-avatar,
